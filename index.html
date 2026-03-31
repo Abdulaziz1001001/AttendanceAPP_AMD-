@@ -963,35 +963,60 @@ if(!localStorage.getItem('amd_seeded')){
    AUTH
 ══════════════════════════════════════════ */
 const Auth = {
-  adminSession:null,
-  empSession:null,
+  adminSession: null,
+  empSession: null,
 
-  adminLogin(){
-    const u=document.getElementById('admin-username').value.trim();
-    const p=document.getElementById('admin-password').value;
-    const admin=DB.getAdmins().find(a=>a.username===u&&a.password===p);
-    if(!admin){UI.showErr('admin-login-err','admin-login-err-msg','Invalid username or password');return;}
-    this.adminSession=admin;
-    document.getElementById('admin-display-name').textContent=admin.name;
-    document.getElementById('admin-avatar-initial').textContent=admin.name.charAt(0).toUpperCase();
-    App.goto('admin');
-    Admin.refresh();
+  async adminLogin() {
+    const u = document.getElementById('admin-username').value.trim();
+    const p = document.getElementById('admin-password').value;
+    try {
+      // إرسال الطلب للسيرفر بدلاً من البحث في DB
+      const data = await API.request('/auth/admin-login', 'POST', { username: u, password: p });
+      
+      localStorage.setItem('amd_token', data.token); // حفظ التوكن
+      this.adminSession = data.user;
+      
+      document.getElementById('admin-display-name').textContent = data.user.name;
+      document.getElementById('admin-avatar-initial').textContent = data.user.name.charAt(0).toUpperCase();
+      
+      App.goto('admin');
+      Admin.refresh(); // سنقوم بتحديث هذه الدالة لاحقاً أيضاً
+    } catch (err) {
+      UI.showErr('admin-login-err', 'admin-login-err-msg', err.message || 'Invalid username or password');
+    }
   },
 
-  adminLogout(){this.adminSession=null;App.goto('home')},
-
-  empLogin(){
-    const u=document.getElementById('emp-username').value.trim();
-    const p=document.getElementById('emp-password').value;
-    const emp=DB.getEmployees().find(e=>e.username===u&&e.password===p&&e.active);
-    if(!emp){UI.showErr('emp-login-err','emp-login-err-msg','Invalid username or password');return;}
-    this.empSession=emp;
-    document.getElementById('emp-topbar-name').textContent=emp.name;
-    App.goto('emp');
-    Emp.init();
+  adminLogout() {
+    this.adminSession = null;
+    localStorage.removeItem('amd_token'); // مسح التوكن عند تسجيل الخروج
+    App.goto('home');
   },
 
-  empLogout(){this.empSession=null;Emp.cleanup();App.goto('home')},
+  async empLogin() {
+    const u = document.getElementById('emp-username').value.trim();
+    const p = document.getElementById('emp-password').value;
+    try {
+      // إرسال الطلب للسيرفر
+      const data = await API.request('/auth/emp-login', 'POST', { username: u, password: p });
+      
+      localStorage.setItem('amd_token', data.token);
+      this.empSession = data.user;
+      
+      document.getElementById('emp-topbar-name').textContent = data.user.name;
+      
+      App.goto('emp');
+      Emp.init();
+    } catch (err) {
+      UI.showErr('emp-login-err', 'emp-login-err-msg', err.message || 'Invalid username or password');
+    }
+  },
+
+  empLogout() {
+    this.empSession = null;
+    localStorage.removeItem('amd_token');
+    Emp.cleanup();
+    App.goto('home');
+  }
 };
 
 /* ══════════════════════════════════════════
