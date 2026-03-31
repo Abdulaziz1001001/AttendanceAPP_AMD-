@@ -1023,16 +1023,15 @@ const Auth = {
    APP ROUTER
 ══════════════════════════════════════════ */
 const App = {
-  current:'home',
-  goto(page){
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    const el=document.getElementById('page-'+page);
-    if(el) el.classList.add('active');
-    this.current=page;
-    if(page==='locations'||page==='admin') setTimeout(()=>Maps.initAdmin(),300);
+  current: 'home',
+  goto(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const el = document.getElementById('page-' + page);
+    if (el) el.classList.add('active');
+    this.current = page;
+    if (page === 'locations' || page === 'admin') setTimeout(() => Maps.initAdmin(), 300);
   }
 };
-
 /* ══════════════════════════════════════════
    UI HELPERS
 ══════════════════════════════════════════ */
