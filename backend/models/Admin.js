@@ -5,4 +5,4 @@ const AdminSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: String
 });
-module.exports = mongoose.model('Admin', AdminSchema);
+module.exports = mongoose.models.Admin || mongoose.model('Admin', AdminSchema);
