@@ -12,4 +12,4 @@ const RecordSchema = new mongoose.Schema({
   status: { type: String, enum: ['present', 'late', 'absent', 'early_leave'] },
   notes: String
 });
-module.exports = mongoose.model('Record', RecordSchema);
+module.exports = mongoose.models.Record || mongoose.model('Record', RecordSchema);
