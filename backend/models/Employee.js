@@ -6,7 +6,7 @@ const EmployeeSchema = new mongoose.Schema({
   password: { type: String, required: true },
   email: String,
   phone: String,
-  groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'Group' },
+ groupId: { type: String },
   active: { type: Boolean, default: true },
   workStart: String,
   workEnd: String,
