@@ -1217,11 +1217,43 @@ const Admin = {
     UI.openModal('modal-employee');
   },
 
-  saveEmployee(){
-    const data={ id:DB.uid(), eid:document.getElementById('emp-modal-eid').value.trim(), name:document.getElementById('emp-modal-name').value.trim(), username:document.getElementById('emp-modal-user').value.trim(), password:document.getElementById('emp-modal-pass').value, active:1 };
-    if(!data.name||!data.username){UI.toast('Required fields missing','error');return;}
-    let emps=DB.getEmployees(); emps.push(data); DB.saveEmployees(emps);
-    UI.closeModal('modal-employee'); this.renderEmployees(); UI.toast('Employee added','success');
+  async saveEmployee(){
+    const id=document.getElementById('emp-modal-id').value;
+    const data={
+      eid:document.getElementById('emp-modal-eid').value.trim(),
+      name:document.getElementById('emp-modal-name').value.trim(),
+      username:document.getElementById('emp-modal-user').value.trim(),
+      password:document.getElementById('emp-modal-pass').value,
+      email:document.getElementById('emp-modal-email').value.trim(),
+      phone:document.getElementById('emp-modal-phone').value.trim(),
+      groupId:document.getElementById('emp-modal-group').value,
+      active:parseInt(document.getElementById('emp-modal-status').value),
+      workStart:document.getElementById('emp-modal-start').value,
+      workEnd:document.getElementById('emp-modal-end').value,
+      salary:parseFloat(document.getElementById('emp-modal-salary').value)||0,
+    };
+    
+    if(!data.eid||!data.name||!data.username||(!id&&!data.password)){UI.toast('Please fill required fields','error');return;}
+    
+    try {
+        // إرسال الموظف إلى قاعدة البيانات الحقيقية (MongoDB)
+        if (!id) {
+            await API.request('/admin/add-employee', 'POST', data);
+        }
+        
+        // حفظ نسخة محلية لكي يظهر فوراً في الجدول أمامك
+        let emps=DB.getEmployees();
+        if(id) emps=emps.map(e=>e.id===id?data:e);
+        else { data.id = DB.uid(); emps.push(data); }
+        DB.saveEmployees(emps);
+        
+        UI.closeModal('modal-employee');
+        this.renderEmployees();
+        UI.toast('Employee saved to Database successfully!', 'success');
+        
+    } catch (err) {
+        UI.toast('Failed to save to database. Check connection.', 'error');
+    }
   },
 
   deleteEmployee(id){
