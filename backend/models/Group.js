@@ -4,4 +4,4 @@ const GroupSchema = new mongoose.Schema({
   desc: String,
   color: { type: String, default: '#C45A28' }
 });
-module.exports = mongoose.model('Group', GroupSchema);
+module.exports = mongoose.models.Group || mongoose.model('Group', GroupSchema);
