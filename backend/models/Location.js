@@ -6,4 +6,4 @@ const LocationSchema = new mongoose.Schema({
   lng: { type: Number, required: true },
   radius: { type: Number, default: 500 }
 });
-module.exports = mongoose.model('Location', LocationSchema);
+module.exports = mongoose.models.Location || mongoose.model('Location', LocationSchema);
