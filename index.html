@@ -1852,10 +1852,11 @@ document.addEventListener('keydown',e=>{
     document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));
   }
 });
-document.addEventListener('DOMContentLoaded',()=>{
-  // set today in records filter
-  const d=document.getElementById('rec-date');
-  if(d) d.value=DB.today();
+/* init */
+document.addEventListener('DOMContentLoaded', () => {
+  // set today in records filter using standard JS
+  const d = document.getElementById('rec-date');
+  if(d) d.value = new Date().toISOString().split('T')[0];
 });
 });
 </script>
