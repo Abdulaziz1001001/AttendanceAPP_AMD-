@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AMD United Contracting — Attendance System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root {
+  --bg: #0C0C0C;
+  --surface: #141414;
+  --surface2: #1C1C1C;
+  --surface3: #242424;
+  --border: #2C2C2C;
+  --border2: #383838;
+  --accent: #C45A28;
+  --accent-light: #D96830;
+  --accent-glow: rgba(196,90,40,0.15);
+  --text: #F0ECE6;
+  --text-muted: #888880;
+  --text-dim: #555550;
+  --success: #27AE60;
+  --warning: #E67E22;
+  --danger: #E74C3C;
+  --info: #3498DB;
+  --radius: 4px;
+  --radius-lg: 8px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 48px rgba(0,0,0,0.6);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:15px;overflow:hidden}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:'Barlow',sans-serif}
+input,select,textarea{font-family:'Barlow',sans-serif}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── PAGES ── */
+.page{position:fixed;inset:0;display:none;flex-direction:column;overflow:hidden}
+.page.active{display:flex}
+
+/* ══════════════════════════════════════════
+   LANDING PAGE
+══════════════════════════════════════════ */
+#page-home{background:var(--bg);align-items:center;justify-content:center;
+  background-image:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(196,90,40,0.08) 0%, transparent 70%)}
+.home-grid{display:grid;grid-template-rows:auto auto auto;gap:3rem;align-items:center;text-align:center;max-width:540px;width:90%;padding:2rem}
+
+.amd-logo-wrap{display:flex;flex-direction:column;align-items:center;gap:1rem}
+.amd-logo-icon{width:72px;height:72px}
+.amd-wordmark{display:flex;align-items:center;gap:1rem}
+.amd-arabic{font-size:2rem;color:var(--accent);letter-spacing:0.05em;font-weight:300;line-height:1}
+.amd-divider{width:1px;height:2rem;background:var(--border2)}
+.amd-latin{font-family:'Cinzel',serif;font-size:1.5rem;color:var(--text);letter-spacing:0.1em}
+.home-subtitle{font-size:0.8rem;color:var(--text-muted);letter-spacing:0.3em;text-transform:uppercase;margin-top:0.5rem}
+
+.home-heading{font-family:'Cinzel',serif;font-size:1.1rem;font-weight:400;color:var(--text-muted);letter-spacing:0.15em;text-transform:uppercase}
+.home-heading span{color:var(--accent)}
+
+.portal-cards{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.portal-card{background:var(--surface);border:1px solid var(--border);padding:2rem 1.5rem;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.portal-card::before{content:'';position:absolute;inset:0;background:var(--accent-glow);opacity:0;transition:opacity 0.2s}
+.portal-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow)}
+.portal-card:hover::before{opacity:1}
+.portal-card-icon{font-size:2rem;color:var(--accent);margin-bottom:1rem;display:block}
+.portal-card h3{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem}
+.portal-card p{font-size:0.8rem;color:var(--text-muted);line-height:1.5}
+.portal-card-arrow{position:absolute;bottom:1rem;right:1rem;color:var(--accent);opacity:0;transition:opacity 0.2s;font-size:0.8rem}
+.portal-card:hover .portal-card-arrow{opacity:1}
+
+.home-features{display:flex;justify-content:center;gap:2rem;padding-top:1rem;border-top:1px solid var(--border)}
+.home-feature{display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--text-muted)}
+.home-feature i{color:var(--accent);font-size:0.9rem}
+
+/* ══════════════════════════════════════════
+   AUTH PAGES
+══════════════════════════════════════════ */
+#page-admin-login,#page-emp-login{align-items:center;justify-content:center;
+  background:var(--bg) radial-gradient(ellipse 60% 50% at 50% 100%, rgba(196,90,40,0.06) 0%, transparent 70%)}
+.auth-box{width:420px;max-width:92vw}
+.auth-header{margin-bottom:2.5rem}
+.auth-back{display:inline-flex;align-items:center;gap:0.5rem;color:var(--text-muted);font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;margin-bottom:2rem;transition:color 0.2s}
+.auth-back:hover{color:var(--accent)}
+.auth-logo{display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem}
+.auth-logo-icon{width:40px;height:40px}
+.auth-logo-text{font-family:'Cinzel',serif;font-size:1rem;letter-spacing:0.1em}
+.auth-title{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.4rem}
+.auth-subtitle{color:var(--text-muted);font-size:0.85rem}
+
+.form-group{margin-bottom:1.25rem}
+.form-label{display:block;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.5rem}
+.form-control{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:0.75rem 1rem;font-size:0.9rem;outline:none;transition:border-color 0.2s;border-radius:var(--radius)}
+.form-control:focus{border-color:var(--accent)}
+.input-icon-wrap{position:relative}
+.input-icon-wrap i{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:0.85rem}
+.input-icon-wrap .form-control{padding-left:2.5rem}
+.input-icon-wrap .toggle-pw{position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);padding:0.25rem;transition:color 0.2s}
+.input-icon-wrap .toggle-pw:hover{color:var(--accent)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.75rem 1.5rem;font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border:none;border-radius:var(--radius);cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.btn-block{width:100%}
+.btn-primary{background:var(--accent);color:white}
+.btn-primary:hover{background:var(--accent-light);transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(0)}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-ghost{background:transparent;border:none;color:var(--text-muted)}
+.btn-ghost:hover{color:var(--accent)}
+.btn-danger{background:var(--danger);color:white}
+.btn-danger:hover{background:#c0392b}
+.btn-success{background:var(--success);color:white}
+.btn-success:hover{background:#219a52}
+.btn-sm{padding:0.4rem 0.9rem;font-size:0.75rem}
+.btn-icon{padding:0.5rem;aspect-ratio:1;border-radius:var(--radius)}
+.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none!important}
+
+.alert{padding:0.75rem 1rem;border-radius:var(--radius);font-size:0.85rem;display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:1rem}
+.alert-danger{background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);color:#e74c3c}
+.alert-success{background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.3);color:#27ae60}
+.alert-info{background:rgba(52,152,219,0.1);border:1px solid rgba(52,152,219,0.3);color:#3498db}
+.alert-warning{background:rgba(230,126,34,0.1);border:1px solid rgba(230,126,34,0.3);color:#e67e22}
+.hidden{display:none!important}
+
+/* ══════════════════════════════════════════
+   ADMIN LAYOUT
+══════════════════════════════════════════ */
+#page-admin{background:var(--bg);flex-direction:row}
+
+.sidebar{width:240px;min-width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:transform 0.3s}
+.sidebar-top{padding:1.5rem 1.25rem;border-bottom:1px solid var(--border)}
+.sidebar-logo{display:flex;align-items:center;gap:0.75rem}
+.sidebar-logo-icon{width:32px;height:32px}
+.sidebar-logo-text{font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.08em;line-height:1.3}
+.sidebar-logo-text small{display:block;font-family:'Barlow',sans-serif;font-size:0.65rem;color:var(--text-muted);letter-spacing:0.15em;text-transform:uppercase}
+
+.sidebar-nav{flex:1;padding:1rem 0;overflow-y:auto}
+.nav-section-title{display:block;padding:0.75rem 1.25rem 0.4rem;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim)}
+.nav-link{display:flex;align-items:center;gap:0.75rem;padding:0.65rem 1.25rem;color:var(--text-muted);font-size:0.85rem;cursor:pointer;transition:all 0.15s;border-left:2px solid transparent}
+.nav-link i{width:16px;text-align:center;font-size:0.8rem}
+.nav-link:hover{color:var(--text);background:var(--surface2)}
+.nav-link.active{color:var(--accent);border-left-color:var(--accent);background:var(--accent-glow)}
+
+.sidebar-bottom{padding:1rem 1.25rem;border-top:1px solid var(--border)}
+.user-pill{display:flex;align-items:center;gap:0.75rem}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:0.85rem;font-weight:700;flex-shrink:0}
+.user-info-text h4{font-size:0.85rem;font-weight:600}
+.user-info-text span{font-size:0.7rem;color:var(--text-muted)}
+.logout-btn{margin-left:auto;background:none;border:none;color:var(--text-dim);cursor:pointer;padding:0.25rem;transition:color 0.2s}
+.logout-btn:hover{color:var(--danger)}
+
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.topbar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.5rem;gap:1rem;flex-shrink:0}
+.topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;flex:1}
+.topbar-title span{color:var(--text-muted);font-weight:400;font-size:0.85rem;margin-left:0.5rem;text-transform:none;letter-spacing:0;font-family:'Barlow',sans-serif}
+.topbar-actions{display:flex;align-items:center;gap:0.5rem}
+.hamburger{display:none;background:none;border:none;color:var(--text);font-size:1.1rem;cursor:pointer;padding:0.25rem}
+
+.content{flex:1;overflow-y:auto;padding:1.5rem}
+
+/* ══════════════════════════════════════════
+   ADMIN PANELS (tab sections)
+══════════════════════════════════════════ */
+.admin-panel{display:none}
+.admin-panel.active{display:block}
+
+/* Stats Grid */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);padding:1.25rem;position:relative;overflow:hidden;border-radius:var(--radius-lg)}
+.stat-card::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:var(--accent-color)}
+.stat-card[data-color="accent"]{ --accent-color: var(--accent) }
+.stat-card[data-color="success"]{ --accent-color: var(--success) }
+.stat-card[data-color="warning"]{ --accent-color: var(--warning) }
+.stat-card[data-color="danger"]{ --accent-color: var(--danger) }
+.stat-label{font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.5rem}
+.stat-value{font-family:'Barlow Condensed',sans-serif;font-size:2.5rem;font-weight:700;line-height:1;color:var(--text)}
+.stat-icon{position:absolute;right:1.25rem;top:1rem;font-size:1.5rem;color:var(--accent-color);opacity:0.3}
+
+/* Card */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.5rem}
+.card-header{display:flex;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid var(--border);gap:0.75rem}
+.card-title{font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;flex:1}
+.card-body{padding:1.25rem}
+.card-body.no-pad{padding:0}
+
+/* Table */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--surface2);padding:0.75rem 1rem;text-align:left;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border);white-space:nowrap}
+tbody td{padding:0.85rem 1rem;border-bottom:1px solid var(--border);font-size:0.85rem;vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--surface2)}
+
+.badge{display:inline-block;padding:0.2rem 0.6rem;border-radius:100px;font-size:0.7rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase}
+.badge-success{background:rgba(39,174,96,0.15);color:#27ae60}
+.badge-warning{background:rgba(230,126,34,0.15);color:#e67e22}
+.badge-danger{background:rgba(231,76,60,0.15);color:#e74c3c}
+.badge-info{background:rgba(52,152,219,0.15);color:#3498db}
+.badge-muted{background:var(--surface3);color:var(--text-muted)}
+
+/* ══════════════════════════════════════════
+   LOCATION MAP PANEL
+══════════════════════════════════════════ */
+.map-layout{display:grid;grid-template-columns:1fr 340px;gap:1rem;height:calc(100vh - 160px)}
+.map-container{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+#admin-map,#emp-map{width:100%;height:100%;z-index:1}
+.map-sidebar{display:flex;flex-direction:column;gap:1rem;overflow-y:auto;padding-bottom:1rem}
+.map-hint{background:var(--accent-glow);border:1px solid rgba(196,90,40,0.3);border-radius:var(--radius);padding:0.75rem;font-size:0.8rem;color:var(--text-muted);display:flex;gap:0.5rem}
+.map-hint i{color:var(--accent);flex-shrink:0;margin-top:2px}
+
+.zone-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem}
+.zone-form h4{font-family:'Barlow Condensed',sans-serif;font-size:0.85rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:1rem;color:var(--accent)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.coord-display{background:var(--surface2);border:1px solid var(--border);padding:0.6rem 0.75rem;font-size:0.8rem;color:var(--text-muted);border-radius:var(--radius);display:flex;justify-content:space-between}
+.coord-display span{color:var(--accent)}
+
+.location-list{display:flex;flex-direction:column;gap:0.5rem}
+.location-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0.75rem 1rem;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:0.75rem}
+.location-item:hover{border-color:var(--accent)}
+.location-item.selected{border-color:var(--accent);background:var(--accent-glow)}
+.location-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.location-item-info h5{font-size:0.85rem;font-weight:600;margin-bottom:0.2rem}
+.location-item-info small{font-size:0.72rem;color:var(--text-muted)}
+.location-item-actions{margin-left:auto;display:flex;gap:0.25rem}
+
+/* ══════════════════════════════════════════
+   EMPLOYEE PORTAL
+══════════════════════════════════════════ */
+#page-emp{background:var(--bg);flex-direction:column}
+.emp-topbar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.5rem;gap:1rem;flex-shrink:0}
+.emp-topbar-logo{display:flex;align-items:center;gap:0.5rem}
+.emp-topbar-logo svg{width:28px;height:28px}
+.emp-topbar-name{font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.05em;flex:1}
+.emp-content{flex:1;overflow-y:auto;padding:1.5rem}
+.emp-grid{display:grid;grid-template-columns:1fr 380px;gap:1.5rem;height:calc(100vh - 120px)}
+.emp-map-wrap{border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);height:100%}
+
+.checkin-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1rem}
+.checkin-status{display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem}
+.status-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.status-dot.inside{background:var(--success);box-shadow:0 0 8px var(--success)}
+.status-dot.outside{background:var(--danger);box-shadow:0 0 8px var(--danger)}
+.status-dot.unknown{background:var(--text-dim)}
+.status-dot.pulse{animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(1.15)}}
+
+.checkin-info{font-size:0.85rem;color:var(--text-muted);margin-bottom:1.5rem;line-height:1.7}
+.checkin-info strong{color:var(--text);font-weight:500}
+
+.big-btn{width:100%;padding:1rem;font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border:none;border-radius:var(--radius);cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:0.5rem}
+.big-btn.checkin{background:var(--success);color:white}
+.big-btn.checkin:hover:not(:disabled){background:#219a52;transform:translateY(-1px)}
+.big-btn.checkout{background:var(--danger);color:white}
+.big-btn.checkout:hover:not(:disabled){background:#c0392b;transform:translateY(-1px)}
+.big-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+
+.emp-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:1.25rem}
+.emp-tab{padding:0.6rem 1rem;font-size:0.8rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s}
+.emp-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.emp-tab-content{display:none}
+.emp-tab-content.active{display:block}
+
+.history-row{display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid var(--border)}
+.history-row:last-child{border-bottom:none}
+.history-date{font-size:0.85rem;font-weight:600}
+.history-times{font-size:0.75rem;color:var(--text-muted);margin-top:0.15rem}
+.history-status{font-size:0.75rem}
+
+/* ══════════════════════════════════════════
+   MODALS
+══════════════════════════════════════════ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}
+.modal-overlay.show{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;transform:translateY(20px);transition:transform 0.2s}
+.modal-overlay.show .modal{transform:translateY(0)}
+.modal-header{display:flex;align-items:center;padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);gap:0.75rem}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;flex:1}
+.modal-close{background:none;border:none;color:var(--text-muted);font-size:1rem;cursor:pointer;padding:0.25rem;transition:color 0.2s}
+.modal-close:hover{color:var(--danger)}
+.modal-body{padding:1.5rem}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:0.75rem}
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+#toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:0.5rem;pointer-events:none}
+.toast{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius);padding:0.75rem 1rem;display:flex;align-items:center;gap:0.75rem;font-size:0.85rem;min-width:280px;pointer-events:all;animation:toastIn 0.3s ease;box-shadow:var(--shadow)}
+.toast.out{animation:toastOut 0.3s ease forwards}
+@keyframes toastIn{from{transform:translateX(20px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes toastOut{from{transform:translateX(0);opacity:1}to{transform:translateX(20px);opacity:0}}
+.toast i{font-size:1rem}
+.toast.success{border-left:3px solid var(--success)}.toast.success i{color:var(--success)}
+.toast.error{border-left:3px solid var(--danger)}.toast.error i{color:var(--danger)}
+.toast.warning{border-left:3px solid var(--warning)}.toast.warning i{color:var(--warning)}
+.toast.info{border-left:3px solid var(--info)}.toast.info i{color:var(--info)}
+
+/* ══════════════════════════════════════════
+   MISC
+══════════════════════════════════════════ */
+.divider{height:1px;background:var(--border);margin:1rem 0}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text-muted)}
+.empty-state i{font-size:2.5rem;margin-bottom:1rem;display:block;color:var(--text-dim)}
+.empty-state p{font-size:0.85rem}
+.filter-bar{display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.search-input{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:0.55rem 1rem 0.55rem 2.5rem;border-radius:var(--radius);font-size:0.85rem;outline:none;transition:border-color 0.2s;flex:1;min-width:180px;position:relative}
+.search-wrap{position:relative;flex:1;min-width:180px}
+.search-wrap i{position:absolute;left:0.85rem;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:0.8rem}
+.search-wrap input{width:100%;padding-left:2.4rem}
+.form-select{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:0.55rem 1rem;border-radius:var(--radius);font-size:0.85rem;outline:none;transition:border-color 0.2s}
+.form-select:focus{border-color:var(--accent)}
+.form-control:focus,.search-wrap input:focus{border-color:var(--accent)}
+.text-muted{color:var(--text-muted)}
+.text-accent{color:var(--accent)}
+.fw-600{font-weight:600}
+
+/* Color dot for groups */
+.group-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+
+/* Profile grid */
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.profile-field{background:var(--surface2);border-radius:var(--radius);padding:0.75rem 1rem}
+.profile-field label{font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:0.3rem}
+.profile-field span{font-size:0.9rem;font-weight:500}
+
+/* Loading spinner */
+.spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Responsive */
+@media(max-width:900px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .map-layout{grid-template-columns:1fr;grid-template-rows:350px auto}
+  .emp-grid{grid-template-columns:1fr;grid-template-rows:300px auto}
+  .sidebar{position:fixed;z-index:200;left:0;top:0;bottom:0;transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .hamburger{display:block}
+  .sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:199;display:none}
+  .sidebar-overlay.show{display:block}
+  .form-row{grid-template-columns:1fr}
+  .profile-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .portal-cards{grid-template-columns:1fr}
+  .auth-box{padding:0 1rem}
+}
+
+/* Leaflet overrides for dark theme */
+.leaflet-container{background:#1a1a1a!important}
+.leaflet-tile{filter:brightness(0.7) saturate(0.8)}
+.leaflet-popup-content-wrapper{background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--border)!important;border-radius:var(--radius)!important;box-shadow:var(--shadow)!important}
+.leaflet-popup-tip{background:var(--surface)!important}
+.leaflet-control-zoom a{background:var(--surface)!important;color:var(--text)!important;border-color:var(--border)!important}
+.leaflet-control-zoom a:hover{background:var(--surface2)!important}
+</style>
+</head>
+<body>
+
+<!-- ══ SVG LOGO (reusable) ══ -->
+<svg style="display:none">
+  <symbol id="amd-icon" viewBox="0 0 100 100">
+    <polygon points="10,90 45,10 55,10 90,90 75,90 50,28 25,90" fill="currentColor"/>
+    <rect x="22" y="68" width="56" height="8" fill="currentColor"/>
+  </symbol>
+</svg>
+
+<!-- ══════════════════════════════════════════
+     HOME PAGE
+══════════════════════════════════════════ -->
+<div id="page-home" class="page active">
+  <div class="home-grid">
+    <div class="amd-logo-wrap">
+      <svg class="amd-logo-icon" viewBox="0 0 100 100">
+        <polygon points="10,90 45,10 55,10 90,90 75,90 50,28 25,90" fill="#C45A28"/>
+        <rect x="22" y="68" width="56" height="8" fill="#C45A28"/>
+      </svg>
+      <div class="amd-wordmark">
+        <span class="amd-arabic">عمد</span>
+        <div class="amd-divider"></div>
+        <span class="amd-latin">AMD</span>
+      </div>
+      <div class="home-subtitle">United Contracting Company</div>
+    </div>
+
+    <div>
+      <p class="home-heading">Attendance <span>Management</span> System</p>
+    </div>
+
+    <div>
+      <div class="portal-cards">
+        <div class="portal-card" onclick="App.goto('admin-login')">
+          <i class="fas fa-shield-alt portal-card-icon"></i>
+          <h3>Admin Portal</h3>
+          <p>Manage zones, teams & reports</p>
+          <i class="fas fa-arrow-right portal-card-arrow"></i>
+        </div>
+        <div class="portal-card" onclick="App.goto('emp-login')">
+          <i class="fas fa-user-hard-hat portal-card-icon"></i>
+          <h3>Employee Portal</h3>
+          <p>GPS check-in & attendance log</p>
+          <i class="fas fa-arrow-right portal-card-arrow"></i>
+        </div>
+      </div>
+      <div class="home-features" style="margin-top:1.5rem">
+        <div class="home-feature"><i class="fas fa-map-marker-alt"></i><span>GPS Zones</span></div>
+        <div class="home-feature"><i class="fas fa-ruler-combined"></i><span>500m Radius</span></div>
+        <div class="home-feature"><i class="fas fa-layer-group"></i><span>Group Access</span></div>
+        <div class="home-feature"><i class="fas fa-chart-bar"></i><span>Reports</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ADMIN LOGIN
+══════════════════════════════════════════ -->
+<div id="page-admin-login" class="page">
+  <div class="auth-box">
+    <div class="auth-header">
+      <div class="auth-back" onclick="App.goto('home')"><i class="fas fa-arrow-left"></i> Back</div>
+      <div class="auth-logo">
+        <svg class="auth-logo-icon" viewBox="0 0 100 100"><polygon points="10,90 45,10 55,10 90,90 75,90 50,28 25,90" fill="#C45A28"/><rect x="22" y="68" width="56" height="8" fill="#C45A28"/></svg>
+        <div class="auth-logo-text">AMD United<small>Contracting Company</small></div>
+      </div>
+      <h1 class="auth-title">Admin Login</h1>
+      <p class="auth-subtitle">Sign in to manage your workforce</p>
+    </div>
+    <div id="admin-login-err" class="alert alert-danger hidden"><i class="fas fa-exclamation-circle"></i><span id="admin-login-err-msg">Error</span></div>
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <div class="input-icon-wrap">
+        <i class="fas fa-user"></i>
+        <input type="text" id="admin-username" class="form-control" placeholder="Enter username" autocomplete="username">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div class="input-icon-wrap">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="admin-password" class="form-control" placeholder="Enter password" autocomplete="current-password">
+        <button class="toggle-pw" onclick="UI.togglePw('admin-password',this)"><i class="fas fa-eye"></i></button>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-block" id="admin-login-btn" onclick="Auth.adminLogin()">
+      <span>Sign In</span>
+    </button>
+    <p style="text-align:center;margin-top:1.5rem;font-size:0.75rem;color:var(--text-dim)">Default: admin / admin123</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     EMPLOYEE LOGIN
+══════════════════════════════════════════ -->
+<div id="page-emp-login" class="page">
+  <div class="auth-box">
+    <div class="auth-header">
+      <div class="auth-back" onclick="App.goto('home')"><i class="fas fa-arrow-left"></i> Back</div>
+      <div class="auth-logo">
+        <svg class="auth-logo-icon" viewBox="0 0 100 100"><polygon points="10,90 45,10 55,10 90,90 75,90 50,28 25,90" fill="#C45A28"/><rect x="22" y="68" width="56" height="8" fill="#C45A28"/></svg>
+        <div class="auth-logo-text">AMD United<small>Contracting Company</small></div>
+      </div>
+      <h1 class="auth-title">Employee Login</h1>
+      <p class="auth-subtitle">Sign in to record your attendance</p>
+    </div>
+    <div id="emp-login-err" class="alert alert-danger hidden"><i class="fas fa-exclamation-circle"></i><span id="emp-login-err-msg">Error</span></div>
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <div class="input-icon-wrap">
+        <i class="fas fa-user"></i>
+        <input type="text" id="emp-username" class="form-control" placeholder="Enter username" autocomplete="username">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div class="input-icon-wrap">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="emp-password" class="form-control" placeholder="Enter password" autocomplete="current-password">
+        <button class="toggle-pw" onclick="UI.togglePw('emp-password',this)"><i class="fas fa-eye"></i></button>
+      </div>
+    </div>
+    <button class="btn btn-success btn-block" id="emp-login-btn" onclick="Auth.empLogin()">
+      <span>Sign In</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ADMIN MAIN
+══════════════════════════════════════════ -->
+<div id="page-admin" class="page">
+  <!-- Sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="UI.closeSidebar()"></div>
+  
+  <!-- Sidebar -->
+  <aside class="sidebar" id="admin-sidebar">
+    <div class="sidebar-top">
+      <div class="sidebar-logo">
+        <svg class="sidebar-logo-icon" viewBox="0 0 100 100"><polygon points="10,90 45,10 55,10 90,90 75,90 50,28 25,90" fill="#C45A28"/><rect x="22" y="68" width="56" height="8" fill="#C45A28"/></svg>
+        <div class="sidebar-logo-text">AMD United<small>Attendance System</small></div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <span class="nav-section-title">Overview</span>
+      <div class="nav-link active" onclick="Admin.showPanel('dashboard',this)"><i class="fas fa-th-large"></i><span>Dashboard</span></div>
+      <span class="nav-section-title">Management</span>
+      <div class="nav-link" onclick="Admin.showPanel('employees',this)"><i class="fas fa-users"></i><span>Employees</span></div>
+      <div class="nav-link" onclick="Admin.showPanel('groups',this)"><i class="fas fa-layer-group"></i><span>Groups</span></div>
+      <div class="nav-link" onclick="Admin.showPanel('locations',this)"><i class="fas fa-map-marker-alt"></i><span>Locations & Zones</span></div>
+      <span class="nav-section-title">Records</span>
+      <div class="nav-link" onclick="Admin.showPanel('records',this)"><i class="fas fa-clipboard-list"></i><span>Attendance Records</span></div>
+      <div class="nav-link" onclick="Admin.showPanel('reports',this)"><i class="fas fa-chart-bar"></i><span>Reports</span></div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-pill">
+        <div class="user-avatar" id="admin-avatar-initial">A</div>
+        <div class="user-info-text">
+          <h4 id="admin-display-name">Admin</h4>
+          <span>Administrator</span>
+        </div>
+        <button class="logout-btn" onclick="Auth.adminLogout()" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Area -->
+  <div class="main-area">
+    <header class="topbar">
+      <button class="hamburger" onclick="UI.toggleSidebar()"><i class="fas fa-bars"></i></button>
+      <div class="topbar-title" id="admin-panel-title">Dashboard<span>Overview</span></div>
+      <div class="topbar-actions">
+        <button class="btn btn-sm btn-outline" onclick="Admin.refresh()"><i class="fas fa-sync-alt"></i></button>
+      </div>
+    </header>
+    <div class="content">
+
+      <!-- ── DASHBOARD PANEL ── -->
+      <div id="panel-dashboard" class="admin-panel active">
+        <div class="stats-grid">
+          <div class="stat-card" data-color="accent">
+            <div class="stat-label">Total Employees</div>
+            <div class="stat-value" id="stat-total">0</div>
+            <i class="fas fa-users stat-icon"></i>
+          </div>
+          <div class="stat-card" data-color="success">
+            <div class="stat-label">Present Today</div>
+            <div class="stat-value" id="stat-present">0</div>
+            <i class="fas fa-user-check stat-icon"></i>
+          </div>
+          <div class="stat-card" data-color="warning">
+            <div class="stat-label">Late Today</div>
+            <div class="stat-value" id="stat-late">0</div>
+            <i class="fas fa-clock stat-icon"></i>
+          </div>
+          <div class="stat-card" data-color="danger">
+            <div class="stat-label">Absent Today</div>
+            <div class="stat-value" id="stat-absent">0</div>
+            <i class="fas fa-user-times stat-icon"></i>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Today's Attendance</div></div>
+          <div class="card-body no-pad">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Employee</th><th>Group</th><th>Check In</th><th>Check Out</th><th>Status</th></tr></thead>
+                <tbody id="dash-attendance-table"><tr><td colspan="5" class="empty-state"><i class="fas fa-inbox"></i><p>No records today</p></td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Active Zones</div></div>
+          <div class="card-body no-pad">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Zone Name</th><th>Group</th><th>Coordinates</th><th>Radius</th><th>Status</th></tr></thead>
+                <tbody id="dash-zones-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── EMPLOYEES PANEL ── -->
+      <div id="panel-employees" class="admin-panel">
+        <div class="filter-bar">
+          <div class="search-wrap"><i class="fas fa-search"></i><input type="text" class="form-control" placeholder="Search employees..." oninput="Admin.filterEmployees(this.value)" id="emp-search"></div>
+          <select class="form-select" id="emp-group-filter" onchange="Admin.filterEmployees()">
+            <option value="">All Groups</option>
+          </select>
+          <button class="btn btn-primary btn-sm" onclick="Admin.openEmployeeModal()"><i class="fas fa-plus"></i> Add Employee</button>
+        </div>
+        <div class="card">
+          <div class="card-body no-pad">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>ID</th><th>Name</th><th>Username</th><th>Group</th><th>Work Hours</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="employees-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── GROUPS PANEL ── -->
+      <div id="panel-groups" class="admin-panel">
+        <div style="margin-bottom:1rem;display:flex;justify-content:flex-end">
+          <button class="btn btn-primary btn-sm" onclick="Admin.openGroupModal()"><i class="fas fa-plus"></i> Add Group</button>
+        </div>
+        <div class="card">
+          <div class="card-body no-pad">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Color</th><th>Group Name</th><th>Description</th><th>Members</th><th>Actions</th></tr></thead>
+                <tbody id="groups-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── LOCATIONS PANEL ── -->
+      <div id="panel-locations" class="admin-panel">
+        <div class="map-layout">
+          <div class="map-container">
+            <div id="admin-map"></div>
+          </div>
+          <div class="map-sidebar">
+            <div class="map-hint">
+              <i class="fas fa-info-circle"></i>
+              <span>Click anywhere on the map to set an attendance zone. A 500m radius will be drawn automatically.</span>
+            </div>
+            <!-- Add / Edit Zone Form -->
+            <div class="zone-form" id="zone-form">
+              <h4 id="zone-form-title">New Zone</h4>
+              <div class="form-group">
+                <label class="form-label">Zone Name</label>
+                <input type="text" id="zone-name" class="form-control" placeholder="e.g. Main Site">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Assign to Group</label>
+                <select id="zone-group" class="form-control form-select">
+                  <option value="">— Select Group —</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Coordinates</label>
+                <div class="coord-display">
+                  <span id="zone-lat-display">Lat: —</span>
+                  <span id="zone-lng-display">Lng: —</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Radius</label>
+                <div style="display:flex;align-items:center;gap:0.75rem">
+                  <input type="range" id="zone-radius" min="100" max="1000" value="500" step="50" oninput="Admin.updateRadiusDisplay(this.value)" style="flex:1;accent-color:var(--accent)">
+                  <span id="zone-radius-val" style="font-weight:600;color:var(--accent);min-width:60px">500 m</span>
+                </div>
+              </div>
+              <div style="display:flex;gap:0.5rem">
+                <button class="btn btn-primary btn-sm" onclick="Admin.saveZone()" style="flex:1"><i class="fas fa-save"></i> Save Zone</button>
+                <button class="btn btn-outline btn-sm" onclick="Admin.clearZoneForm()"><i class="fas fa-times"></i></button>
+              </div>
+            </div>
+            <!-- Zone List -->
+            <div class="card" style="margin:0">
+              <div class="card-header"><div class="card-title">Saved Zones</div></div>
+              <div class="card-body" style="padding:0.75rem">
+                <div id="zone-list" class="location-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── RECORDS PANEL ── -->
+      <div id="panel-records" class="admin-panel">
+        <div class="filter-bar">
+          <div class="search-wrap"><i class="fas fa-search"></i><input type="text" class="form-control" placeholder="Search by name..." oninput="Admin.filterRecords()" id="rec-search"></div>
+          <input type="date" id="rec-date" class="form-control" style="width:160px" onchange="Admin.filterRecords()">
+          <select class="form-select" id="rec-status" onchange="Admin.filterRecords()">
+            <option value="">All Statuses</option>
+            <option value="present">Present</option>
+            <option value="late">Late</option>
+            <option value="absent">Absent</option>
+            <option value="early_leave">Early Leave</option>
+          </select>
+        </div>
+        <div class="card">
+          <div class="card-body no-pad">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Employee</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Zone</th><th>Status</th><th>Notes</th></tr></thead>
+                <tbody id="records-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── REPORTS PANEL ── -->
+      <div id="panel-reports" class="admin-panel">
+        <div class="filter-bar">
+          <select class="form-select" id="report-emp" onchange="Admin.generateReport()">
+            <option value="">All Employees</option>
+          </select>
+          <select class="form-select" id="report-month" onchange="Admin.generateReport()"></select>
+          <select class="form-select" id="report-year" onchange="Admin.generateReport()">
+            <option value="2025">2025</option>
+            <option value="2026" selected>2026</option>
+          </select>
+        </div>
+        <div class="stats-grid" id="report-stats" style="margin-bottom:1.5rem"></div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Monthly Breakdown</div></div>
+          <div class="card-body no-pad">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Employee</th><th>Days Present</th><th>Days Absent</th><th>Days Late</th><th>Early Leaves</th></tr></thead>
+                <tbody id="report-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main-area -->
+</div><!-- /page-admin -->
+
+<!-- ══════════════════════════════════════════
+     EMPLOYEE PORTAL
+══════════════════════════════════════════ -->
+<div id="page-emp" class="page">
+  <div class="emp-topbar">
+    <div class="emp-topbar-logo">
+      <svg width="28" height="28" viewBox="0 0 100 100"><polygon points="10,90 45,10 55,10 90,90 75,90 50,28 25,90" fill="#C45A28"/><rect x="22" y="68" width="56" height="8" fill="#C45A28"/></svg>
+    </div>
+    <div class="emp-topbar-name" id="emp-topbar-name">Employee Portal</div>
+    <button class="btn btn-sm btn-outline" onclick="Auth.empLogout()"><i class="fas fa-sign-out-alt"></i></button>
+  </div>
+  <div class="emp-content">
+    <div class="emp-grid">
+      <!-- Map -->
+      <div class="emp-map-wrap">
+        <div id="emp-map" style="width:100%;height:100%"></div>
+      </div>
+      <!-- Right panel -->
+      <div style="overflow-y:auto">
+        <!-- Check-in Card -->
+        <div class="checkin-card">
+          <div class="checkin-status">
+            <div class="status-dot unknown pulse" id="emp-status-dot"></div>
+            <span id="emp-status-text" style="font-size:0.9rem;font-weight:600">Locating...</span>
+          </div>
+          <div class="checkin-info" id="emp-location-info">
+            Getting your GPS location...
+          </div>
+          <button id="emp-checkin-btn" class="big-btn checkin" onclick="Emp.checkIn()" disabled>
+            <i class="fas fa-map-marker-check"></i> Check In
+          </button>
+          <button id="emp-checkout-btn" class="big-btn checkout hidden" onclick="Emp.checkOut()" style="margin-top:0.75rem">
+            <i class="fas fa-sign-out-alt"></i> Check Out
+          </button>
+        </div>
+
+        <!-- Today's Record -->
+        <div class="card" id="today-record-card">
+          <div class="card-header"><div class="card-title">Today's Record</div></div>
+          <div class="card-body" id="today-record-body">
+            <div class="empty-state" style="padding:1.5rem">
+              <i class="fas fa-calendar-day"></i>
+              <p>No record yet for today</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="emp-tabs">
+          <div class="emp-tab active" onclick="Emp.switchTab('history',this)">History</div>
+          <div class="emp-tab" onclick="Emp.switchTab('profile',this)">Profile</div>
+        </div>
+        <div id="tab-history" class="emp-tab-content active">
+          <div id="emp-history-list">
+            <div class="empty-state"><i class="fas fa-history"></i><p>No history yet</p></div>
+          </div>
+        </div>
+        <div id="tab-profile" class="emp-tab-content">
+          <div class="profile-grid" id="emp-profile-grid"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════ -->
+<!-- Employee Modal -->
+<div id="modal-employee" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="emp-modal-title">Add Employee</span>
+      <button class="modal-close" onclick="UI.closeModal('modal-employee')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="emp-modal-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Employee ID</label>
+          <input type="text" id="emp-modal-eid" class="form-control" placeholder="e.g. EMP001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" id="emp-modal-name" class="form-control" placeholder="Full name">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" id="emp-modal-user" class="form-control" placeholder="Login username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" id="emp-modal-pass" class="form-control" placeholder="Password">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="emp-modal-email" class="form-control" placeholder="Email">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="text" id="emp-modal-phone" class="form-control" placeholder="Phone">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Group</label>
+          <select id="emp-modal-group" class="form-control form-select"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select id="emp-modal-status" class="form-control form-select">
+            <option value="1">Active</option>
+            <option value="0">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Work Start</label>
+          <input type="time" id="emp-modal-start" class="form-control" value="09:00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Work End</label>
+          <input type="time" id="emp-modal-end" class="form-control" value="17:00">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Monthly Salary (SAR)</label>
+        <input type="number" id="emp-modal-salary" class="form-control" placeholder="0.00">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="UI.closeModal('modal-employee')">Cancel</button>
+      <button class="btn btn-primary" onclick="Admin.saveEmployee()">Save Employee</button>
+    </div>
+  </div>
+</div>
+
+<!-- Group Modal -->
+<div id="modal-group" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="grp-modal-title">Add Group</span>
+      <button class="modal-close" onclick="UI.closeModal('modal-group')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="grp-modal-id">
+      <div class="form-group">
+        <label class="form-label">Group Name</label>
+        <input type="text" id="grp-modal-name" class="form-control" placeholder="Group name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <input type="text" id="grp-modal-desc" class="form-control" placeholder="Short description">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Color</label>
+        <input type="color" id="grp-modal-color" class="form-control" value="#C45A28" style="height:42px;cursor:pointer">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="UI.closeModal('modal-group')">Cancel</button>
+      <button class="btn btn-primary" onclick="Admin.saveGroup()">Save Group</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-wrap"></div>
+
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════
+   DATA STORE (localStorage)
+══════════════════════════════════════════ */
+const API_URL = 'http://localhost:5000/api'; // Change to live URL later
+
+const API = {
+  getHeaders() {
+    const token = localStorage.getItem('amd_token');
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    };
+  },
+
+  async request(endpoint, method = 'GET', body = null) {
+    const config = { method, headers: this.getHeaders() };
+    if (body) config.body = JSON.stringify(body);
+    
+    try {
+      const res = await fetch(`${API_URL}${endpoint}`, config);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.msg || 'API Error');
+      return data;
+    } catch (err) {
+      console.error(err);
+      UI.toast(err.message, 'error');
+      throw err;
+    }
+  }
+};
+
+/* Seed initial data once */
+if(!localStorage.getItem('amd_seeded')){
+  const g1=DB.uid(),g2=DB.uid();
+  DB.saveGroups([
+    {id:g1,name:'Site Workers',desc:'On-site construction workers',color:'#C45A28'},
+    {id:g2,name:'Office Staff',desc:'Administrative and office employees',color:'#3498DB'}
+  ]);
+  const e1=DB.uid(),e2=DB.uid();
+  DB.saveEmployees([
+    {id:e1,eid:'EMP001',name:'Mohammed Al-Rashidi',username:'m.rashidi',password:'1234',email:'m.rashidi@amd.sa',phone:'0501234567',groupId:g1,salary:5000,workStart:'08:00',workEnd:'16:00',active:1},
+    {id:e2,eid:'EMP002',name:'Sara Al-Otaibi',username:'s.otaibi',password:'1234',email:'s.otaibi@amd.sa',phone:'0507654321',groupId:g2,salary:6000,workStart:'09:00',workEnd:'17:00',active:1}
+  ]);
+  localStorage.setItem('amd_seeded','1');
+}
+
+/* ══════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════ */
+const Auth = {
+  adminSession:null,
+  empSession:null,
+
+  adminLogin(){
+    const u=document.getElementById('admin-username').value.trim();
+    const p=document.getElementById('admin-password').value;
+    const admin=DB.getAdmins().find(a=>a.username===u&&a.password===p);
+    if(!admin){UI.showErr('admin-login-err','admin-login-err-msg','Invalid username or password');return;}
+    this.adminSession=admin;
+    document.getElementById('admin-display-name').textContent=admin.name;
+    document.getElementById('admin-avatar-initial').textContent=admin.name.charAt(0).toUpperCase();
+    App.goto('admin');
+    Admin.refresh();
+  },
+
+  adminLogout(){this.adminSession=null;App.goto('home')},
+
+  empLogin(){
+    const u=document.getElementById('emp-username').value.trim();
+    const p=document.getElementById('emp-password').value;
+    const emp=DB.getEmployees().find(e=>e.username===u&&e.password===p&&e.active);
+    if(!emp){UI.showErr('emp-login-err','emp-login-err-msg','Invalid username or password');return;}
+    this.empSession=emp;
+    document.getElementById('emp-topbar-name').textContent=emp.name;
+    App.goto('emp');
+    Emp.init();
+  },
+
+  empLogout(){this.empSession=null;Emp.cleanup();App.goto('home')},
+};
+
+/* ══════════════════════════════════════════
+   APP ROUTER
+══════════════════════════════════════════ */
+const App = {
+  current:'home',
+  goto(page){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    const el=document.getElementById('page-'+page);
+    if(el) el.classList.add('active');
+    this.current=page;
+    if(page==='locations'||page==='admin') setTimeout(()=>Maps.initAdmin(),300);
+  }
+};
+
+/* ══════════════════════════════════════════
+   UI HELPERS
+══════════════════════════════════════════ */
+const UI = {
+  togglePw(id,btn){
+    const inp=document.getElementById(id);
+    const isText=inp.type==='text';
+    inp.type=isText?'password':'text';
+    btn.querySelector('i').className=isText?'fas fa-eye':'fas fa-eye-slash';
+  },
+  showErr(divId,spanId,msg){
+    document.getElementById(divId).classList.remove('hidden');
+    document.getElementById(spanId).textContent=msg;
+  },
+  openModal(id){document.getElementById(id).classList.add('show')},
+  closeModal(id){document.getElementById(id).classList.remove('show')},
+  toggleSidebar(){
+    document.getElementById('admin-sidebar').classList.toggle('open');
+    document.getElementById('sidebar-overlay').classList.toggle('show');
+  },
+  closeSidebar(){
+    document.getElementById('admin-sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('show');
+  },
+  toast(msg,type='info'){
+    const icons={success:'fa-check-circle',error:'fa-exclamation-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
+    const t=document.createElement('div');
+    t.className=`toast ${type}`;
+    t.innerHTML=`<i class="fas ${icons[type]||icons.info}"></i><span>${msg}</span>`;
+    document.getElementById('toast-wrap').appendChild(t);
+    setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),350)},3500);
+  },
+  badge(status){
+    const map={present:'success',late:'warning',absent:'danger',early_leave:'warning'};
+    const label={present:'Present',late:'Late',absent:'Absent',early_leave:'Early Leave',pending:'Pending'};
+    const cls=map[status]||'muted';
+    return `<span class="badge badge-${cls}">${label[status]||status}</span>`;
+  },
+  statusDot(color){return `<span class="group-dot" style="background:${color}"></span>`}
+};
+
+/* ══════════════════════════════════════════
+   MAPS
+══════════════════════════════════════════ */
+const Maps = {
+  adminMap:null,
+  empMap:null,
+  tempMarker:null,
+  tempCircle:null,
+  zoneMarkers:{},
+  zoneCircles:{},
+  editingZoneId:null,
+
+  initAdmin(){
+    if(this.adminMap) return;
+    const el=document.getElementById('admin-map');
+    if(!el) return;
+    const center=CONFIG.center;
+    this.adminMap=L.map('admin-map').setView(center,13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'&copy; OpenStreetMap contributors',
+      maxZoom:19
+    }).addTo(this.adminMap);
+
+    this.adminMap.on('click',e=>{
+      if(App.current!=='admin') return;
+      const panel=document.getElementById('panel-locations');
+      if(!panel.classList.contains('active')) return;
+      this._placeTemp(e.latlng.lat,e.latlng.lng);
+    });
+    this.renderZones();
+  },
+
+  _placeTemp(lat,lng){
+    if(this.tempMarker) this.adminMap.removeLayer(this.tempMarker);
+    if(this.tempCircle) this.adminMap.removeLayer(this.tempCircle);
+    const radius=parseInt(document.getElementById('zone-radius').value)||500;
+    this.tempMarker=L.circleMarker([lat,lng],{radius:8,fillColor:'#C45A28',color:'#fff',weight:2,fillOpacity:1}).addTo(this.adminMap);
+    this.tempCircle=L.circle([lat,lng],{radius,color:'#C45A28',fillColor:'#C45A28',fillOpacity:0.1,weight:2,dashArray:'6 4'}).addTo(this.adminMap);
+    document.getElementById('zone-lat-display').textContent=`Lat: ${lat.toFixed(6)}`;
+    document.getElementById('zone-lng-display').textContent=`Lng: ${lng.toFixed(6)}`;
+    this.tempMarker._lat=lat;
+    this.tempMarker._lng=lng;
+  },
+
+  updateRadius(radius){
+    if(this.tempCircle) this.tempCircle.setRadius(radius);
+    Object.values(this.zoneCircles).forEach(c=>{/* active only */});
+  },
+
+  renderZones(){
+    if(!this.adminMap) return;
+    // clear old
+    Object.values(this.zoneMarkers).forEach(m=>this.adminMap.removeLayer(m));
+    Object.values(this.zoneCircles).forEach(c=>this.adminMap.removeLayer(c));
+    this.zoneMarkers={};this.zoneCircles={};
+
+    DB.getLocations().forEach(loc=>{
+      const groups=DB.getGroups();
+      const grp=groups.find(g=>g.id===loc.groupId);
+      const color=grp?grp.color:'#C45A28';
+      const m=L.circleMarker([loc.lat,loc.lng],{radius:10,fillColor:color,color:'#fff',weight:2,fillOpacity:1})
+        .bindPopup(`<strong>${loc.name}</strong><br>Group: ${grp?grp.name:'—'}<br>Radius: ${loc.radius}m`)
+        .addTo(this.adminMap);
+      const c=L.circle([loc.lat,loc.lng],{radius:loc.radius,color:color,fillColor:color,fillOpacity:0.08,weight:2}).addTo(this.adminMap);
+      this.zoneMarkers[loc.id]=m;
+      this.zoneCircles[loc.id]=c;
+    });
+    Admin.renderZoneList();
+  },
+
+  initEmp(lat,lng,zones,userLat,userLng){
+    const center=[lat||24.7136,lng||46.6753];
+    if(!this.empMap){
+      this.empMap=L.map('emp-map',{zoomControl:true}).setView(center,15);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OSM',maxZoom:19}).addTo(this.empMap);
+    } else {
+      this.empMap.setView(center,15);
+    }
+
+    // Clear existing layers except base tile
+    this.empMap.eachLayer(l=>{if(l instanceof L.CircleMarker||l instanceof L.Circle||l instanceof L.Marker) this.empMap.removeLayer(l);});
+
+    // Draw zones
+    zones.forEach(z=>{
+      const grp=DB.getGroups().find(g=>g.id===z.groupId);
+      const col=grp?grp.color:'#C45A28';
+      L.circle([z.lat,z.lng],{radius:z.radius,color:col,fillColor:col,fillOpacity:0.12,weight:2})
+        .bindPopup(`<strong>${z.name}</strong><br>${z.radius}m radius`)
+        .addTo(this.empMap);
+      L.circleMarker([z.lat,z.lng],{radius:8,fillColor:col,color:'#fff',weight:2,fillOpacity:1})
+        .bindPopup(`<strong>${z.name}</strong>`)
+        .addTo(this.empMap);
+    });
+
+    // Draw user
+    if(userLat&&userLng){
+      L.circleMarker([userLat,userLng],{radius:10,fillColor:'#3498DB',color:'#fff',weight:3,fillOpacity:1})
+        .bindPopup('You are here')
+        .addTo(this.empMap);
+    }
+  }
+};
+
+const CONFIG={center:[24.7136,46.6753]};
+
+/* ══════════════════════════════════════════
+   ADMIN LOGIC
+══════════════════════════════════════════ */
+const Admin = {
+  currentPanel:'dashboard',
+
+  showPanel(panel,el){
+    document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('panel-'+panel).classList.add('active');
+    document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));
+    if(el) el.classList.add('active');
+    this.currentPanel=panel;
+    const titles={dashboard:'Dashboard',employees:'Employees',groups:'Groups',locations:'Locations & Zones',records:'Attendance Records',reports:'Reports'};
+    document.getElementById('admin-panel-title').innerHTML=`${titles[panel]||panel}`;
+    UI.closeSidebar();
+
+    if(panel==='locations'){
+      setTimeout(()=>Maps.initAdmin(),200);
+      this.populateGroupSelect('zone-group');
+      this.renderZoneList();
+    }
+    if(panel==='employees'){
+      this.populateGroupSelect('emp-group-filter',true);
+      this.renderEmployees();
+    }
+    if(panel==='groups') this.renderGroups();
+    if(panel==='records'){
+      document.getElementById('rec-date').value=DB.today();
+      this.filterRecords();
+    }
+    if(panel==='reports') this.initReports();
+    if(panel==='dashboard') this.renderDashboard();
+  },
+
+  refresh(){
+    if(this.currentPanel==='dashboard') this.renderDashboard();
+    else this.showPanel(this.currentPanel);
+  },
+
+  renderDashboard(){
+    const emps=DB.getEmployees().filter(e=>e.active);
+    document.getElementById('stat-total').textContent=emps.length;
+    const today=DB.today();
+    const recs=DB.getRecords().filter(r=>r.date===today);
+    const present=recs.filter(r=>['present','late','early_leave'].includes(r.status)).length;
+    const late=recs.filter(r=>r.status==='late').length;
+    const absent=emps.length-present;
+    document.getElementById('stat-present').textContent=present;
+    document.getElementById('stat-late').textContent=late;
+    document.getElementById('stat-absent').textContent=Math.max(0,absent);
+
+    const tbody=document.getElementById('dash-attendance-table');
+    if(!recs.length){tbody.innerHTML=`<tr><td colspan="5"><div class="empty-state" style="padding:2rem"><i class="fas fa-inbox"></i><p>No attendance records today</p></div></td></tr>`;return;}
+    tbody.innerHTML=recs.slice(0,10).map(r=>{
+      const emp=DB.getEmployees().find(e=>e.id===r.employeeId)||{name:'Unknown'};
+      const grp=DB.getGroups().find(g=>g.id===emp.groupId);
+      return`<tr><td>${emp.name}</td><td>${grp?`<span class="group-dot" style="background:${grp.color}"></span> ${grp.name}`:'—'}</td><td>${DB.fmtTime(r.checkIn)}</td><td>${DB.fmtTime(r.checkOut)}</td><td>${UI.badge(r.status)}</td></tr>`;
+    }).join('');
+
+    const zones=DB.getLocations();
+    const ztbody=document.getElementById('dash-zones-table');
+    if(!zones.length){ztbody.innerHTML=`<tr><td colspan="5"><div class="empty-state" style="padding:1rem"><p>No zones defined</p></div></td></tr>`;return;}
+    ztbody.innerHTML=zones.map(z=>{
+      const grp=DB.getGroups().find(g=>g.id===z.groupId);
+      return`<tr><td><strong>${z.name}</strong></td><td>${grp?`<span class="group-dot" style="background:${grp.color}"></span> ${grp.name}`:'—'}</td><td style="font-size:0.8rem;color:var(--text-muted)">${z.lat.toFixed(5)}, ${z.lng.toFixed(5)}</td><td>${z.radius}m</td><td><span class="badge badge-success">Active</span></td></tr>`;
+    }).join('');
+  },
+
+  renderEmployees(filter='',groupFilter=''){
+    let emps=DB.getEmployees();
+    if(filter) emps=emps.filter(e=>e.name.toLowerCase().includes(filter.toLowerCase())||e.eid.toLowerCase().includes(filter.toLowerCase()));
+    if(groupFilter) emps=emps.filter(e=>e.groupId===groupFilter);
+    const tbody=document.getElementById('employees-table');
+    if(!emps.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state" style="padding:2rem"><i class="fas fa-users"></i><p>No employees found</p></div></td></tr>`;return;}
+    const groups=DB.getGroups();
+    tbody.innerHTML=emps.map(e=>{
+      const grp=groups.find(g=>g.id===e.groupId);
+      return`<tr>
+        <td><code style="color:var(--accent);font-size:0.8rem">${e.eid}</code></td>
+        <td><strong>${e.name}</strong></td>
+        <td style="color:var(--text-muted)">${e.username}</td>
+        <td>${grp?`${UI.statusDot(grp.color)} ${grp.name}`:'—'}</td>
+        <td style="font-size:0.8rem;color:var(--text-muted)">${e.workStart||'—'} – ${e.workEnd||'—'}</td>
+        <td>${e.active?'<span class="badge badge-success">Active</span>':'<span class="badge badge-muted">Inactive</span>'}</td>
+        <td>
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.openEmployeeModal('${e.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteEmployee('${e.id}')" title="Delete" style="color:var(--danger)"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>`;
+    }).join('');
+  },
+
+  filterEmployees(val){
+    const search=val||document.getElementById('emp-search')?.value||'';
+    const grp=document.getElementById('emp-group-filter')?.value||'';
+    this.renderEmployees(search,grp);
+  },
+
+  openEmployeeModal(id){
+    const groups=DB.getGroups();
+    const sel=document.getElementById('emp-modal-group');
+    sel.innerHTML=groups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+    if(id){
+      const e=DB.getEmployees().find(x=>x.id===id);
+      if(!e) return;
+      document.getElementById('emp-modal-title').textContent='Edit Employee';
+      document.getElementById('emp-modal-id').value=e.id;
+      document.getElementById('emp-modal-eid').value=e.eid;
+      document.getElementById('emp-modal-name').value=e.name;
+      document.getElementById('emp-modal-user').value=e.username;
+      document.getElementById('emp-modal-pass').value=e.password;
+      document.getElementById('emp-modal-email').value=e.email||'';
+      document.getElementById('emp-modal-phone').value=e.phone||'';
+      document.getElementById('emp-modal-group').value=e.groupId||'';
+      document.getElementById('emp-modal-status').value=e.active?'1':'0';
+      document.getElementById('emp-modal-start').value=e.workStart||'09:00';
+      document.getElementById('emp-modal-end').value=e.workEnd||'17:00';
+      document.getElementById('emp-modal-salary').value=e.salary||'';
+    } else {
+      document.getElementById('emp-modal-title').textContent='Add Employee';
+      document.getElementById('emp-modal-id').value='';
+      ['eid','name','user','pass','email','phone','salary'].forEach(f=>document.getElementById('emp-modal-'+f).value='');
+      document.getElementById('emp-modal-status').value='1';
+      document.getElementById('emp-modal-start').value='09:00';
+      document.getElementById('emp-modal-end').value='17:00';
+    }
+    UI.openModal('modal-employee');
+  },
+
+  saveEmployee(){
+    const id=document.getElementById('emp-modal-id').value;
+    const data={
+      id:id||DB.uid(),
+      eid:document.getElementById('emp-modal-eid').value.trim(),
+      name:document.getElementById('emp-modal-name').value.trim(),
+      username:document.getElementById('emp-modal-user').value.trim(),
+      password:document.getElementById('emp-modal-pass').value,
+      email:document.getElementById('emp-modal-email').value.trim(),
+      phone:document.getElementById('emp-modal-phone').value.trim(),
+      groupId:document.getElementById('emp-modal-group').value,
+      active:parseInt(document.getElementById('emp-modal-status').value),
+      workStart:document.getElementById('emp-modal-start').value,
+      workEnd:document.getElementById('emp-modal-end').value,
+      salary:parseFloat(document.getElementById('emp-modal-salary').value)||0,
+    };
+    if(!data.eid||!data.name||!data.username||(!id&&!data.password)){UI.toast('Please fill required fields','error');return;}
+    let emps=DB.getEmployees();
+    if(id) emps=emps.map(e=>e.id===id?data:e);
+    else emps.push(data);
+    DB.saveEmployees(emps);
+    UI.closeModal('modal-employee');
+    this.renderEmployees();
+    UI.toast(id?'Employee updated':'Employee added','success');
+  },
+
+  deleteEmployee(id){
+    if(!confirm('Delete this employee?')) return;
+    DB.saveEmployees(DB.getEmployees().filter(e=>e.id!==id));
+    this.renderEmployees();
+    UI.toast('Employee deleted','warning');
+  },
+
+  renderGroups(){
+    const emps=DB.getEmployees();
+    const tbody=document.getElementById('groups-table');
+    const groups=DB.getGroups();
+    if(!groups.length){tbody.innerHTML=`<tr><td colspan="5"><div class="empty-state" style="padding:2rem"><i class="fas fa-layer-group"></i><p>No groups yet</p></div></td></tr>`;return;}
+    tbody.innerHTML=groups.map(g=>{
+      const count=emps.filter(e=>e.groupId===g.id).length;
+      return`<tr>
+        <td><span class="group-dot" style="background:${g.color};width:20px;height:20px;display:inline-block;border-radius:50%"></span></td>
+        <td><strong>${g.name}</strong></td>
+        <td style="color:var(--text-muted);font-size:0.85rem">${g.desc||'—'}</td>
+        <td><span class="badge badge-info">${count} members</span></td>
+        <td>
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.openGroupModal('${g.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteGroup('${g.id}')" title="Delete" style="color:var(--danger)"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>`;
+    }).join('');
+  },
+
+  openGroupModal(id){
+    if(id){
+      const g=DB.getGroups().find(x=>x.id===id);
+      if(!g) return;
+      document.getElementById('grp-modal-title').textContent='Edit Group';
+      document.getElementById('grp-modal-id').value=g.id;
+      document.getElementById('grp-modal-name').value=g.name;
+      document.getElementById('grp-modal-desc').value=g.desc||'';
+      document.getElementById('grp-modal-color').value=g.color||'#C45A28';
+    } else {
+      document.getElementById('grp-modal-title').textContent='Add Group';
+      document.getElementById('grp-modal-id').value='';
+      document.getElementById('grp-modal-name').value='';
+      document.getElementById('grp-modal-desc').value='';
+      document.getElementById('grp-modal-color').value='#C45A28';
+    }
+    UI.openModal('modal-group');
+  },
+
+  saveGroup(){
+    const id=document.getElementById('grp-modal-id').value;
+    const data={
+      id:id||DB.uid(),
+      name:document.getElementById('grp-modal-name').value.trim(),
+      desc:document.getElementById('grp-modal-desc').value.trim(),
+      color:document.getElementById('grp-modal-color').value,
+    };
+    if(!data.name){UI.toast('Group name required','error');return;}
+    let groups=DB.getGroups();
+    if(id) groups=groups.map(g=>g.id===id?data:g);
+    else groups.push(data);
+    DB.saveGroups(groups);
+    UI.closeModal('modal-group');
+    this.renderGroups();
+    UI.toast(id?'Group updated':'Group added','success');
+  },
+
+  deleteGroup(id){
+    if(!confirm('Delete this group?')) return;
+    DB.saveGroups(DB.getGroups().filter(g=>g.id!==id));
+    this.renderGroups();
+    UI.toast('Group deleted','warning');
+  },
+
+  populateGroupSelect(selId,addAll){
+    const sel=document.getElementById(selId);
+    if(!sel) return;
+    const groups=DB.getGroups();
+    sel.innerHTML=(addAll?'<option value="">All Groups</option>':'')+groups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+  },
+
+  renderZoneList(){
+    const zones=DB.getLocations();
+    const groups=DB.getGroups();
+    const wrap=document.getElementById('zone-list');
+    if(!wrap) return;
+    if(!zones.length){wrap.innerHTML='<div class="empty-state" style="padding:1rem"><i class="fas fa-map-marker-alt"></i><p>No zones yet. Click the map.</p></div>';return;}
+    wrap.innerHTML=zones.map(z=>{
+      const grp=groups.find(g=>g.id===z.groupId);
+      return`<div class="location-item" id="zone-item-${z.id}">
+        <div class="location-dot" style="background:${grp?grp.color:'#C45A28'}"></div>
+        <div class="location-item-info">
+          <h5>${z.name}</h5>
+          <small>${grp?grp.name:'No group'} · ${z.radius}m radius</small>
+        </div>
+        <div class="location-item-actions">
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.focusZone('${z.id}')" title="Center map"><i class="fas fa-crosshairs"></i></button>
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteZone('${z.id}')" title="Delete" style="color:var(--danger)"><i class="fas fa-trash"></i></button>
+        </div>
+      </div>`;
+    }).join('');
+  },
+
+  updateRadiusDisplay(v){
+    document.getElementById('zone-radius-val').textContent=v+' m';
+    if(Maps.tempCircle) Maps.tempCircle.setRadius(parseInt(v));
+  },
+
+  saveZone(){
+    const name=document.getElementById('zone-name').value.trim();
+    const groupId=document.getElementById('zone-group').value;
+    const radius=parseInt(document.getElementById('zone-radius').value)||500;
+    if(!name){UI.toast('Zone name required','error');return;}
+    if(!Maps.tempMarker||!Maps.tempMarker._lat){UI.toast('Click the map to set location','error');return;}
+    const zone={
+      id:DB.uid(),
+      name,
+      groupId,
+      lat:Maps.tempMarker._lat,
+      lng:Maps.tempMarker._lng,
+      radius,
+    };
+    const locs=DB.getLocations();
+    locs.push(zone);
+    DB.saveLocations(locs);
+    // Remove temp
+    if(Maps.tempMarker){Maps.adminMap.removeLayer(Maps.tempMarker);Maps.tempMarker=null;}
+    if(Maps.tempCircle){Maps.adminMap.removeLayer(Maps.tempCircle);Maps.tempCircle=null;}
+    document.getElementById('zone-name').value='';
+    document.getElementById('zone-lat-display').textContent='Lat: —';
+    document.getElementById('zone-lng-display').textContent='Lng: —';
+    Maps.renderZones();
+    UI.toast('Zone saved successfully','success');
+  },
+
+  clearZoneForm(){
+    if(Maps.tempMarker){Maps.adminMap.removeLayer(Maps.tempMarker);Maps.tempMarker=null;}
+    if(Maps.tempCircle){Maps.adminMap.removeLayer(Maps.tempCircle);Maps.tempCircle=null;}
+    document.getElementById('zone-name').value='';
+    document.getElementById('zone-lat-display').textContent='Lat: —';
+    document.getElementById('zone-lng-display').textContent='Lng: —';
+  },
+
+  focusZone(id){
+    const z=DB.getLocations().find(l=>l.id===id);
+    if(!z||!Maps.adminMap) return;
+    Maps.adminMap.setView([z.lat,z.lng],16);
+  },
+
+  deleteZone(id){
+    if(!confirm('Delete this zone?')) return;
+    DB.saveLocations(DB.getLocations().filter(l=>l.id!==id));
+    Maps.renderZones();
+    UI.toast('Zone deleted','warning');
+  },
+
+  filterRecords(){
+    const search=(document.getElementById('rec-search')?.value||'').toLowerCase();
+    const date=document.getElementById('rec-date')?.value||'';
+    const status=document.getElementById('rec-status')?.value||'';
+    let recs=DB.getRecords();
+    const emps=DB.getEmployees();
+    if(date) recs=recs.filter(r=>r.date===date);
+    if(status) recs=recs.filter(r=>r.status===status);
+    if(search) recs=recs.filter(r=>{
+      const e=emps.find(x=>x.id===r.employeeId);
+      return e&&e.name.toLowerCase().includes(search);
+    });
+    recs.sort((a,b)=>new Date(b.checkIn||b.date)-new Date(a.checkIn||a.date));
+    const tbody=document.getElementById('records-table');
+    if(!recs.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state" style="padding:2rem"><i class="fas fa-clipboard-list"></i><p>No records found</p></div></td></tr>`;return;}
+    const locs=DB.getLocations();
+    tbody.innerHTML=recs.map(r=>{
+      const emp=emps.find(e=>e.id===r.employeeId)||{name:'Unknown'};
+      const loc=locs.find(l=>l.id===r.zoneId);
+      return`<tr>
+        <td><strong>${emp.name}</strong><br><small style="color:var(--text-muted)">${emp.eid||''}</small></td>
+        <td>${DB.fmtDate(r.date)}</td>
+        <td>${DB.fmtTime(r.checkIn)}</td>
+        <td>${DB.fmtTime(r.checkOut)}</td>
+        <td style="font-size:0.8rem;color:var(--text-muted)">${loc?loc.name:'—'}</td>
+        <td>${UI.badge(r.status)}</td>
+        <td style="font-size:0.8rem;color:var(--text-muted)">${r.notes||'—'}</td>
+      </tr>`;
+    }).join('');
+  },
+
+  initReports(){
+    const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const msel=document.getElementById('report-month');
+    const now=new Date();
+    msel.innerHTML=months.map((m,i)=>`<option value="${i+1}" ${i===now.getMonth()?'selected':''}>${m}</option>`).join('');
+    const esel=document.getElementById('report-emp');
+    esel.innerHTML='<option value="">All Employees</option>'+DB.getEmployees().map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+    this.generateReport();
+  },
+
+  generateReport(){
+    const year=parseInt(document.getElementById('report-year').value);
+    const month=parseInt(document.getElementById('report-month').value);
+    const empId=document.getElementById('report-emp').value;
+    const start=`${year}-${String(month).padStart(2,'0')}-01`;
+    const end=new Date(year,month,0).toISOString().split('T')[0];
+    let recs=DB.getRecords().filter(r=>r.date>=start&&r.date<=end);
+    let emps=DB.getEmployees().filter(e=>e.active);
+    if(empId){recs=recs.filter(r=>r.employeeId===empId);emps=emps.filter(e=>e.id===empId);}
+
+    const total=recs.length;
+    const present=recs.filter(r=>['present','late','early_leave'].includes(r.status)).length;
+    const late=recs.filter(r=>r.status==='late').length;
+    const absent=recs.filter(r=>r.status==='absent').length;
+
+    document.getElementById('report-stats').innerHTML=`
+      <div class="stat-card" data-color="accent"><div class="stat-label">Total Records</div><div class="stat-value">${total}</div><i class="fas fa-list stat-icon"></i></div>
+      <div class="stat-card" data-color="success"><div class="stat-label">Present Days</div><div class="stat-value">${present}</div><i class="fas fa-check stat-icon"></i></div>
+      <div class="stat-card" data-color="warning"><div class="stat-label">Late Days</div><div class="stat-value">${late}</div><i class="fas fa-clock stat-icon"></i></div>
+      <div class="stat-card" data-color="danger"><div class="stat-label">Absent Days</div><div class="stat-value">${absent}</div><i class="fas fa-times stat-icon"></i></div>
+    `;
+
+    const tbody=document.getElementById('report-table');
+    const empStats=emps.map(e=>{
+      const er=recs.filter(r=>r.employeeId===e.id);
+      return{
+        name:e.name,
+        present:er.filter(r=>['present','late','early_leave'].includes(r.status)).length,
+        absent:er.filter(r=>r.status==='absent').length,
+        late:er.filter(r=>r.status==='late').length,
+        early:er.filter(r=>r.status==='early_leave').length,
+      };
+    });
+    if(!empStats.length){tbody.innerHTML=`<tr><td colspan="5"><div class="empty-state" style="padding:1.5rem"><p>No data for this period</p></div></td></tr>`;return;}
+    tbody.innerHTML=empStats.map(s=>`<tr>
+      <td><strong>${s.name}</strong></td>
+      <td>${s.present}</td>
+      <td>${s.absent}</td>
+      <td>${s.late}</td>
+      <td>${s.early}</td>
+    </tr>`).join('');
+  }
+};
+
+/* ══════════════════════════════════════════
+   EMPLOYEE PORTAL LOGIC
+══════════════════════════════════════════ */
+const Emp = {
+  watchId:null,
+  currentPos:null,
+  assignedZones:[],
+  currentRecord:null,
+  nearestZone:null,
+
+  init(){
+    const emp=Auth.empSession;
+    if(!emp) return;
+
+    // Load assigned zones
+    this.assignedZones=DB.getLocations().filter(z=>z.groupId===emp.groupId);
+
+    // Load today's record
+    const today=DB.today();
+    this.currentRecord=DB.getRecords().find(r=>r.employeeId===emp.id&&r.date===today)||null;
+
+    this.renderTodayRecord();
+    this.renderHistory();
+    this.renderProfile();
+    this.updateButtons();
+    this.startTracking();
+  },
+
+  cleanup(){
+    if(this.watchId!==null){navigator.geolocation.clearWatch(this.watchId);this.watchId=null;}
+    this.currentPos=null;
+  },
+
+  startTracking(){
+    document.getElementById('emp-status-text').textContent='Locating...';
+    document.getElementById('emp-status-dot').className='status-dot unknown pulse';
+
+    if(!navigator.geolocation){
+      document.getElementById('emp-location-info').textContent='Geolocation not supported on this device.';
+      return;
+    }
+    this.watchId=navigator.geolocation.watchPosition(
+      pos=>{
+        this.currentPos={lat:pos.coords.latitude,lng:pos.coords.longitude,acc:pos.coords.accuracy};
+        this.checkZone();
+        // Update map
+        Maps.initEmp(
+          this.assignedZones[0]?.lat||pos.coords.latitude,
+          this.assignedZones[0]?.lng||pos.coords.longitude,
+          this.assignedZones,
+          pos.coords.latitude,
+          pos.coords.longitude
+        );
+      },
+      err=>{
+        document.getElementById('emp-status-text').textContent='Location unavailable';
+        document.getElementById('emp-status-dot').className='status-dot outside';
+        document.getElementById('emp-location-info').textContent=this.geoError(err);
+        // Still init map
+        if(this.assignedZones.length){
+          Maps.initEmp(this.assignedZones[0].lat,this.assignedZones[0].lng,this.assignedZones,null,null);
+        } else {
+          Maps.initEmp(CONFIG.center[0],CONFIG.center[1],[],null,null);
+        }
+      },
+      {enableHighAccuracy:true,timeout:15000,maximumAge:5000}
+    );
+  },
+
+  checkZone(){
+    if(!this.currentPos||!this.assignedZones.length){
+      document.getElementById('emp-status-text').textContent='No zone assigned';
+      document.getElementById('emp-status-dot').className='status-dot outside';
+      document.getElementById('emp-location-info').innerHTML=`<strong>No attendance zones</strong> are assigned to your group. Contact your administrator.`;
+      return;
+    }
+
+    let closest=null,closestDist=Infinity,insideZone=null;
+    this.assignedZones.forEach(z=>{
+      const d=this.haversine(this.currentPos.lat,this.currentPos.lng,z.lat,z.lng);
+      if(d<closestDist){closestDist=d;closest=z;}
+      if(d<=z.radius&&!insideZone) insideZone=z;
+    });
+
+    this.nearestZone=closest;
+    const dist=Math.round(closestDist);
+
+    if(insideZone){
+      document.getElementById('emp-status-dot').className='status-dot inside pulse';
+      document.getElementById('emp-status-text').textContent='Within Zone ✓';
+      document.getElementById('emp-location-info').innerHTML=
+        `You are inside <strong>${insideZone.name}</strong>.<br>Distance from center: <strong>${dist}m</strong> / ${insideZone.radius}m radius.<br>GPS accuracy: ±${Math.round(this.currentPos.acc||0)}m`;
+    } else {
+      document.getElementById('emp-status-dot').className='status-dot outside pulse';
+      document.getElementById('emp-status-text').textContent='Outside Zone';
+      document.getElementById('emp-location-info').innerHTML=
+        `You are <strong>${dist}m away</strong> from the nearest zone.<br>Required zone: <strong>${closest?.name||'—'}</strong><br>You must be within <strong>${closest?.radius||500}m</strong> to check in.`;
+    }
+
+    this.updateButtons(!!insideZone);
+  },
+
+  updateButtons(insideZone){
+    const rec=this.currentRecord;
+    const checkinBtn=document.getElementById('emp-checkin-btn');
+    const checkoutBtn=document.getElementById('emp-checkout-btn');
+
+    if(!rec){
+      checkinBtn.classList.remove('hidden');
+      checkoutBtn.classList.add('hidden');
+      checkinBtn.disabled=!insideZone;
+    } else if(rec&&!rec.checkOut){
+      checkinBtn.classList.add('hidden');
+      checkoutBtn.classList.remove('hidden');
+      checkoutBtn.disabled=!insideZone;
+    } else {
+      checkinBtn.classList.add('hidden');
+      checkoutBtn.classList.add('hidden');
+    }
+  },
+
+  checkIn(){
+    if(!this.currentPos){UI.toast('Location not available','error');return;}
+    const emp=Auth.empSession;
+    const today=DB.today();
+
+    // Determine status
+    let status='present',notes='';
+    if(emp.workStart){
+      const now=new Date();
+      const startParts=emp.workStart.split(':').map(Number);
+      const start=new Date();start.setHours(startParts[0],startParts[1],0,0);
+      const diffMin=Math.round((now-start)/60000);
+      if(diffMin>5){status='late';notes=`Late by ${diffMin} minutes`;}
+    }
+
+    // Find active zone
+    let zoneId=this.nearestZone?.id;
+    let insideZone=null;
+    this.assignedZones.forEach(z=>{
+      const d=this.haversine(this.currentPos.lat,this.currentPos.lng,z.lat,z.lng);
+      if(d<=z.radius) insideZone=z;
+    });
+    if(insideZone) zoneId=insideZone.id;
+
+    const rec={
+      id:DB.uid(),
+      employeeId:emp.id,
+      date:today,
+      checkIn:DB.nowISO(),
+      checkOut:null,
+      checkInLat:this.currentPos.lat,
+      checkInLng:this.currentPos.lng,
+      zoneId:zoneId||null,
+      status,
+      notes
+    };
+    const recs=DB.getRecords();
+    recs.push(rec);
+    DB.saveRecords(recs);
+    this.currentRecord=rec;
+    this.renderTodayRecord();
+    this.updateButtons(true);
+    this.renderHistory();
+    UI.toast(`Checked in successfully${status==='late'?` (${notes})`:''}`,status==='late'?'warning':'success');
+  },
+
+  checkOut(){
+    if(!this.currentRecord){return;}
+    if(!this.currentPos){UI.toast('Location not available','error');return;}
+    const emp=Auth.empSession;
+    let notes=this.currentRecord.notes||'';
+    let status=this.currentRecord.status;
+
+    // Check early leave
+    if(emp.workEnd){
+      const now=new Date();
+      const endParts=emp.workEnd.split(':').map(Number);
+      const end=new Date();end.setHours(endParts[0],endParts[1],0,0);
+      const diffMin=Math.round((end-now)/60000);
+      if(diffMin>5){
+        if(status==='present'||status==='late') status='early_leave';
+        notes+=(notes?' | ':'')+`Early leave by ${diffMin} minutes`;
+      }
+    }
+
+    const recs=DB.getRecords().map(r=>{
+      if(r.id===this.currentRecord.id){
+        return{...r,checkOut:DB.nowISO(),checkOutLat:this.currentPos.lat,checkOutLng:this.currentPos.lng,status,notes};
+      }
+      return r;
+    });
+    DB.saveRecords(recs);
+    this.currentRecord={...this.currentRecord,checkOut:DB.nowISO(),status,notes};
+    this.renderTodayRecord();
+    this.updateButtons(false);
+    this.renderHistory();
+    UI.toast('Checked out successfully','success');
+  },
+
+  renderTodayRecord(){
+    const rec=this.currentRecord;
+    const body=document.getElementById('today-record-body');
+    if(!rec){
+      body.innerHTML=`<div class="empty-state" style="padding:1.5rem"><i class="fas fa-calendar-day"></i><p>No record yet for today</p></div>`;
+      return;
+    }
+    const loc=DB.getLocations().find(l=>l.id===rec.zoneId);
+    body.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+        <div class="profile-field"><label>Check In</label><span>${DB.fmtTime(rec.checkIn)}</span></div>
+        <div class="profile-field"><label>Check Out</label><span>${DB.fmtTime(rec.checkOut)}</span></div>
+        <div class="profile-field"><label>Status</label><span>${UI.badge(rec.status)}</span></div>
+        <div class="profile-field"><label>Zone</label><span style="font-size:0.85rem">${loc?loc.name:'—'}</span></div>
+        ${rec.notes?`<div class="profile-field" style="grid-column:1/-1"><label>Notes</label><span style="font-size:0.85rem;color:var(--warning)">${rec.notes}</span></div>`:''}
+      </div>
+    `;
+  },
+
+  renderHistory(){
+    const emp=Auth.empSession;
+    const recs=DB.getRecords().filter(r=>r.employeeId===emp.id).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,20);
+    const wrap=document.getElementById('emp-history-list');
+    if(!recs.length){wrap.innerHTML=`<div class="empty-state"><i class="fas fa-history"></i><p>No attendance history yet</p></div>`;return;}
+    wrap.innerHTML=recs.map(r=>`
+      <div class="history-row">
+        <div>
+          <div class="history-date">${DB.fmtDate(r.date)}</div>
+          <div class="history-times">In: ${DB.fmtTime(r.checkIn)} &nbsp;|&nbsp; Out: ${DB.fmtTime(r.checkOut)}</div>
+        </div>
+        <div class="history-status">${UI.badge(r.status)}</div>
+      </div>
+    `).join('');
+  },
+
+  renderProfile(){
+    const emp=Auth.empSession;
+    const grp=DB.getGroups().find(g=>g.id===emp.groupId);
+    document.getElementById('emp-profile-grid').innerHTML=`
+      <div class="profile-field"><label>Employee ID</label><span>${emp.eid||'—'}</span></div>
+      <div class="profile-field"><label>Name</label><span>${emp.name}</span></div>
+      <div class="profile-field"><label>Username</label><span>${emp.username}</span></div>
+      <div class="profile-field"><label>Group</label><span>${grp?`<span class="group-dot" style="background:${grp.color}"></span> ${grp.name}`:'—'}</span></div>
+      <div class="profile-field"><label>Work Hours</label><span>${emp.workStart||'—'} – ${emp.workEnd||'—'}</span></div>
+      <div class="profile-field"><label>Email</label><span style="font-size:0.8rem">${emp.email||'—'}</span></div>
+    `;
+  },
+
+  switchTab(tab,el){
+    document.querySelectorAll('.emp-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.emp-tab-content').forEach(c=>c.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('tab-'+tab).classList.add('active');
+  },
+
+  haversine(lat1,lon1,lat2,lon2){
+    const R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+    const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  },
+
+  geoError(e){
+    if(e.code===1) return 'Location permission denied. Please allow location access.';
+    if(e.code===2) return 'Location unavailable. Check device GPS.';
+    if(e.code===3) return 'Location request timed out. Try again.';
+    return 'Unknown location error.';
+  }
+};
+
+/* ══════════════════════════════════════════
+   KEYBOARD SHORTCUTS
+══════════════════════════════════════════ */
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    if(App.current==='admin-login') Auth.adminLogin();
+    if(App.current==='emp-login') Auth.empLogin();
+  }
+  if(e.key==='Escape'){
+    document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));
+  }
+});
+
+/* init */
+document.addEventListener('DOMContentLoaded',()=>{
+  // set today in records filter
+  const d=document.getElementById('rec-date');
+  if(d) d.value=DB.today();
+});
+</script>
+</body>
+</html>
