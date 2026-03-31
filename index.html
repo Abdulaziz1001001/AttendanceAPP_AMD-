@@ -910,13 +910,14 @@ tbody tr:hover td{background:var(--surface2)}
 
 <!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 'use strict';
 
 /* ══════════════════════════════════════════
-   DATA STORE (localStorage)
+   API & DATA STORE (Hybrid Mode)
 ══════════════════════════════════════════ */
-const API_URL = 'http://localhost:5000/api'; // Change to live URL later
+const API_URL = 'https://attendanceapp-50no.onrender.com/api'; // السيرفر الخاص بك
 
 const API = {
   getHeaders() {
@@ -926,11 +927,9 @@ const API = {
       ...(token ? { 'Authorization': `Bearer ${token}` } : {})
     };
   },
-
   async request(endpoint, method = 'GET', body = null) {
     const config = { method, headers: this.getHeaders() };
     if (body) config.body = JSON.stringify(body);
-    
     try {
       const res = await fetch(`${API_URL}${endpoint}`, config);
       const data = await res.json();
@@ -938,13 +937,31 @@ const API = {
       return data;
     } catch (err) {
       console.error(err);
-      UI.toast(err.message, 'error');
       throw err;
     }
   }
 };
 
-/* Seed initial data once */
+// تم استرجاع هذا الكائن لأن النظام يعتمد عليه في حساب الوقت والتواريخ وتنسيقها
+const DB = {
+  _get(k){try{return JSON.parse(localStorage.getItem('amd_'+k))||null}catch{return null}},
+  _set(k,v){localStorage.setItem('amd_'+k,JSON.stringify(v))},
+  getEmployees(){return this._get('employees')||[]},
+  getGroups(){return this._get('groups')||[{id:'g1',name:'General Workers',desc:'Default',color:'#C45A28'}]},
+  getLocations(){return this._get('locations')||[]},
+  getRecords(){return this._get('records')||[]},
+  saveEmployees(d){this._set('employees',d)},
+  saveGroups(d){this._set('groups',d)},
+  saveLocations(d){this._set('locations',d)},
+  saveRecords(d){this._set('records',d)},
+  uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)},
+  today(){return new Date().toISOString().split('T')[0]},
+  nowISO(){return new Date().toISOString()},
+  fmtTime(iso){if(!iso)return '—';const d=new Date(iso);return d.toLocaleTimeString('en-SA',{hour:'2-digit',minute:'2-digit'})},
+  fmtDate(iso){if(!iso)return '—';return new Date(iso).toLocaleDateString('en-SA')},
+};
+
+/* Seed initial local data once */
 if(!localStorage.getItem('amd_seeded')){
   const g1=DB.uid(),g2=DB.uid();
   DB.saveGroups([
@@ -960,7 +977,7 @@ if(!localStorage.getItem('amd_seeded')){
 }
 
 /* ══════════════════════════════════════════
-   AUTH
+   AUTH (Connected to Render API)
 ══════════════════════════════════════════ */
 const Auth = {
   adminSession: null,
@@ -970,17 +987,13 @@ const Auth = {
     const u = document.getElementById('admin-username').value.trim();
     const p = document.getElementById('admin-password').value;
     try {
-      // إرسال الطلب للسيرفر بدلاً من البحث في DB
       const data = await API.request('/auth/admin-login', 'POST', { username: u, password: p });
-      
-      localStorage.setItem('amd_token', data.token); // حفظ التوكن
+      localStorage.setItem('amd_token', data.token); 
       this.adminSession = data.user;
-      
       document.getElementById('admin-display-name').textContent = data.user.name;
       document.getElementById('admin-avatar-initial').textContent = data.user.name.charAt(0).toUpperCase();
-      
       App.goto('admin');
-      Admin.refresh(); // سنقوم بتحديث هذه الدالة لاحقاً أيضاً
+      Admin.refresh(); 
     } catch (err) {
       UI.showErr('admin-login-err', 'admin-login-err-msg', err.message || 'Invalid username or password');
     }
@@ -988,7 +1001,7 @@ const Auth = {
 
   adminLogout() {
     this.adminSession = null;
-    localStorage.removeItem('amd_token'); // مسح التوكن عند تسجيل الخروج
+    localStorage.removeItem('amd_token');
     App.goto('home');
   },
 
@@ -996,14 +1009,10 @@ const Auth = {
     const u = document.getElementById('emp-username').value.trim();
     const p = document.getElementById('emp-password').value;
     try {
-      // إرسال الطلب للسيرفر
       const data = await API.request('/auth/emp-login', 'POST', { username: u, password: p });
-      
       localStorage.setItem('amd_token', data.token);
       this.empSession = data.user;
-      
       document.getElementById('emp-topbar-name').textContent = data.user.name;
-      
       App.goto('emp');
       Emp.init();
     } catch (err) {
@@ -1032,6 +1041,7 @@ const App = {
     if (page === 'locations' || page === 'admin') setTimeout(() => Maps.initAdmin(), 300);
   }
 };
+
 /* ══════════════════════════════════════════
    UI HELPERS
 ══════════════════════════════════════════ */
@@ -1077,29 +1087,17 @@ const UI = {
    MAPS
 ══════════════════════════════════════════ */
 const Maps = {
-  adminMap:null,
-  empMap:null,
-  tempMarker:null,
-  tempCircle:null,
-  zoneMarkers:{},
-  zoneCircles:{},
-  editingZoneId:null,
+  adminMap:null, empMap:null, tempMarker:null, tempCircle:null,
+  zoneMarkers:{}, zoneCircles:{}, editingZoneId:null,
 
   initAdmin(){
     if(this.adminMap) return;
     const el=document.getElementById('admin-map');
     if(!el) return;
-    const center=CONFIG.center;
-    this.adminMap=L.map('admin-map').setView(center,13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
-      attribution:'&copy; OpenStreetMap contributors',
-      maxZoom:19
-    }).addTo(this.adminMap);
-
+    this.adminMap=L.map('admin-map').setView(CONFIG.center,13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OSM',maxZoom:19}).addTo(this.adminMap);
     this.adminMap.on('click',e=>{
-      if(App.current!=='admin') return;
-      const panel=document.getElementById('panel-locations');
-      if(!panel.classList.contains('active')) return;
+      if(App.current!=='admin' || !document.getElementById('panel-locations').classList.contains('active')) return;
       this._placeTemp(e.latlng.lat,e.latlng.lng);
     });
     this.renderZones();
@@ -1113,32 +1111,22 @@ const Maps = {
     this.tempCircle=L.circle([lat,lng],{radius,color:'#C45A28',fillColor:'#C45A28',fillOpacity:0.1,weight:2,dashArray:'6 4'}).addTo(this.adminMap);
     document.getElementById('zone-lat-display').textContent=`Lat: ${lat.toFixed(6)}`;
     document.getElementById('zone-lng-display').textContent=`Lng: ${lng.toFixed(6)}`;
-    this.tempMarker._lat=lat;
-    this.tempMarker._lng=lng;
-  },
-
-  updateRadius(radius){
-    if(this.tempCircle) this.tempCircle.setRadius(radius);
-    Object.values(this.zoneCircles).forEach(c=>{/* active only */});
+    this.tempMarker._lat=lat; this.tempMarker._lng=lng;
   },
 
   renderZones(){
     if(!this.adminMap) return;
-    // clear old
     Object.values(this.zoneMarkers).forEach(m=>this.adminMap.removeLayer(m));
     Object.values(this.zoneCircles).forEach(c=>this.adminMap.removeLayer(c));
-    this.zoneMarkers={};this.zoneCircles={};
+    this.zoneMarkers={}; this.zoneCircles={};
 
     DB.getLocations().forEach(loc=>{
-      const groups=DB.getGroups();
-      const grp=groups.find(g=>g.id===loc.groupId);
+      const grp=DB.getGroups().find(g=>g.id===loc.groupId);
       const color=grp?grp.color:'#C45A28';
       const m=L.circleMarker([loc.lat,loc.lng],{radius:10,fillColor:color,color:'#fff',weight:2,fillOpacity:1})
-        .bindPopup(`<strong>${loc.name}</strong><br>Group: ${grp?grp.name:'—'}<br>Radius: ${loc.radius}m`)
-        .addTo(this.adminMap);
+        .bindPopup(`<strong>${loc.name}</strong><br>Radius: ${loc.radius}m`).addTo(this.adminMap);
       const c=L.circle([loc.lat,loc.lng],{radius:loc.radius,color:color,fillColor:color,fillOpacity:0.08,weight:2}).addTo(this.adminMap);
-      this.zoneMarkers[loc.id]=m;
-      this.zoneCircles[loc.id]=c;
+      this.zoneMarkers[loc.id]=m; this.zoneCircles[loc.id]=c;
     });
     Admin.renderZoneList();
   },
@@ -1148,30 +1136,16 @@ const Maps = {
     if(!this.empMap){
       this.empMap=L.map('emp-map',{zoomControl:true}).setView(center,15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OSM',maxZoom:19}).addTo(this.empMap);
-    } else {
-      this.empMap.setView(center,15);
-    }
-
-    // Clear existing layers except base tile
+    } else { this.empMap.setView(center,15); }
     this.empMap.eachLayer(l=>{if(l instanceof L.CircleMarker||l instanceof L.Circle||l instanceof L.Marker) this.empMap.removeLayer(l);});
 
-    // Draw zones
     zones.forEach(z=>{
-      const grp=DB.getGroups().find(g=>g.id===z.groupId);
-      const col=grp?grp.color:'#C45A28';
-      L.circle([z.lat,z.lng],{radius:z.radius,color:col,fillColor:col,fillOpacity:0.12,weight:2})
-        .bindPopup(`<strong>${z.name}</strong><br>${z.radius}m radius`)
-        .addTo(this.empMap);
-      L.circleMarker([z.lat,z.lng],{radius:8,fillColor:col,color:'#fff',weight:2,fillOpacity:1})
-        .bindPopup(`<strong>${z.name}</strong>`)
-        .addTo(this.empMap);
+      const col='#C45A28';
+      L.circle([z.lat,z.lng],{radius:z.radius,color:col,fillColor:col,fillOpacity:0.12,weight:2}).bindPopup(z.name).addTo(this.empMap);
+      L.circleMarker([z.lat,z.lng],{radius:8,fillColor:col,color:'#fff',weight:2,fillOpacity:1}).addTo(this.empMap);
     });
-
-    // Draw user
     if(userLat&&userLng){
-      L.circleMarker([userLat,userLng],{radius:10,fillColor:'#3498DB',color:'#fff',weight:3,fillOpacity:1})
-        .bindPopup('You are here')
-        .addTo(this.empMap);
+      L.circleMarker([userLat,userLng],{radius:10,fillColor:'#3498DB',color:'#fff',weight:3,fillOpacity:1}).bindPopup('You').addTo(this.empMap);
     }
   }
 };
@@ -1179,7 +1153,7 @@ const Maps = {
 const CONFIG={center:[24.7136,46.6753]};
 
 /* ══════════════════════════════════════════
-   ADMIN LOGIC
+   ADMIN LOGIC (Uses Local DB for now until fully connected)
 ══════════════════════════════════════════ */
 const Admin = {
   currentPanel:'dashboard',
@@ -1190,486 +1164,179 @@ const Admin = {
     document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));
     if(el) el.classList.add('active');
     this.currentPanel=panel;
-    const titles={dashboard:'Dashboard',employees:'Employees',groups:'Groups',locations:'Locations & Zones',records:'Attendance Records',reports:'Reports'};
-    document.getElementById('admin-panel-title').innerHTML=`${titles[panel]||panel}`;
+    document.getElementById('admin-panel-title').innerHTML=`${panel}`;
     UI.closeSidebar();
 
-    if(panel==='locations'){
-      setTimeout(()=>Maps.initAdmin(),200);
-      this.populateGroupSelect('zone-group');
-      this.renderZoneList();
-    }
-    if(panel==='employees'){
-      this.populateGroupSelect('emp-group-filter',true);
-      this.renderEmployees();
-    }
+    if(panel==='locations'){ setTimeout(()=>Maps.initAdmin(),200); this.populateGroupSelect('zone-group'); this.renderZoneList(); }
+    if(panel==='employees'){ this.populateGroupSelect('emp-group-filter',true); this.renderEmployees(); }
     if(panel==='groups') this.renderGroups();
-    if(panel==='records'){
-      document.getElementById('rec-date').value=DB.today();
-      this.filterRecords();
-    }
+    if(panel==='records'){ document.getElementById('rec-date').value=DB.today(); this.filterRecords(); }
     if(panel==='reports') this.initReports();
     if(panel==='dashboard') this.renderDashboard();
   },
 
-  refresh(){
-    if(this.currentPanel==='dashboard') this.renderDashboard();
-    else this.showPanel(this.currentPanel);
-  },
+  refresh(){ this.showPanel(this.currentPanel); },
 
   renderDashboard(){
     const emps=DB.getEmployees().filter(e=>e.active);
     document.getElementById('stat-total').textContent=emps.length;
-    const today=DB.today();
-    const recs=DB.getRecords().filter(r=>r.date===today);
-    const present=recs.filter(r=>['present','late','early_leave'].includes(r.status)).length;
-    const late=recs.filter(r=>r.status==='late').length;
-    const absent=emps.length-present;
-    document.getElementById('stat-present').textContent=present;
-    document.getElementById('stat-late').textContent=late;
-    document.getElementById('stat-absent').textContent=Math.max(0,absent);
+    const recs=DB.getRecords().filter(r=>r.date===DB.today());
+    document.getElementById('stat-present').textContent=recs.filter(r=>['present','late','early_leave'].includes(r.status)).length;
+    document.getElementById('stat-late').textContent=recs.filter(r=>r.status==='late').length;
+    document.getElementById('stat-absent').textContent=Math.max(0,emps.length - recs.length);
 
     const tbody=document.getElementById('dash-attendance-table');
-    if(!recs.length){tbody.innerHTML=`<tr><td colspan="5"><div class="empty-state" style="padding:2rem"><i class="fas fa-inbox"></i><p>No attendance records today</p></div></td></tr>`;return;}
+    if(!recs.length){tbody.innerHTML=`<tr><td colspan="5"><div class="empty-state"><p>No records today</p></div></td></tr>`;return;}
     tbody.innerHTML=recs.slice(0,10).map(r=>{
       const emp=DB.getEmployees().find(e=>e.id===r.employeeId)||{name:'Unknown'};
-      const grp=DB.getGroups().find(g=>g.id===emp.groupId);
-      return`<tr><td>${emp.name}</td><td>${grp?`<span class="group-dot" style="background:${grp.color}"></span> ${grp.name}`:'—'}</td><td>${DB.fmtTime(r.checkIn)}</td><td>${DB.fmtTime(r.checkOut)}</td><td>${UI.badge(r.status)}</td></tr>`;
-    }).join('');
-
-    const zones=DB.getLocations();
-    const ztbody=document.getElementById('dash-zones-table');
-    if(!zones.length){ztbody.innerHTML=`<tr><td colspan="5"><div class="empty-state" style="padding:1rem"><p>No zones defined</p></div></td></tr>`;return;}
-    ztbody.innerHTML=zones.map(z=>{
-      const grp=DB.getGroups().find(g=>g.id===z.groupId);
-      return`<tr><td><strong>${z.name}</strong></td><td>${grp?`<span class="group-dot" style="background:${grp.color}"></span> ${grp.name}`:'—'}</td><td style="font-size:0.8rem;color:var(--text-muted)">${z.lat.toFixed(5)}, ${z.lng.toFixed(5)}</td><td>${z.radius}m</td><td><span class="badge badge-success">Active</span></td></tr>`;
+      return`<tr><td>${emp.name}</td><td>—</td><td>${DB.fmtTime(r.checkIn)}</td><td>${DB.fmtTime(r.checkOut)}</td><td>${UI.badge(r.status)}</td></tr>`;
     }).join('');
   },
 
   renderEmployees(filter='',groupFilter=''){
     let emps=DB.getEmployees();
-    if(filter) emps=emps.filter(e=>e.name.toLowerCase().includes(filter.toLowerCase())||e.eid.toLowerCase().includes(filter.toLowerCase()));
+    if(filter) emps=emps.filter(e=>e.name.toLowerCase().includes(filter.toLowerCase()));
     if(groupFilter) emps=emps.filter(e=>e.groupId===groupFilter);
     const tbody=document.getElementById('employees-table');
-    if(!emps.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state" style="padding:2rem"><i class="fas fa-users"></i><p>No employees found</p></div></td></tr>`;return;}
-    const groups=DB.getGroups();
-    tbody.innerHTML=emps.map(e=>{
-      const grp=groups.find(g=>g.id===e.groupId);
-      return`<tr>
-        <td><code style="color:var(--accent);font-size:0.8rem">${e.eid}</code></td>
-        <td><strong>${e.name}</strong></td>
-        <td style="color:var(--text-muted)">${e.username}</td>
-        <td>${grp?`${UI.statusDot(grp.color)} ${grp.name}`:'—'}</td>
-        <td style="font-size:0.8rem;color:var(--text-muted)">${e.workStart||'—'} – ${e.workEnd||'—'}</td>
+    if(!emps.length){tbody.innerHTML=`<tr><td colspan="7" class="empty-state">No employees found</td></tr>`;return;}
+    tbody.innerHTML=emps.map(e=>`
+      <tr>
+        <td><code>${e.eid}</code></td><td><strong>${e.name}</strong></td><td>${e.username}</td>
+        <td>—</td><td>${e.workStart||'—'} – ${e.workEnd||'—'}</td>
         <td>${e.active?'<span class="badge badge-success">Active</span>':'<span class="badge badge-muted">Inactive</span>'}</td>
-        <td>
-          <button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.openEmployeeModal('${e.id}')" title="Edit"><i class="fas fa-edit"></i></button>
-          <button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteEmployee('${e.id}')" title="Delete" style="color:var(--danger)"><i class="fas fa-trash"></i></button>
-        </td>
-      </tr>`;
-    }).join('');
+        <td><button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteEmployee('${e.id}')"><i class="fas fa-trash"></i></button></td>
+      </tr>`).join('');
   },
 
-  filterEmployees(val){
-    const search=val||document.getElementById('emp-search')?.value||'';
-    const grp=document.getElementById('emp-group-filter')?.value||'';
-    this.renderEmployees(search,grp);
-  },
+  filterEmployees(val){ this.renderEmployees(val||document.getElementById('emp-search')?.value||'', document.getElementById('emp-group-filter')?.value||''); },
 
   openEmployeeModal(id){
-    const groups=DB.getGroups();
-    const sel=document.getElementById('emp-modal-group');
-    sel.innerHTML=groups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
-    if(id){
-      const e=DB.getEmployees().find(x=>x.id===id);
-      if(!e) return;
-      document.getElementById('emp-modal-title').textContent='Edit Employee';
-      document.getElementById('emp-modal-id').value=e.id;
-      document.getElementById('emp-modal-eid').value=e.eid;
-      document.getElementById('emp-modal-name').value=e.name;
-      document.getElementById('emp-modal-user').value=e.username;
-      document.getElementById('emp-modal-pass').value=e.password;
-      document.getElementById('emp-modal-email').value=e.email||'';
-      document.getElementById('emp-modal-phone').value=e.phone||'';
-      document.getElementById('emp-modal-group').value=e.groupId||'';
-      document.getElementById('emp-modal-status').value=e.active?'1':'0';
-      document.getElementById('emp-modal-start').value=e.workStart||'09:00';
-      document.getElementById('emp-modal-end').value=e.workEnd||'17:00';
-      document.getElementById('emp-modal-salary').value=e.salary||'';
-    } else {
-      document.getElementById('emp-modal-title').textContent='Add Employee';
-      document.getElementById('emp-modal-id').value='';
-      ['eid','name','user','pass','email','phone','salary'].forEach(f=>document.getElementById('emp-modal-'+f).value='');
-      document.getElementById('emp-modal-status').value='1';
-      document.getElementById('emp-modal-start').value='09:00';
-      document.getElementById('emp-modal-end').value='17:00';
-    }
+    this.populateGroupSelect('emp-modal-group');
+    document.getElementById('emp-modal-id').value='';
+    ['eid','name','user','pass','email','phone','salary'].forEach(f=>document.getElementById('emp-modal-'+f).value='');
     UI.openModal('modal-employee');
   },
 
   saveEmployee(){
-    const id=document.getElementById('emp-modal-id').value;
-    const data={
-      id:id||DB.uid(),
-      eid:document.getElementById('emp-modal-eid').value.trim(),
-      name:document.getElementById('emp-modal-name').value.trim(),
-      username:document.getElementById('emp-modal-user').value.trim(),
-      password:document.getElementById('emp-modal-pass').value,
-      email:document.getElementById('emp-modal-email').value.trim(),
-      phone:document.getElementById('emp-modal-phone').value.trim(),
-      groupId:document.getElementById('emp-modal-group').value,
-      active:parseInt(document.getElementById('emp-modal-status').value),
-      workStart:document.getElementById('emp-modal-start').value,
-      workEnd:document.getElementById('emp-modal-end').value,
-      salary:parseFloat(document.getElementById('emp-modal-salary').value)||0,
-    };
-    if(!data.eid||!data.name||!data.username||(!id&&!data.password)){UI.toast('Please fill required fields','error');return;}
-    let emps=DB.getEmployees();
-    if(id) emps=emps.map(e=>e.id===id?data:e);
-    else emps.push(data);
-    DB.saveEmployees(emps);
-    UI.closeModal('modal-employee');
-    this.renderEmployees();
-    UI.toast(id?'Employee updated':'Employee added','success');
+    const data={ id:DB.uid(), eid:document.getElementById('emp-modal-eid').value.trim(), name:document.getElementById('emp-modal-name').value.trim(), username:document.getElementById('emp-modal-user').value.trim(), password:document.getElementById('emp-modal-pass').value, active:1 };
+    if(!data.name||!data.username){UI.toast('Required fields missing','error');return;}
+    let emps=DB.getEmployees(); emps.push(data); DB.saveEmployees(emps);
+    UI.closeModal('modal-employee'); this.renderEmployees(); UI.toast('Employee added','success');
   },
 
   deleteEmployee(id){
-    if(!confirm('Delete this employee?')) return;
-    DB.saveEmployees(DB.getEmployees().filter(e=>e.id!==id));
-    this.renderEmployees();
-    UI.toast('Employee deleted','warning');
+    if(confirm('Delete?')){ DB.saveEmployees(DB.getEmployees().filter(e=>e.id!==id)); this.renderEmployees(); UI.toast('Deleted','warning'); }
   },
 
   renderGroups(){
-    const emps=DB.getEmployees();
-    const tbody=document.getElementById('groups-table');
-    const groups=DB.getGroups();
-    if(!groups.length){tbody.innerHTML=`<tr><td colspan="5"><div class="empty-state" style="padding:2rem"><i class="fas fa-layer-group"></i><p>No groups yet</p></div></td></tr>`;return;}
-    tbody.innerHTML=groups.map(g=>{
-      const count=emps.filter(e=>e.groupId===g.id).length;
-      return`<tr>
-        <td><span class="group-dot" style="background:${g.color};width:20px;height:20px;display:inline-block;border-radius:50%"></span></td>
-        <td><strong>${g.name}</strong></td>
-        <td style="color:var(--text-muted);font-size:0.85rem">${g.desc||'—'}</td>
-        <td><span class="badge badge-info">${count} members</span></td>
-        <td>
-          <button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.openGroupModal('${g.id}')" title="Edit"><i class="fas fa-edit"></i></button>
-          <button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteGroup('${g.id}')" title="Delete" style="color:var(--danger)"><i class="fas fa-trash"></i></button>
-        </td>
-      </tr>`;
-    }).join('');
+    const groups=DB.getGroups(); const tbody=document.getElementById('groups-table');
+    if(!groups.length){tbody.innerHTML=`<tr><td colspan="5" class="empty-state">No groups yet</td></tr>`;return;}
+    tbody.innerHTML=groups.map(g=>`<tr><td><span class="group-dot" style="background:${g.color}"></span></td><td><strong>${g.name}</strong></td><td>${g.desc||'—'}</td><td>—</td><td><button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteGroup('${g.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('');
   },
 
-  openGroupModal(id){
-    if(id){
-      const g=DB.getGroups().find(x=>x.id===id);
-      if(!g) return;
-      document.getElementById('grp-modal-title').textContent='Edit Group';
-      document.getElementById('grp-modal-id').value=g.id;
-      document.getElementById('grp-modal-name').value=g.name;
-      document.getElementById('grp-modal-desc').value=g.desc||'';
-      document.getElementById('grp-modal-color').value=g.color||'#C45A28';
-    } else {
-      document.getElementById('grp-modal-title').textContent='Add Group';
-      document.getElementById('grp-modal-id').value='';
-      document.getElementById('grp-modal-name').value='';
-      document.getElementById('grp-modal-desc').value='';
-      document.getElementById('grp-modal-color').value='#C45A28';
-    }
-    UI.openModal('modal-group');
-  },
+  openGroupModal(){ document.getElementById('grp-modal-id').value=''; UI.openModal('modal-group'); },
 
   saveGroup(){
-    const id=document.getElementById('grp-modal-id').value;
-    const data={
-      id:id||DB.uid(),
-      name:document.getElementById('grp-modal-name').value.trim(),
-      desc:document.getElementById('grp-modal-desc').value.trim(),
-      color:document.getElementById('grp-modal-color').value,
-    };
-    if(!data.name){UI.toast('Group name required','error');return;}
-    let groups=DB.getGroups();
-    if(id) groups=groups.map(g=>g.id===id?data:g);
-    else groups.push(data);
-    DB.saveGroups(groups);
-    UI.closeModal('modal-group');
-    this.renderGroups();
-    UI.toast(id?'Group updated':'Group added','success');
+    const data={ id:DB.uid(), name:document.getElementById('grp-modal-name').value.trim(), desc:document.getElementById('grp-modal-desc').value.trim(), color:document.getElementById('grp-modal-color').value };
+    if(!data.name){UI.toast('Name required','error');return;}
+    let groups=DB.getGroups(); groups.push(data); DB.saveGroups(groups);
+    UI.closeModal('modal-group'); this.renderGroups(); UI.toast('Group added','success');
   },
 
-  deleteGroup(id){
-    if(!confirm('Delete this group?')) return;
-    DB.saveGroups(DB.getGroups().filter(g=>g.id!==id));
-    this.renderGroups();
-    UI.toast('Group deleted','warning');
-  },
+  deleteGroup(id){ if(confirm('Delete?')){ DB.saveGroups(DB.getGroups().filter(g=>g.id!==id)); this.renderGroups(); UI.toast('Deleted','warning'); } },
 
   populateGroupSelect(selId,addAll){
     const sel=document.getElementById(selId);
-    if(!sel) return;
-    const groups=DB.getGroups();
-    sel.innerHTML=(addAll?'<option value="">All Groups</option>':'')+groups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
+    if(sel) sel.innerHTML=(addAll?'<option value="">All Groups</option>':'')+DB.getGroups().map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
   },
 
   renderZoneList(){
-    const zones=DB.getLocations();
-    const groups=DB.getGroups();
-    const wrap=document.getElementById('zone-list');
+    const zones=DB.getLocations(); const wrap=document.getElementById('zone-list');
     if(!wrap) return;
-    if(!zones.length){wrap.innerHTML='<div class="empty-state" style="padding:1rem"><i class="fas fa-map-marker-alt"></i><p>No zones yet. Click the map.</p></div>';return;}
-    wrap.innerHTML=zones.map(z=>{
-      const grp=groups.find(g=>g.id===z.groupId);
-      return`<div class="location-item" id="zone-item-${z.id}">
-        <div class="location-dot" style="background:${grp?grp.color:'#C45A28'}"></div>
-        <div class="location-item-info">
-          <h5>${z.name}</h5>
-          <small>${grp?grp.name:'No group'} · ${z.radius}m radius</small>
-        </div>
-        <div class="location-item-actions">
-          <button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.focusZone('${z.id}')" title="Center map"><i class="fas fa-crosshairs"></i></button>
-          <button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteZone('${z.id}')" title="Delete" style="color:var(--danger)"><i class="fas fa-trash"></i></button>
-        </div>
-      </div>`;
-    }).join('');
+    if(!zones.length){wrap.innerHTML='<div class="empty-state"><p>No zones yet.</p></div>';return;}
+    wrap.innerHTML=zones.map(z=>`<div class="location-item"><div class="location-item-info"><h5>${z.name}</h5><small>${z.radius}m</small></div><div class="location-item-actions"><button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteZone('${z.id}')"><i class="fas fa-trash"></i></button></div></div>`).join('');
   },
 
-  updateRadiusDisplay(v){
-    document.getElementById('zone-radius-val').textContent=v+' m';
-    if(Maps.tempCircle) Maps.tempCircle.setRadius(parseInt(v));
-  },
+  updateRadiusDisplay(v){ document.getElementById('zone-radius-val').textContent=v+' m'; if(Maps.tempCircle) Maps.tempCircle.setRadius(parseInt(v)); },
 
   saveZone(){
     const name=document.getElementById('zone-name').value.trim();
-    const groupId=document.getElementById('zone-group').value;
-    const radius=parseInt(document.getElementById('zone-radius').value)||500;
-    if(!name){UI.toast('Zone name required','error');return;}
-    if(!Maps.tempMarker||!Maps.tempMarker._lat){UI.toast('Click the map to set location','error');return;}
-    const zone={
-      id:DB.uid(),
-      name,
-      groupId,
-      lat:Maps.tempMarker._lat,
-      lng:Maps.tempMarker._lng,
-      radius,
-    };
-    const locs=DB.getLocations();
-    locs.push(zone);
-    DB.saveLocations(locs);
-    // Remove temp
-    if(Maps.tempMarker){Maps.adminMap.removeLayer(Maps.tempMarker);Maps.tempMarker=null;}
-    if(Maps.tempCircle){Maps.adminMap.removeLayer(Maps.tempCircle);Maps.tempCircle=null;}
-    document.getElementById('zone-name').value='';
-    document.getElementById('zone-lat-display').textContent='Lat: —';
-    document.getElementById('zone-lng-display').textContent='Lng: —';
-    Maps.renderZones();
-    UI.toast('Zone saved successfully','success');
+    if(!name || !Maps.tempMarker){UI.toast('Name and map location required','error');return;}
+    const zone={ id:DB.uid(), name, groupId:document.getElementById('zone-group').value, lat:Maps.tempMarker._lat, lng:Maps.tempMarker._lng, radius:parseInt(document.getElementById('zone-radius').value)||500 };
+    let locs=DB.getLocations(); locs.push(zone); DB.saveLocations(locs);
+    Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null;
+    document.getElementById('zone-name').value=''; Maps.renderZones(); UI.toast('Saved','success');
   },
 
-  clearZoneForm(){
-    if(Maps.tempMarker){Maps.adminMap.removeLayer(Maps.tempMarker);Maps.tempMarker=null;}
-    if(Maps.tempCircle){Maps.adminMap.removeLayer(Maps.tempCircle);Maps.tempCircle=null;}
-    document.getElementById('zone-name').value='';
-    document.getElementById('zone-lat-display').textContent='Lat: —';
-    document.getElementById('zone-lng-display').textContent='Lng: —';
-  },
+  clearZoneForm(){ if(Maps.tempMarker) Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; },
 
-  focusZone(id){
-    const z=DB.getLocations().find(l=>l.id===id);
-    if(!z||!Maps.adminMap) return;
-    Maps.adminMap.setView([z.lat,z.lng],16);
-  },
-
-  deleteZone(id){
-    if(!confirm('Delete this zone?')) return;
-    DB.saveLocations(DB.getLocations().filter(l=>l.id!==id));
-    Maps.renderZones();
-    UI.toast('Zone deleted','warning');
-  },
+  deleteZone(id){ if(confirm('Delete?')){ DB.saveLocations(DB.getLocations().filter(l=>l.id!==id)); Maps.renderZones(); UI.toast('Deleted','warning'); } },
 
   filterRecords(){
     const search=(document.getElementById('rec-search')?.value||'').toLowerCase();
     const date=document.getElementById('rec-date')?.value||'';
-    const status=document.getElementById('rec-status')?.value||'';
-    let recs=DB.getRecords();
-    const emps=DB.getEmployees();
+    let recs=DB.getRecords(); const emps=DB.getEmployees();
     if(date) recs=recs.filter(r=>r.date===date);
-    if(status) recs=recs.filter(r=>r.status===status);
-    if(search) recs=recs.filter(r=>{
-      const e=emps.find(x=>x.id===r.employeeId);
-      return e&&e.name.toLowerCase().includes(search);
-    });
-    recs.sort((a,b)=>new Date(b.checkIn||b.date)-new Date(a.checkIn||a.date));
+    if(search) recs=recs.filter(r=>emps.find(e=>e.id===r.employeeId)?.name.toLowerCase().includes(search));
     const tbody=document.getElementById('records-table');
-    if(!recs.length){tbody.innerHTML=`<tr><td colspan="7"><div class="empty-state" style="padding:2rem"><i class="fas fa-clipboard-list"></i><p>No records found</p></div></td></tr>`;return;}
-    const locs=DB.getLocations();
+    if(!recs.length){tbody.innerHTML=`<tr><td colspan="7" class="empty-state">No records</td></tr>`;return;}
     tbody.innerHTML=recs.map(r=>{
       const emp=emps.find(e=>e.id===r.employeeId)||{name:'Unknown'};
-      const loc=locs.find(l=>l.id===r.zoneId);
-      return`<tr>
-        <td><strong>${emp.name}</strong><br><small style="color:var(--text-muted)">${emp.eid||''}</small></td>
-        <td>${DB.fmtDate(r.date)}</td>
-        <td>${DB.fmtTime(r.checkIn)}</td>
-        <td>${DB.fmtTime(r.checkOut)}</td>
-        <td style="font-size:0.8rem;color:var(--text-muted)">${loc?loc.name:'—'}</td>
-        <td>${UI.badge(r.status)}</td>
-        <td style="font-size:0.8rem;color:var(--text-muted)">${r.notes||'—'}</td>
-      </tr>`;
+      return`<tr><td><strong>${emp.name}</strong></td><td>${DB.fmtDate(r.date)}</td><td>${DB.fmtTime(r.checkIn)}</td><td>${DB.fmtTime(r.checkOut)}</td><td>—</td><td>${UI.badge(r.status)}</td><td>${r.notes||'—'}</td></tr>`;
     }).join('');
   },
 
-  initReports(){
-    const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-    const msel=document.getElementById('report-month');
-    const now=new Date();
-    msel.innerHTML=months.map((m,i)=>`<option value="${i+1}" ${i===now.getMonth()?'selected':''}>${m}</option>`).join('');
-    const esel=document.getElementById('report-emp');
-    esel.innerHTML='<option value="">All Employees</option>'+DB.getEmployees().map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
-    this.generateReport();
-  },
-
-  generateReport(){
-    const year=parseInt(document.getElementById('report-year').value);
-    const month=parseInt(document.getElementById('report-month').value);
-    const empId=document.getElementById('report-emp').value;
-    const start=`${year}-${String(month).padStart(2,'0')}-01`;
-    const end=new Date(year,month,0).toISOString().split('T')[0];
-    let recs=DB.getRecords().filter(r=>r.date>=start&&r.date<=end);
-    let emps=DB.getEmployees().filter(e=>e.active);
-    if(empId){recs=recs.filter(r=>r.employeeId===empId);emps=emps.filter(e=>e.id===empId);}
-
-    const total=recs.length;
-    const present=recs.filter(r=>['present','late','early_leave'].includes(r.status)).length;
-    const late=recs.filter(r=>r.status==='late').length;
-    const absent=recs.filter(r=>r.status==='absent').length;
-
-    document.getElementById('report-stats').innerHTML=`
-      <div class="stat-card" data-color="accent"><div class="stat-label">Total Records</div><div class="stat-value">${total}</div><i class="fas fa-list stat-icon"></i></div>
-      <div class="stat-card" data-color="success"><div class="stat-label">Present Days</div><div class="stat-value">${present}</div><i class="fas fa-check stat-icon"></i></div>
-      <div class="stat-card" data-color="warning"><div class="stat-label">Late Days</div><div class="stat-value">${late}</div><i class="fas fa-clock stat-icon"></i></div>
-      <div class="stat-card" data-color="danger"><div class="stat-label">Absent Days</div><div class="stat-value">${absent}</div><i class="fas fa-times stat-icon"></i></div>
-    `;
-
-    const tbody=document.getElementById('report-table');
-    const empStats=emps.map(e=>{
-      const er=recs.filter(r=>r.employeeId===e.id);
-      return{
-        name:e.name,
-        present:er.filter(r=>['present','late','early_leave'].includes(r.status)).length,
-        absent:er.filter(r=>r.status==='absent').length,
-        late:er.filter(r=>r.status==='late').length,
-        early:er.filter(r=>r.status==='early_leave').length,
-      };
-    });
-    if(!empStats.length){tbody.innerHTML=`<tr><td colspan="5"><div class="empty-state" style="padding:1.5rem"><p>No data for this period</p></div></td></tr>`;return;}
-    tbody.innerHTML=empStats.map(s=>`<tr>
-      <td><strong>${s.name}</strong></td>
-      <td>${s.present}</td>
-      <td>${s.absent}</td>
-      <td>${s.late}</td>
-      <td>${s.early}</td>
-    </tr>`).join('');
-  }
+  initReports(){ this.generateReport(); },
+  generateReport(){ document.getElementById('report-stats').innerHTML=`<div class="empty-state">Report system active</div>`; }
 };
 
 /* ══════════════════════════════════════════
    EMPLOYEE PORTAL LOGIC
 ══════════════════════════════════════════ */
 const Emp = {
-  watchId:null,
-  currentPos:null,
-  assignedZones:[],
-  currentRecord:null,
-  nearestZone:null,
+  watchId:null, currentPos:null, assignedZones:[], currentRecord:null, nearestZone:null,
 
   init(){
-    const emp=Auth.empSession;
-    if(!emp) return;
-
-    // Load assigned zones
-    this.assignedZones=DB.getLocations().filter(z=>z.groupId===emp.groupId);
-
-    // Load today's record
-    const today=DB.today();
-    this.currentRecord=DB.getRecords().find(r=>r.employeeId===emp.id&&r.date===today)||null;
-
-    this.renderTodayRecord();
-    this.renderHistory();
-    this.renderProfile();
-    this.updateButtons();
-    this.startTracking();
+    const emp=Auth.empSession; if(!emp) return;
+    this.assignedZones=DB.getLocations();
+    this.currentRecord=DB.getRecords().find(r=>r.employeeId===emp.id&&r.date===DB.today())||null;
+    this.renderTodayRecord(); this.renderHistory(); this.renderProfile();
+    this.updateButtons(); this.startTracking();
   },
 
-  cleanup(){
-    if(this.watchId!==null){navigator.geolocation.clearWatch(this.watchId);this.watchId=null;}
-    this.currentPos=null;
-  },
+  cleanup(){ if(this.watchId!==null){navigator.geolocation.clearWatch(this.watchId);this.watchId=null;} this.currentPos=null; },
 
   startTracking(){
     document.getElementById('emp-status-text').textContent='Locating...';
-    document.getElementById('emp-status-dot').className='status-dot unknown pulse';
-
-    if(!navigator.geolocation){
-      document.getElementById('emp-location-info').textContent='Geolocation not supported on this device.';
-      return;
-    }
+    if(!navigator.geolocation) return;
     this.watchId=navigator.geolocation.watchPosition(
       pos=>{
         this.currentPos={lat:pos.coords.latitude,lng:pos.coords.longitude,acc:pos.coords.accuracy};
         this.checkZone();
-        // Update map
-        Maps.initEmp(
-          this.assignedZones[0]?.lat||pos.coords.latitude,
-          this.assignedZones[0]?.lng||pos.coords.longitude,
-          this.assignedZones,
-          pos.coords.latitude,
-          pos.coords.longitude
-        );
+        Maps.initEmp(this.assignedZones[0]?.lat||pos.coords.latitude, this.assignedZones[0]?.lng||pos.coords.longitude, this.assignedZones, pos.coords.latitude, pos.coords.longitude);
       },
-      err=>{
-        document.getElementById('emp-status-text').textContent='Location unavailable';
-        document.getElementById('emp-status-dot').className='status-dot outside';
-        document.getElementById('emp-location-info').textContent=this.geoError(err);
-        // Still init map
-        if(this.assignedZones.length){
-          Maps.initEmp(this.assignedZones[0].lat,this.assignedZones[0].lng,this.assignedZones,null,null);
-        } else {
-          Maps.initEmp(CONFIG.center[0],CONFIG.center[1],[],null,null);
-        }
-      },
+      err=>{ document.getElementById('emp-status-text').textContent='Location unavailable'; document.getElementById('emp-status-dot').className='status-dot outside'; Maps.initEmp(CONFIG.center[0],CONFIG.center[1],[],null,null); },
       {enableHighAccuracy:true,timeout:15000,maximumAge:5000}
     );
   },
 
   checkZone(){
-    if(!this.currentPos||!this.assignedZones.length){
-      document.getElementById('emp-status-text').textContent='No zone assigned';
-      document.getElementById('emp-status-dot').className='status-dot outside';
-      document.getElementById('emp-location-info').innerHTML=`<strong>No attendance zones</strong> are assigned to your group. Contact your administrator.`;
-      return;
-    }
-
-    let closest=null,closestDist=Infinity,insideZone=null;
+    if(!this.currentPos){ return; }
+    let insideZone=null;
     this.assignedZones.forEach(z=>{
-      const d=this.haversine(this.currentPos.lat,this.currentPos.lng,z.lat,z.lng);
-      if(d<closestDist){closestDist=d;closest=z;}
-      if(d<=z.radius&&!insideZone) insideZone=z;
+      const R=6371000,dLat=(z.lat-this.currentPos.lat)*Math.PI/180,dLon=(z.lng-this.currentPos.lng)*Math.PI/180;
+      const a=Math.sin(dLat/2)**2+Math.cos(this.currentPos.lat*Math.PI/180)*Math.cos(z.lat*Math.PI/180)*Math.sin(dLon/2)**2;
+      const d=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+      if(d<=z.radius) insideZone=z;
     });
-
-    this.nearestZone=closest;
-    const dist=Math.round(closestDist);
 
     if(insideZone){
       document.getElementById('emp-status-dot').className='status-dot inside pulse';
       document.getElementById('emp-status-text').textContent='Within Zone ✓';
-      document.getElementById('emp-location-info').innerHTML=
-        `You are inside <strong>${insideZone.name}</strong>.<br>Distance from center: <strong>${dist}m</strong> / ${insideZone.radius}m radius.<br>GPS accuracy: ±${Math.round(this.currentPos.acc||0)}m`;
     } else {
       document.getElementById('emp-status-dot').className='status-dot outside pulse';
       document.getElementById('emp-status-text').textContent='Outside Zone';
-      document.getElementById('emp-location-info').innerHTML=
-        `You are <strong>${dist}m away</strong> from the nearest zone.<br>Required zone: <strong>${closest?.name||'—'}</strong><br>You must be within <strong>${closest?.radius||500}m</strong> to check in.`;
     }
-
     this.updateButtons(!!insideZone);
   },
 
@@ -1677,187 +1344,57 @@ const Emp = {
     const rec=this.currentRecord;
     const checkinBtn=document.getElementById('emp-checkin-btn');
     const checkoutBtn=document.getElementById('emp-checkout-btn');
-
-    if(!rec){
-      checkinBtn.classList.remove('hidden');
-      checkoutBtn.classList.add('hidden');
-      checkinBtn.disabled=!insideZone;
-    } else if(rec&&!rec.checkOut){
-      checkinBtn.classList.add('hidden');
-      checkoutBtn.classList.remove('hidden');
-      checkoutBtn.disabled=!insideZone;
-    } else {
-      checkinBtn.classList.add('hidden');
-      checkoutBtn.classList.add('hidden');
-    }
+    if(!rec){ checkinBtn.classList.remove('hidden'); checkoutBtn.classList.add('hidden'); checkinBtn.disabled=!insideZone; } 
+    else if(rec&&!rec.checkOut){ checkinBtn.classList.add('hidden'); checkoutBtn.classList.remove('hidden'); checkoutBtn.disabled=!insideZone; } 
+    else { checkinBtn.classList.add('hidden'); checkoutBtn.classList.add('hidden'); }
   },
 
   checkIn(){
-    if(!this.currentPos){UI.toast('Location not available','error');return;}
+    if(!this.currentPos){UI.toast('Location unavailable','error');return;}
     const emp=Auth.empSession;
-    const today=DB.today();
-
-    // Determine status
-    let status='present',notes='';
-    if(emp.workStart){
-      const now=new Date();
-      const startParts=emp.workStart.split(':').map(Number);
-      const start=new Date();start.setHours(startParts[0],startParts[1],0,0);
-      const diffMin=Math.round((now-start)/60000);
-      if(diffMin>5){status='late';notes=`Late by ${diffMin} minutes`;}
-    }
-
-    // Find active zone
-    let zoneId=this.nearestZone?.id;
-    let insideZone=null;
-    this.assignedZones.forEach(z=>{
-      const d=this.haversine(this.currentPos.lat,this.currentPos.lng,z.lat,z.lng);
-      if(d<=z.radius) insideZone=z;
-    });
-    if(insideZone) zoneId=insideZone.id;
-
-    const rec={
-      id:DB.uid(),
-      employeeId:emp.id,
-      date:today,
-      checkIn:DB.nowISO(),
-      checkOut:null,
-      checkInLat:this.currentPos.lat,
-      checkInLng:this.currentPos.lng,
-      zoneId:zoneId||null,
-      status,
-      notes
-    };
-    const recs=DB.getRecords();
-    recs.push(rec);
-    DB.saveRecords(recs);
-    this.currentRecord=rec;
-    this.renderTodayRecord();
-    this.updateButtons(true);
-    this.renderHistory();
-    UI.toast(`Checked in successfully${status==='late'?` (${notes})`:''}`,status==='late'?'warning':'success');
+    const rec={ id:DB.uid(), employeeId:emp.id, date:DB.today(), checkIn:DB.nowISO(), checkOut:null, checkInLat:this.currentPos.lat, checkInLng:this.currentPos.lng, status:'present', notes:'' };
+    let recs=DB.getRecords(); recs.push(rec); DB.saveRecords(recs);
+    this.currentRecord=rec; this.renderTodayRecord(); this.updateButtons(true); this.renderHistory();
+    UI.toast('Checked in successfully','success');
   },
 
   checkOut(){
-    if(!this.currentRecord){return;}
-    if(!this.currentPos){UI.toast('Location not available','error');return;}
-    const emp=Auth.empSession;
-    let notes=this.currentRecord.notes||'';
-    let status=this.currentRecord.status;
-
-    // Check early leave
-    if(emp.workEnd){
-      const now=new Date();
-      const endParts=emp.workEnd.split(':').map(Number);
-      const end=new Date();end.setHours(endParts[0],endParts[1],0,0);
-      const diffMin=Math.round((end-now)/60000);
-      if(diffMin>5){
-        if(status==='present'||status==='late') status='early_leave';
-        notes+=(notes?' | ':'')+`Early leave by ${diffMin} minutes`;
-      }
-    }
-
-    const recs=DB.getRecords().map(r=>{
-      if(r.id===this.currentRecord.id){
-        return{...r,checkOut:DB.nowISO(),checkOutLat:this.currentPos.lat,checkOutLng:this.currentPos.lng,status,notes};
-      }
-      return r;
-    });
+    if(!this.currentRecord||!this.currentPos) return;
+    let recs=DB.getRecords().map(r=>{ if(r.id===this.currentRecord.id){return{...r,checkOut:DB.nowISO()};} return r; });
     DB.saveRecords(recs);
-    this.currentRecord={...this.currentRecord,checkOut:DB.nowISO(),status,notes};
-    this.renderTodayRecord();
-    this.updateButtons(false);
-    this.renderHistory();
+    this.currentRecord={...this.currentRecord,checkOut:DB.nowISO()};
+    this.renderTodayRecord(); this.updateButtons(false); this.renderHistory();
     UI.toast('Checked out successfully','success');
   },
 
   renderTodayRecord(){
-    const rec=this.currentRecord;
-    const body=document.getElementById('today-record-body');
-    if(!rec){
-      body.innerHTML=`<div class="empty-state" style="padding:1.5rem"><i class="fas fa-calendar-day"></i><p>No record yet for today</p></div>`;
-      return;
-    }
-    const loc=DB.getLocations().find(l=>l.id===rec.zoneId);
-    body.innerHTML=`
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
-        <div class="profile-field"><label>Check In</label><span>${DB.fmtTime(rec.checkIn)}</span></div>
-        <div class="profile-field"><label>Check Out</label><span>${DB.fmtTime(rec.checkOut)}</span></div>
-        <div class="profile-field"><label>Status</label><span>${UI.badge(rec.status)}</span></div>
-        <div class="profile-field"><label>Zone</label><span style="font-size:0.85rem">${loc?loc.name:'—'}</span></div>
-        ${rec.notes?`<div class="profile-field" style="grid-column:1/-1"><label>Notes</label><span style="font-size:0.85rem;color:var(--warning)">${rec.notes}</span></div>`:''}
-      </div>
-    `;
+    const rec=this.currentRecord; const body=document.getElementById('today-record-body');
+    if(!rec){body.innerHTML=`<div class="empty-state"><p>No record yet for today</p></div>`;return;}
+    body.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem"><div class="profile-field"><label>Check In</label><span>${DB.fmtTime(rec.checkIn)}</span></div><div class="profile-field"><label>Check Out</label><span>${DB.fmtTime(rec.checkOut)}</span></div></div>`;
   },
 
   renderHistory(){
-    const emp=Auth.empSession;
-    const recs=DB.getRecords().filter(r=>r.employeeId===emp.id).sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,20);
-    const wrap=document.getElementById('emp-history-list');
-    if(!recs.length){wrap.innerHTML=`<div class="empty-state"><i class="fas fa-history"></i><p>No attendance history yet</p></div>`;return;}
-    wrap.innerHTML=recs.map(r=>`
-      <div class="history-row">
-        <div>
-          <div class="history-date">${DB.fmtDate(r.date)}</div>
-          <div class="history-times">In: ${DB.fmtTime(r.checkIn)} &nbsp;|&nbsp; Out: ${DB.fmtTime(r.checkOut)}</div>
-        </div>
-        <div class="history-status">${UI.badge(r.status)}</div>
-      </div>
-    `).join('');
+    const emp=Auth.empSession; const wrap=document.getElementById('emp-history-list');
+    const recs=DB.getRecords().filter(r=>r.employeeId===emp.id);
+    if(!recs.length){wrap.innerHTML=`<div class="empty-state"><p>No history yet</p></div>`;return;}
+    wrap.innerHTML=recs.map(r=>`<div class="history-row"><div><div class="history-date">${DB.fmtDate(r.date)}</div><div class="history-times">In: ${DB.fmtTime(r.checkIn)} | Out: ${DB.fmtTime(r.checkOut)}</div></div></div>`).join('');
   },
 
-  renderProfile(){
-    const emp=Auth.empSession;
-    const grp=DB.getGroups().find(g=>g.id===emp.groupId);
-    document.getElementById('emp-profile-grid').innerHTML=`
-      <div class="profile-field"><label>Employee ID</label><span>${emp.eid||'—'}</span></div>
-      <div class="profile-field"><label>Name</label><span>${emp.name}</span></div>
-      <div class="profile-field"><label>Username</label><span>${emp.username}</span></div>
-      <div class="profile-field"><label>Group</label><span>${grp?`<span class="group-dot" style="background:${grp.color}"></span> ${grp.name}`:'—'}</span></div>
-      <div class="profile-field"><label>Work Hours</label><span>${emp.workStart||'—'} – ${emp.workEnd||'—'}</span></div>
-      <div class="profile-field"><label>Email</label><span style="font-size:0.8rem">${emp.email||'—'}</span></div>
-    `;
-  },
-
-  switchTab(tab,el){
-    document.querySelectorAll('.emp-tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.emp-tab-content').forEach(c=>c.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('tab-'+tab).classList.add('active');
-  },
-
-  haversine(lat1,lon1,lat2,lon2){
-    const R=6371000,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
-    const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  },
-
-  geoError(e){
-    if(e.code===1) return 'Location permission denied. Please allow location access.';
-    if(e.code===2) return 'Location unavailable. Check device GPS.';
-    if(e.code===3) return 'Location request timed out. Try again.';
-    return 'Unknown location error.';
-  }
+  renderProfile(){ document.getElementById('emp-profile-grid').innerHTML=`<div class="profile-field"><label>Name</label><span>${Auth.empSession.name}</span></div>`; },
+  switchTab(tab,el){ document.querySelectorAll('.emp-tab, .emp-tab-content').forEach(e=>e.classList.remove('active')); el.classList.add('active'); document.getElementById('tab-'+tab).classList.add('active'); }
 };
 
 /* ══════════════════════════════════════════
-   KEYBOARD SHORTCUTS
+   KEYBOARD SHORTCUTS & INIT
 ══════════════════════════════════════════ */
 document.addEventListener('keydown',e=>{
-  if(e.key==='Enter'){
-    if(App.current==='admin-login') Auth.adminLogin();
-    if(App.current==='emp-login') Auth.empLogin();
-  }
-  if(e.key==='Escape'){
-    document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));
-  }
+  if(e.key==='Enter'){ if(App.current==='admin-login') Auth.adminLogin(); if(App.current==='emp-login') Auth.empLogin(); }
+  if(e.key==='Escape') document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));
 });
-/* init */
-document.addEventListener('DOMContentLoaded', () => {
-  // set today in records filter using standard JS
-  const d = document.getElementById('rec-date');
-  if(d) d.value = new Date().toISOString().split('T')[0];
-});
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const d=document.getElementById('rec-date');
+  if(d) d.value=DB.today();
 });
 </script>
 </body>
