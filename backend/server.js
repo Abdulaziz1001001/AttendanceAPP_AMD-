@@ -1,6 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const bcrypt = require('bcryptjs'); // تمت إضافة هذا السطر
+const Admin = require('./models/Admin'); // تمت إضافة هذا السطر
 require('dotenv').config();
 
 const app = express();
@@ -35,6 +37,7 @@ mongoose.connect(process.env.MONGO_URI)
     }
   })
   .catch(err => console.log('MongoDB connection error:', err));
+
 // Route Imports
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
