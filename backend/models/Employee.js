@@ -12,4 +12,4 @@ const EmployeeSchema = new mongoose.Schema({
   workEnd: String,
   salary: Number
 }, { timestamps: true });
-module.exports = mongoose.model('Employee', EmployeeSchema);
+module.exports = mongoose.models.Employee || mongoose.model('Employee', EmployeeSchema);
