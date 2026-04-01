@@ -699,26 +699,29 @@ const Admin = {
   async saveZone(){
     const name=document.getElementById('zone-name').value.trim();
     if(!name || !Maps.tempMarker){UI.toast('Name and map location required','error');return;}
-    const data={ name, groupId:document.getElementById('zone-group').value, lat:Maps.tempMarker._lat, lng:Maps.tempMarker._lng, radius:parseInt(document.getElementById('zone-radius').value)||500 };
-    UI.loader(true); try { await API.request('/admin/location', 'POST', data); await DB.sync(); Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; Maps.renderZones(); UI.toast('Saved','success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false);
+    
+    // جلب الإحداثيات الرسمية من الدبوس
+    const pos = Maps.tempMarker.getLatLng();
+    
+    const data={ 
+      name, 
+      groupId:document.getElementById('zone-group').value, 
+      lat: pos.lat,  // خط العرض
+      lng: pos.lng,  // خط الطول
+      radius: parseInt(document.getElementById('zone-radius').value) || 500 
+    };
+    
+    UI.loader(true); 
+    try { 
+      await API.request('/admin/location', 'POST', data); 
+      await DB.sync(); 
+      Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; 
+      document.getElementById('zone-name').value=''; 
+      Maps.renderZones(); 
+      UI.toast('Saved','success'); 
+    } catch(e){UI.toast(e.message,'error')} 
+    UI.loader(false);
   },
-  
-  clearZoneForm(){ if(Maps.tempMarker) Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; },
-  async deleteZone(id){ if(confirm('Delete?')){ UI.loader(true); try{ await API.request(`/admin/location/${id}`, 'DELETE'); await DB.sync(); Maps.renderZones(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
-  
-  filterRecords(){
-    const search=document.getElementById('rec-search').value.toLowerCase(); const date=document.getElementById('rec-date').value;
-    let recs=DB.getRecords(); const emps=DB.getEmployees();
-    if(date) recs=recs.filter(r=>r.date===date);
-    if(search) recs=recs.filter(r=>emps.find(e=>e.id===r.employeeId)?.name.toLowerCase().includes(search));
-    const tbody=document.getElementById('records-table');
-    if(!recs.length){tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted)">No records</td></tr>`;return;}
-    tbody.innerHTML=recs.map(r=>{
-      const emp=emps.find(e=>e.id===r.employeeId)||{name:'Unknown'};
-      return`<tr><td><strong>${emp.name}</strong></td><td>${DB.fmtDate(r.date)}</td><td>${DB.fmtTime(r.checkIn)}</td><td>${DB.fmtTime(r.checkOut)}</td><td>${UI.badge(r.status)}</td><td>${r.notes||'—'}</td></tr>`;
-    }).join('');
-  }
-};
 
 /* ══════════════════════════════════════════
    EMPLOYEE PORTAL LOGIC
