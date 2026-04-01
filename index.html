@@ -1086,21 +1086,28 @@ const UI = {
 /* ══════════════════════════════════════════
    MAPS
 ══════════════════════════════════════════ */
-const Maps = {
-  adminMap:null, empMap:null, tempMarker:null, tempCircle:null,
-  zoneMarkers:{}, zoneCircles:{}, editingZoneId:null,
-
-  initAdmin(){
-    if(this.adminMap) return;
+initAdmin(){
+    // إذا كانت الخريطة مفتوحة مسبقاً، نجبرها على إعادة حساب حجمها لتعمل بسلاسة
+    if(this.adminMap) {
+      setTimeout(() => this.adminMap.invalidateSize(), 100);
+      return;
+    }
+    
     const el=document.getElementById('admin-map');
     if(!el) return;
+    
     this.adminMap=L.map('admin-map').setView(CONFIG.center,13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OSM',maxZoom:19}).addTo(this.adminMap);
+    
     this.adminMap.on('click',e=>{
       if(App.current!=='admin' || !document.getElementById('panel-locations').classList.contains('active')) return;
       this._placeTemp(e.latlng.lat,e.latlng.lng);
     });
+    
     this.renderZones();
+    
+    // إصلاح أبعاد الخريطة عند تشغيلها للمرة الأولى أيضاً
+    setTimeout(() => this.adminMap.invalidateSize(), 100);
   },
 
   _placeTemp(lat,lng){
