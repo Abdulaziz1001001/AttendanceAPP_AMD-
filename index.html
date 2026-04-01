@@ -274,7 +274,10 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
 
 <div id="modal-employee" class="modal-overlay">
   <div class="modal">
-    <div class="modal-header"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;text-transform:uppercase" id="emp-modal-title">Employee</span><button class="btn-ghost" onclick="UI.closeModal('modal-employee')"><i class="fas fa-times"></i></button></div>
+    <div class="modal-header">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;text-transform:uppercase" id="emp-modal-title">Employee</span>
+      <button class="btn-ghost" onclick="UI.closeModal('modal-employee')"><i class="fas fa-times"></i></button>
+    </div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:1rem">
       <input type="hidden" id="emp-modal-id">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
@@ -282,6 +285,10 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
         <div><label class="form-label">Name</label><input type="text" id="emp-modal-name" class="form-control" placeholder="Full Name"></div>
         <div><label class="form-label">Username</label><input type="text" id="emp-modal-user" class="form-control" placeholder="login_name"></div>
         <div><label class="form-label">Password</label><input type="password" id="emp-modal-pass" class="form-control" placeholder="Leave blank to keep old"></div>
+        
+        <div><label class="form-label">Email</label><input type="email" id="emp-modal-email" class="form-control" placeholder="Email"></div>
+        <div><label class="form-label">Phone</label><input type="text" id="emp-modal-phone" class="form-control" placeholder="Phone"></div>
+        
         <div><label class="form-label">Group</label><select id="emp-modal-group" class="form-control form-select"></select></div>
         <div><label class="form-label">Status</label><select id="emp-modal-status" class="form-control form-select"><option value="1">Active</option><option value="0">Inactive</option></select></div>
         <div><label class="form-label">Start Time</label><input type="time" id="emp-modal-start" class="form-control" value="09:00"></div>
@@ -289,10 +296,12 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
       </div>
       <div><label class="form-label">Salary (SAR)</label><input type="number" id="emp-modal-salary" class="form-control" placeholder="0"></div>
     </div>
-    <div class="modal-footer"><button class="btn btn-outline" onclick="UI.closeModal('modal-employee')">Cancel</button><button class="btn btn-primary" onclick="Admin.saveEmployee()">Save</button></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="UI.closeModal('modal-employee')">Cancel</button>
+      <button class="btn btn-primary" onclick="Admin.saveEmployee()">Save</button>
+    </div>
   </div>
 </div>
-
 <div id="modal-group" class="modal-overlay">
   <div class="modal">
     <div class="modal-header"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;text-transform:uppercase" id="grp-modal-title">Group</span><button class="btn-ghost" onclick="UI.closeModal('modal-group')"><i class="fas fa-times"></i></button></div>
