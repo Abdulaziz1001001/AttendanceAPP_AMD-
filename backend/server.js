@@ -10,6 +10,11 @@ const app = express();
 // Middleware
 app.use(cors()); 
 app.use(express.json()); 
+// رادار السيرفر: طباعة أي طلب يصل في شاشة Render
+app.use((req, res, next) => {
+  console.log(`📥 طلب جديد وصل: ${req.method} ${req.url}`);
+  next();
+});
 
 // Database Connection
 mongoose.connect(process.env.MONGO_URI)
