@@ -935,22 +935,18 @@ const API = {
   }
 };
 
-// المخزن السحابي: يجلب البيانات من السيرفر بدلاً من ذاكرة الهاتف!
 const DB = {
   data: { employees: [], groups: [], locations: [], records: [] },
-  
   async sync() {
     try {
       const res = await API.request('/admin/all-data');
       this.data = res;
     } catch(e) { console.error("Sync Error", e); }
   },
-
   getEmployees(){return this.data.employees},
   getGroups(){return this.data.groups},
   getLocations(){return this.data.locations},
   getRecords(){return this.data.records},
-
   today(){return new Date().toISOString().split('T')[0]},
   nowISO(){return new Date().toISOString()},
   fmtTime(iso){if(!iso)return '—';const d=new Date(iso);return d.toLocaleTimeString('en-SA',{hour:'2-digit',minute:'2-digit'})},
@@ -962,7 +958,6 @@ const DB = {
 ══════════════════════════════════════════ */
 const Auth = {
   adminSession: null, empSession: null,
-
   async adminLogin() {
     try {
       const data = await API.request('/auth/admin-login', 'POST', { 
@@ -973,11 +968,10 @@ const Auth = {
       document.getElementById('admin-display-name').textContent = data.user.name;
       document.getElementById('admin-avatar-initial').textContent = data.user.name.charAt(0).toUpperCase();
       
-      await DB.sync(); // سحب كل البيانات من السيرفر
+      await DB.sync();
       App.goto('admin'); Admin.refresh(); 
     } catch (err) { UI.showErr('admin-login-err', 'admin-login-err-msg', err.message); }
   },
-
   async empLogin() {
     try {
       const data = await API.request('/auth/emp-login', 'POST', { 
@@ -987,11 +981,10 @@ const Auth = {
       localStorage.setItem('amd_token', data.token); this.empSession = data.user;
       document.getElementById('emp-topbar-name').textContent = data.user.name;
       
-      await DB.sync(); // سحب الخرائط وقواعد الحضور من السيرفر
+      await DB.sync();
       App.goto('emp'); Emp.init();
     } catch (err) { UI.showErr('emp-login-err', 'emp-login-err-msg', err.message); }
   },
-
   adminLogout() { this.adminSession = null; localStorage.removeItem('amd_token'); App.goto('home'); },
   empLogout() { this.empSession = null; localStorage.removeItem('amd_token'); Emp.cleanup(); App.goto('home'); }
 };
@@ -1006,7 +999,8 @@ const App = {
     const el = document.getElementById('page-' + page);
     if (el) el.classList.add('active');
     this.current = page;
-    if (page === 'locations' || page === 'admin') setTimeout(() => Maps.initAdmin(), 300);
+    // التأخير هنا مهم لضمان انتهاء حركة المتصفح قبل تحديث الخريطة
+    if (page === 'locations' || page === 'admin') setTimeout(() => Maps.initAdmin(), 350);
   }
 };
 
@@ -1033,28 +1027,54 @@ const UI = {
 };
 
 /* ══════════════════════════════════════════
-   MAPS
+   MAPS (Professional Drag & Drop Marker)
 ══════════════════════════════════════════ */
 const Maps = {
   adminMap:null, empMap:null, tempMarker:null, tempCircle:null, zoneMarkers:{}, zoneCircles:{},
+  
+  // Custom Icon for standard pin look
+  pinIcon: L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+  }),
+
   initAdmin(){
-    if(this.adminMap) { setTimeout(() => this.adminMap.invalidateSize(), 100); return; }
+    if(this.adminMap) { setTimeout(() => this.adminMap.invalidateSize(), 350); return; }
     const el=document.getElementById('admin-map'); if(!el) return;
     this.adminMap=L.map('admin-map').setView([24.7136,46.6753],13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OSM',maxZoom:19}).addTo(this.adminMap);
+    
     this.adminMap.on('click',e=>{
       if(App.current!=='admin' || !document.getElementById('panel-locations').classList.contains('active')) return;
       this._placeTemp(e.latlng.lat,e.latlng.lng);
     });
-    this.renderZones(); setTimeout(() => this.adminMap.invalidateSize(), 100);
+    this.renderZones(); 
+    setTimeout(() => this.adminMap.invalidateSize(), 350); // ضمان النعومة
   },
   _placeTemp(lat,lng){
-    if(this.tempMarker) this.adminMap.removeLayer(this.tempMarker); if(this.tempCircle) this.adminMap.removeLayer(this.tempCircle);
+    if(this.tempMarker) this.adminMap.removeLayer(this.tempMarker); 
+    if(this.tempCircle) this.adminMap.removeLayer(this.tempCircle);
     const radius=parseInt(document.getElementById('zone-radius').value)||500;
-    this.tempMarker=L.circleMarker([lat,lng],{radius:8,fillColor:'#C45A28',color:'#fff',weight:2,fillOpacity:1}).addTo(this.adminMap);
-    this.tempCircle=L.circle([lat,lng],{radius,color:'#C45A28',fillColor:'#C45A28',fillOpacity:0.1,weight:2,dashArray:'6 4'}).addTo(this.adminMap);
-    document.getElementById('zone-lat-display').textContent=`Lat: ${lat.toFixed(6)}`; document.getElementById('zone-lng-display').textContent=`Lng: ${lng.toFixed(6)}`;
-    this.tempMarker._lat=lat; this.tempMarker._lng=lng;
+    
+    // إنشاء دبوس قابل للسحب!
+    this.tempMarker = L.marker([lat,lng], {icon: this.pinIcon, draggable: true}).addTo(this.adminMap);
+    this.tempCircle = L.circle([lat,lng],{radius,color:'#C45A28',fillColor:'#C45A28',fillOpacity:0.1,weight:2,dashArray:'6 4'}).addTo(this.adminMap);
+    
+    const updateCoords = (newLat, newLng) => {
+        document.getElementById('zone-lat-display').textContent=`Lat: ${newLat.toFixed(6)}`; 
+        document.getElementById('zone-lng-display').textContent=`Lng: ${newLng.toFixed(6)}`;
+        this.tempMarker._lat=newLat; this.tempMarker._lng=newLng;
+        this.tempCircle.setLatLng([newLat, newLng]); // تحريك الدائرة مع الدبوس
+    };
+
+    updateCoords(lat, lng);
+
+    // تحديث الإحداثيات عند سحب الدبوس
+    this.tempMarker.on('drag', (e) => {
+        const pos = e.target.getLatLng();
+        updateCoords(pos.lat, pos.lng);
+    });
   },
   renderZones(){
     if(!this.adminMap) return;
@@ -1074,7 +1094,9 @@ const Maps = {
       this.empMap=L.map('emp-map',{zoomControl:true}).setView(center,15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OSM',maxZoom:19}).addTo(this.empMap);
     } else { this.empMap.setView(center,15); }
-    setTimeout(() => this.empMap.invalidateSize(), 100);
+    
+    setTimeout(() => this.empMap.invalidateSize(), 350); // إصلاح نعومة خريطة الموظف
+    
     this.empMap.eachLayer(l=>{if(l instanceof L.CircleMarker||l instanceof L.Circle||l instanceof L.Marker) this.empMap.removeLayer(l);});
     zones.forEach(z=>{
       const col='#C45A28';
@@ -1120,33 +1142,112 @@ const Admin = {
     if(groupFilter) emps=emps.filter(e=>e.groupId===groupFilter);
     const tbody=document.getElementById('employees-table');
     if(!emps.length){tbody.innerHTML=`<tr><td colspan="7" class="empty-state">No employees found</td></tr>`;return;}
-    tbody.innerHTML=emps.map(e=>`
+    
+    const groups=DB.getGroups();
+    tbody.innerHTML=emps.map(e=>{
+      const grp=groups.find(g=>g.id===e.groupId);
+      return `
       <tr>
-        <td><code>${e.eid}</code></td><td><strong>${e.name}</strong></td><td>${e.username}</td><td>—</td><td>${e.workStart||'—'} – ${e.workEnd||'—'}</td>
+        <td><code>${e.eid||'—'}</code></td>
+        <td><strong>${e.name}</strong></td>
+        <td>${e.username}</td>
+        <td>${grp ? `<span class="group-dot" style="background:${grp.color}"></span> ${grp.name}` : '—'}</td>
+        <td>${e.workStart||'—'} – ${e.workEnd||'—'}</td>
         <td>${e.active?'<span class="badge badge-success">Active</span>':'<span class="badge badge-muted">Inactive</span>'}</td>
-        <td><button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteEmployee('${e.id}')"><i class="fas fa-trash"></i></button></td>
-      </tr>`).join('');
+        <td>
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.openEmployeeModal('${e.id}')" title="Edit"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteEmployee('${e.id}')" title="Delete" style="color:var(--danger)"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>`;
+    }).join('');
   },
   filterEmployees(val){ this.renderEmployees(val||document.getElementById('emp-search')?.value||'', document.getElementById('emp-group-filter')?.value||''); },
-  openEmployeeModal(){ this.populateGroupSelect('emp-modal-group'); document.getElementById('emp-modal-id').value=''; ['eid','name','user','pass','email','phone','salary'].forEach(f=>document.getElementById('emp-modal-'+f).value=''); UI.openModal('modal-employee'); },
-  async saveEmployee(){
-    const data={ id:document.getElementById('emp-modal-id').value, eid:document.getElementById('emp-modal-eid').value.trim(), name:document.getElementById('emp-modal-name').value.trim(), username:document.getElementById('emp-modal-user').value.trim(), password:document.getElementById('emp-modal-pass').value, groupId:document.getElementById('emp-modal-group').value, active:1 };
-    if(!data.name||!data.username){UI.toast('Required fields missing','error');return;}
-    try { await API.request('/admin/employee', 'POST', data); await DB.sync(); UI.closeModal('modal-employee'); this.renderEmployees(); UI.toast('Employee Saved!','success'); } catch(e){UI.toast('Error saving','error')}
+  
+  openEmployeeModal(id){ 
+    this.populateGroupSelect('emp-modal-group'); 
+    
+    if (id) {
+      // إعداد النافذة للتعديل
+      const e = DB.getEmployees().find(x => x.id === id);
+      if(!e) return;
+      document.getElementById('emp-modal-title').textContent = 'Edit Employee';
+      document.getElementById('emp-modal-id').value = e.id;
+      document.getElementById('emp-modal-eid').value = e.eid || '';
+      document.getElementById('emp-modal-name').value = e.name || '';
+      document.getElementById('emp-modal-user').value = e.username || '';
+      document.getElementById('emp-modal-pass').value = ''; // تركه فارغاً لتجنب تعديل الباسوورد بالخطأ
+      document.getElementById('emp-modal-email').value = e.email || '';
+      document.getElementById('emp-modal-phone').value = e.phone || '';
+      document.getElementById('emp-modal-group').value = e.groupId || '';
+      document.getElementById('emp-modal-status').value = e.active ? '1' : '0';
+      document.getElementById('emp-modal-start').value = e.workStart || '09:00';
+      document.getElementById('emp-modal-end').value = e.workEnd || '17:00';
+      document.getElementById('emp-modal-salary').value = e.salary || '';
+    } else {
+      // إعداد النافذة لإضافة موظف جديد
+      document.getElementById('emp-modal-title').textContent = 'Add Employee';
+      document.getElementById('emp-modal-id').value = '';
+      ['eid','name','user','pass','email','phone','salary'].forEach(f=>document.getElementById('emp-modal-'+f).value=''); 
+      document.getElementById('emp-modal-status').value='1';
+      document.getElementById('emp-modal-start').value='09:00';
+      document.getElementById('emp-modal-end').value='17:00';
+    }
+    UI.openModal('modal-employee'); 
   },
-  async deleteEmployee(id){ if(confirm('Delete?')){ await API.request(`/admin/employee/${id}`, 'DELETE'); await DB.sync(); this.renderEmployees(); UI.toast('Deleted','warning'); } },
+
+  async saveEmployee(){
+    const data={ 
+      id:document.getElementById('emp-modal-id').value, 
+      eid:document.getElementById('emp-modal-eid').value.trim(), 
+      name:document.getElementById('emp-modal-name').value.trim(), 
+      username:document.getElementById('emp-modal-user').value.trim(), 
+      password:document.getElementById('emp-modal-pass').value, 
+      email:document.getElementById('emp-modal-email').value.trim(),
+      phone:document.getElementById('emp-modal-phone').value.trim(),
+      groupId:document.getElementById('emp-modal-group').value, 
+      workStart:document.getElementById('emp-modal-start').value,
+      workEnd:document.getElementById('emp-modal-end').value,
+      salary:parseFloat(document.getElementById('emp-modal-salary').value)||0,
+      active: parseInt(document.getElementById('emp-modal-status').value) === 1 
+    };
+    if(!data.name||!data.username){UI.toast('Required fields missing','error');return;}
+    try { 
+      await API.request('/admin/employee', 'POST', data); 
+      await DB.sync(); 
+      UI.closeModal('modal-employee'); 
+      this.renderEmployees(); 
+      UI.toast('Employee Saved!','success'); 
+    } catch(e){UI.toast('Error saving','error')}
+  },
+  async deleteEmployee(id){ if(confirm('Delete this employee?')){ await API.request(`/admin/employee/${id}`, 'DELETE'); await DB.sync(); this.renderEmployees(); UI.toast('Deleted','warning'); } },
   renderGroups(){
     const groups=DB.getGroups(); const tbody=document.getElementById('groups-table');
     if(!groups.length){tbody.innerHTML=`<tr><td colspan="5" class="empty-state">No groups yet</td></tr>`;return;}
-    tbody.innerHTML=groups.map(g=>`<tr><td><span class="group-dot" style="background:${g.color}"></span></td><td><strong>${g.name}</strong></td><td>${g.desc||'—'}</td><td>—</td><td><button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteGroup('${g.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('');
+    tbody.innerHTML=groups.map(g=>`<tr><td><span class="group-dot" style="background:${g.color}"></span></td><td><strong>${g.name}</strong></td><td>${g.desc||'—'}</td><td>—</td><td><button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.openGroupModal('${g.id}')"><i class="fas fa-edit"></i></button> <button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteGroup('${g.id}')" style="color:var(--danger)"><i class="fas fa-trash"></i></button></td></tr>`).join('');
   },
-  openGroupModal(){ document.getElementById('grp-modal-id').value=''; UI.openModal('modal-group'); },
+  openGroupModal(id){ 
+    if(id) {
+      const g = DB.getGroups().find(x => x.id === id);
+      document.getElementById('grp-modal-title').textContent = 'Edit Group';
+      document.getElementById('grp-modal-id').value = g.id;
+      document.getElementById('grp-modal-name').value = g.name;
+      document.getElementById('grp-modal-desc').value = g.desc || '';
+      document.getElementById('grp-modal-color').value = g.color || '#C45A28';
+    } else {
+      document.getElementById('grp-modal-title').textContent = 'Add Group';
+      document.getElementById('grp-modal-id').value = '';
+      document.getElementById('grp-modal-name').value = '';
+      document.getElementById('grp-modal-desc').value = '';
+      document.getElementById('grp-modal-color').value = '#C45A28';
+    }
+    UI.openModal('modal-group'); 
+  },
   async saveGroup(){
     const data={ id:document.getElementById('grp-modal-id').value, name:document.getElementById('grp-modal-name').value.trim(), desc:document.getElementById('grp-modal-desc').value.trim(), color:document.getElementById('grp-modal-color').value };
     if(!data.name){UI.toast('Name required','error');return;}
     try { await API.request('/admin/group', 'POST', data); await DB.sync(); UI.closeModal('modal-group'); this.renderGroups(); UI.toast('Group Saved!','success'); } catch(e){UI.toast('Error','error')}
   },
-  async deleteGroup(id){ if(confirm('Delete?')){ await API.request(`/admin/group/${id}`, 'DELETE'); await DB.sync(); this.renderGroups(); UI.toast('Deleted','warning'); } },
+  async deleteGroup(id){ if(confirm('Delete this group?')){ await API.request(`/admin/group/${id}`, 'DELETE'); await DB.sync(); this.renderGroups(); UI.toast('Deleted','warning'); } },
   populateGroupSelect(selId,addAll){ const sel=document.getElementById(selId); if(sel) sel.innerHTML=(addAll?'<option value="">All Groups</option>':'')+DB.getGroups().map(g=>`<option value="${g.id}">${g.name}</option>`).join(''); },
   renderZoneList(){
     const zones=DB.getLocations(); const wrap=document.getElementById('zone-list'); if(!wrap) return;
