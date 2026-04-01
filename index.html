@@ -962,9 +962,24 @@ const Auth = {
     try {
       const data = await API.request('/auth/admin-login', 'POST', { 
         username: document.getElementById('admin-username').value.trim(), 
+        password: docu/* ══════════════════════════════════════════
+   AUTH (With Auto-Login)
+══════════════════════════════════════════ */
+const Auth = {
+  adminSession: null, empSession: null,
+
+  async adminLogin() {
+    try {
+      const data = await API.request('/auth/admin-login', 'POST', { 
+        username: document.getElementById('admin-username').value.trim(), 
         password: document.getElementById('admin-password').value 
       });
-      localStorage.setItem('amd_token', data.token); this.adminSession = data.user;
+      // حفظ بيانات الجلسة في المتصفح
+      localStorage.setItem('amd_token', data.token); 
+      localStorage.setItem('amd_user', JSON.stringify(data.user));
+      localStorage.setItem('amd_role', 'admin');
+      
+      this.adminSession = data.user;
       document.getElementById('admin-display-name').textContent = data.user.name;
       document.getElementById('admin-avatar-initial').textContent = data.user.name.charAt(0).toUpperCase();
       
@@ -972,21 +987,64 @@ const Auth = {
       App.goto('admin'); Admin.refresh(); 
     } catch (err) { UI.showErr('admin-login-err', 'admin-login-err-msg', err.message); }
   },
+
   async empLogin() {
     try {
       const data = await API.request('/auth/emp-login', 'POST', { 
         username: document.getElementById('emp-username').value.trim(), 
         password: document.getElementById('emp-password').value 
       });
-      localStorage.setItem('amd_token', data.token); this.empSession = data.user;
+      // حفظ بيانات الجلسة في المتصفح
+      localStorage.setItem('amd_token', data.token); 
+      localStorage.setItem('amd_user', JSON.stringify(data.user));
+      localStorage.setItem('amd_role', 'emp');
+
+      this.empSession = data.user;
       document.getElementById('emp-topbar-name').textContent = data.user.name;
       
       await DB.sync();
       App.goto('emp'); Emp.init();
     } catch (err) { UI.showErr('emp-login-err', 'emp-login-err-msg', err.message); }
   },
-  adminLogout() { this.adminSession = null; localStorage.removeItem('amd_token'); App.goto('home'); },
-  empLogout() { this.empSession = null; localStorage.removeItem('amd_token'); Emp.cleanup(); App.goto('home'); }
+
+  adminLogout() { 
+    this.adminSession = null; 
+    localStorage.removeItem('amd_token'); localStorage.removeItem('amd_user'); localStorage.removeItem('amd_role'); 
+    App.goto('home'); 
+  },
+
+  empLogout() { 
+    this.empSession = null; 
+    localStorage.removeItem('amd_token'); localStorage.removeItem('amd_user'); localStorage.removeItem('amd_role'); 
+    Emp.cleanup(); App.goto('home'); 
+  },
+
+  // الدالة السحرية لاستعادة الجلسة بعد التحديث
+  async restoreSession() {
+    const token = localStorage.getItem('amd_token');
+    const userStr = localStorage.getItem('amd_user');
+    const role = localStorage.getItem('amd_role');
+
+    if (token && userStr && role) {
+      try {
+        const user = JSON.parse(userStr);
+        if (role === 'admin') {
+          this.adminSession = user;
+          document.getElementById('admin-display-name').textContent = user.name;
+          document.getElementById('admin-avatar-initial').textContent = user.name.charAt(0).toUpperCase();
+          await DB.sync();
+          App.goto('admin'); Admin.refresh();
+        } else if (role === 'emp') {
+          this.empSession = user;
+          document.getElementById('emp-topbar-name').textContent = user.name;
+          await DB.sync();
+          App.goto('emp'); Emp.init();
+        }
+      } catch (e) {
+        this.adminLogout(); // مسح البيانات إذا كان هناك خطأ
+      }
+    }
+  }
 };
 
 /* ══════════════════════════════════════════
