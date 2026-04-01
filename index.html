@@ -685,9 +685,24 @@ const Admin = {
     UI.loader(true); try { await API.request('/admin/group', 'POST', data); await DB.sync(); UI.closeModal('modal-group'); this.renderGroups(); UI.toast('Group Saved!','success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false);
   },
   async deleteGroup(id){ if(confirm('Delete this group?')){ UI.loader(true); try{ await API.request(`/admin/group/${id}`, 'DELETE'); await DB.sync(); this.renderGroups(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
-  
-  populateGroupSelect(selId,addAll){ const sel=document.getElementById(selId); if(sel) sel.innerHTML=(addAll?'<option value="">All Groups</option>':'')+DB.getGroups().map(g=>`<option value="${g.id}">${g.name}</option>`).join(''); },
-  
+  populateGroupSelect(selId, addAll) { 
+    const sel = document.getElementById(selId); 
+    if (!sel) return; 
+    
+    // وضع خيار افتراضي دائماً لمنع انهيار شكل القائمة
+    let html = addAll ? '<option value="">All Groups</option>' : '<option value="" disabled selected>-- Select Group --</option>'; 
+    
+    const groups = DB.getGroups(); 
+    
+    // إذا لم يقم المدير بإنشاء أي مجموعة بعد
+    if (groups.length === 0 && !addAll) {
+      html += '<option value="" disabled>⚠️ No groups found! Create one first.</option>';
+    } else {
+      html += groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+    }
+    
+    sel.innerHTML = html; 
+  },  
   renderZoneList(){
     const zones=DB.getLocations(); const wrap=document.getElementById('zone-list'); if(!wrap) return;
     if(!zones.length){wrap.innerHTML='<div style="text-align:center;padding:1rem;color:var(--text-muted)">No zones yet.</div>';return;}
