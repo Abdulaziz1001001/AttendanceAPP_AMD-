@@ -22,7 +22,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Barlow
 a{color:inherit;text-decoration:none} button{cursor:pointer;font-family:'Barlow',sans-serif} input,select,textarea{font-family:'Barlow',sans-serif}
 ::-webkit-scrollbar{width:6px;height:6px} ::-webkit-scrollbar-track{background:var(--surface)} ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 
-/* Pages & Global UI */
 .page{position:fixed;inset:0;display:none;flex-direction:column;overflow:hidden} .page.active{display:flex}
 .hidden{display:none!important}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.75rem 1.5rem;font-family:'Barlow Condensed',sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border:none;border-radius:var(--radius);cursor:pointer;transition:all 0.2s;white-space:nowrap}
@@ -31,22 +30,18 @@ a{color:inherit;text-decoration:none} button{cursor:pointer;font-family:'Barlow'
 .btn-ghost{background:transparent;border:none;color:var(--text-muted)} .btn-ghost:hover{color:var(--accent)}
 .btn-success{background:var(--success);color:white} .btn-danger{background:var(--danger);color:white}
 .btn-sm{padding:0.4rem 0.9rem;font-size:0.75rem} .btn-icon{padding:0.5rem;aspect-ratio:1;border-radius:var(--radius)}
-.btn:disabled{opacity:0.5;cursor:not-allowed;transform:none!important}
 
-/* Forms */
 .form-group{margin-bottom:1.25rem} .form-label{display:block;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.5rem}
 .form-control{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:0.75rem 1rem;font-size:0.9rem;outline:none;transition:border-color 0.2s;border-radius:var(--radius)}
 .form-control:focus{border-color:var(--accent)} .form-select{padding:0.55rem 1rem;}
 .input-icon-wrap{position:relative} .input-icon-wrap i{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:0.85rem}
 .input-icon-wrap .form-control{padding-left:2.5rem} .toggle-pw{position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-dim);padding:0.25rem;transition:color 0.2s} .toggle-pw:hover{color:var(--accent)}
 
-/* Alerts & Badges */
 .alert{padding:0.75rem 1rem;border-radius:var(--radius);font-size:0.85rem;display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:1rem}
 .alert-danger{background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);color:#e74c3c}
 .badge{display:inline-block;padding:0.2rem 0.6rem;border-radius:100px;font-size:0.7rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase}
 .badge-success{background:rgba(39,174,96,0.15);color:#27ae60} .badge-warning{background:rgba(230,126,34,0.15);color:#e67e22} .badge-danger{background:rgba(231,76,60,0.15);color:#e74c3c} .badge-muted{background:var(--surface3);color:var(--text-muted)}
 
-/* Home & Auth */
 #page-home{background:var(--bg) radial-gradient(ellipse 80% 60% at 50% 0%, rgba(196,90,40,0.08) 0%, transparent 70%);align-items:center;justify-content:center;}
 .home-grid{display:grid;gap:3rem;align-items:center;text-align:center;max-width:540px;width:90%;padding:2rem}
 .amd-logo-icon{width:72px;height:72px;fill:var(--accent)} .amd-arabic{font-size:2rem;color:var(--accent);font-weight:300} .amd-latin{font-family:'Cinzel',serif;font-size:1.5rem;letter-spacing:0.1em}
@@ -55,7 +50,6 @@ a{color:inherit;text-decoration:none} button{cursor:pointer;font-family:'Barlow'
 .auth-box{width:420px;max-width:92vw;margin:auto} .auth-header{margin-bottom:2.5rem}
 #page-admin-login,#page-emp-login{background:var(--bg) radial-gradient(ellipse 60% 50% at 50% 100%, rgba(196,90,40,0.06) 0%, transparent 70%);align-items:center;justify-content:center}
 
-/* Layouts */
 #page-admin{flex-direction:row}
 .sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:transform 0.3s}
 .nav-link{display:flex;align-items:center;gap:0.75rem;padding:0.65rem 1.25rem;color:var(--text-muted);font-size:0.85rem;cursor:pointer;border-left:2px solid transparent} .nav-link:hover{color:var(--text);background:var(--surface2)} .nav-link.active{color:var(--accent);border-left-color:var(--accent);background:var(--accent-glow)}
@@ -63,31 +57,26 @@ a{color:inherit;text-decoration:none} button{cursor:pointer;font-family:'Barlow'
 .content{flex:1;overflow-y:auto;padding:1.5rem}
 .admin-panel{display:none} .admin-panel.active{display:block}
 
-/* Cards & Tables */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem}
 .stat-card{background:var(--surface);border:1px solid var(--border);padding:1.25rem;border-radius:var(--radius-lg)} .stat-value{font-family:'Barlow Condensed',sans-serif;font-size:2.5rem;font-weight:700}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1.5rem} .card-header{padding:1rem 1.25rem;border-bottom:1px solid var(--border)} .card-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.1em;text-transform:uppercase}
 table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding:0.75rem 1rem;text-align:left;font-size:0.7rem;text-transform:uppercase;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border)} td{padding:0.85rem 1rem;border-bottom:1px solid var(--border);font-size:0.85rem} tr:hover td{background:var(--surface2)}
 
-/* Maps */
 .map-layout{display:grid;grid-template-columns:1fr 340px;gap:1rem;height:calc(100vh - 160px)}
 #admin-map,#emp-map{width:100%;height:100%;border-radius:var(--radius-lg);border:1px solid var(--border)}
 .leaflet-container{background:#1a1a1a!important; font-family:'Barlow',sans-serif;} .leaflet-tile{filter:brightness(0.7) saturate(0.8)}
 .leaflet-popup-content-wrapper{background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--border)!important;border-radius:var(--radius)!important} .leaflet-popup-tip{background:var(--surface)!important}
 
-/* Employee Portal */
 .emp-grid{display:grid;grid-template-columns:1fr 380px;gap:1.5rem;height:calc(100vh - 120px)}
 .checkin-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1rem}
 .status-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0} .status-dot.inside{background:var(--success);box-shadow:0 0 8px var(--success)} .status-dot.outside{background:var(--danger);box-shadow:0 0 8px var(--danger)} .status-dot.unknown{background:var(--text-dim)}
 .pulse{animation:pulse 1.5s infinite} @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(1.15)}}
 
-/* Loader Overlay */
 .loader-overlay{position:fixed;inset:0;background:rgba(12,12,12,0.9);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.3s}
 .loader-overlay.show{opacity:1;pointer-events:all}
 .spinner{width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:1rem}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Modals & Toasts */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s} .modal-overlay.show{opacity:1;pointer-events:all}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;transform:translateY(20px);transition:transform 0.2s} .modal-overlay.show .modal{transform:translateY(0)}
 .modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between} .modal-body{padding:1.5rem} .modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:0.75rem}
@@ -107,8 +96,8 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
 
 <div id="global-loader" class="loader-overlay">
   <div class="spinner"></div>
-  <h3 style="font-family:'Barlow Condensed',sans-serif;letter-spacing:0.1em;color:var(--accent)">CONNECTING TO SERVER...</h3>
-  <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem">Please wait, waking up database</p>
+  <h3 style="font-family:'Barlow Condensed',sans-serif;letter-spacing:0.1em;color:var(--accent)">CONNECTING TO SECURE SERVER...</h3>
+  <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem">Synchronizing Data</p>
 </div>
 
 <div id="page-home" class="page active">
@@ -275,6 +264,7 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
         <div><label class="form-label">Start Time</label><input type="time" id="emp-modal-start" class="form-control" value="09:00"></div>
         <div><label class="form-label">End Time</label><input type="time" id="emp-modal-end" class="form-control" value="17:00"></div>
       </div>
+      <div><label class="form-label">Salary (SAR)</label><input type="number" id="emp-modal-salary" class="form-control" placeholder="0"></div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline" onclick="UI.closeModal('modal-employee')">Cancel</button><button class="btn btn-primary" onclick="Admin.saveEmployee()">Save</button></div>
   </div>
@@ -321,6 +311,7 @@ const UI = {
   }
 };
 
+/* 🚨 الرادار الذكي: يطبع الخطأ الحقيقي للمستخدم لو فشل الاتصال */
 const API = {
   getHeaders() {
     const token = localStorage.getItem('amd_token');
@@ -331,8 +322,12 @@ const API = {
     if (body) config.body = JSON.stringify(body);
     try {
       const res = await fetch(`${API_URL}${endpoint}`, config);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.msg || 'Server Error');
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } 
+      catch (e) { throw new Error(`Server Error (${res.status}): Please check Render logs. Route might be missing.`); }
+      
+      if (!res.ok) throw new Error(data.msg || `Error ${res.status}`);
       return data;
     } catch (err) { throw err; }
   }
@@ -346,7 +341,6 @@ const DB = {
       this.data = res;
     } catch(e) { 
       console.error("Sync Failed", e); 
-      UI.toast("Could not reach database. Check backend.", "error");
       throw e; 
     }
   },
@@ -507,7 +501,7 @@ const Admin = {
     if(panel==='records'){ document.getElementById('rec-date').value=DB.today(); this.filterRecords(); }
     if(panel==='dashboard') this.renderDashboard();
   },
-  async refresh(){ UI.loader(true); try{ await DB.sync(); this.showPanel(this.currentPanel); UI.toast('Data Synced', 'success'); } catch(e){} UI.loader(false); },
+  async refresh(){ UI.loader(true); try{ await DB.sync(); this.showPanel(this.currentPanel); UI.toast('Data Synced', 'success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false); },
   renderDashboard(){
     const emps=DB.getEmployees().filter(e=>e.active); document.getElementById('stat-total').textContent=emps.length;
     const recs=DB.getRecords().filter(r=>r.date===DB.today());
@@ -554,11 +548,12 @@ const Admin = {
       document.getElementById('emp-modal-name').value = e.name || ''; document.getElementById('emp-modal-user').value = e.username || '';
       document.getElementById('emp-modal-pass').value = ''; document.getElementById('emp-modal-email').value = e.email || '';
       document.getElementById('emp-modal-phone').value = e.phone || ''; document.getElementById('emp-modal-group').value = e.groupId || '';
+      document.getElementById('emp-modal-salary').value = e.salary || '';
       document.getElementById('emp-modal-status').value = e.active ? '1' : '0';
       document.getElementById('emp-modal-start').value = e.workStart || '09:00'; document.getElementById('emp-modal-end').value = e.workEnd || '17:00';
     } else {
       document.getElementById('emp-modal-title').textContent = 'Add Employee'; document.getElementById('emp-modal-id').value = '';
-      ['eid','name','user','pass','email','phone'].forEach(f=>document.getElementById('emp-modal-'+f).value=''); 
+      ['eid','name','user','pass','email','phone','salary'].forEach(f=>document.getElementById('emp-modal-'+f).value=''); 
       document.getElementById('emp-modal-status').value='1'; document.getElementById('emp-modal-start').value='09:00'; document.getElementById('emp-modal-end').value='17:00';
     }
     UI.openModal('modal-employee'); 
@@ -570,15 +565,16 @@ const Admin = {
       password:document.getElementById('emp-modal-pass').value, email:document.getElementById('emp-modal-email').value.trim(),
       phone:document.getElementById('emp-modal-phone').value.trim(), groupId:document.getElementById('emp-modal-group').value, 
       workStart:document.getElementById('emp-modal-start').value, workEnd:document.getElementById('emp-modal-end').value,
+      salary:parseFloat(document.getElementById('emp-modal-salary').value)||0,
       active: parseInt(document.getElementById('emp-modal-status').value) === 1 
     };
     if(!data.name||!data.username){UI.toast('Required fields missing','error');return;}
     UI.loader(true);
     try { await API.request('/admin/employee', 'POST', data); await DB.sync(); UI.closeModal('modal-employee'); this.renderEmployees(); UI.toast('Employee Saved!','success'); } 
-    catch(e){UI.toast('Database Error','error')}
+    catch(e){UI.toast(e.message,'error')}
     UI.loader(false);
   },
-  async deleteEmployee(id){ if(confirm('Delete this employee?')){ UI.loader(true); try{ await API.request(`/admin/employee/${id}`, 'DELETE'); await DB.sync(); this.renderEmployees(); UI.toast('Deleted','warning'); } catch(e){UI.toast('Error', 'error');} UI.loader(false); } },
+  async deleteEmployee(id){ if(confirm('Delete this employee?')){ UI.loader(true); try{ await API.request(`/admin/employee/${id}`, 'DELETE'); await DB.sync(); this.renderEmployees(); UI.toast('Deleted','warning'); } catch(e){UI.toast(e.message, 'error');} UI.loader(false); } },
   
   renderGroups(){
     const groups=DB.getGroups(); const tbody=document.getElementById('groups-table');
@@ -599,9 +595,9 @@ const Admin = {
   async saveGroup(){
     const data={ id:document.getElementById('grp-modal-id').value, name:document.getElementById('grp-modal-name').value.trim(), desc:document.getElementById('grp-modal-desc').value.trim(), color:document.getElementById('grp-modal-color').value };
     if(!data.name){UI.toast('Name required','error');return;}
-    UI.loader(true); try { await API.request('/admin/group', 'POST', data); await DB.sync(); UI.closeModal('modal-group'); this.renderGroups(); UI.toast('Group Saved!','success'); } catch(e){UI.toast('Error','error')} UI.loader(false);
+    UI.loader(true); try { await API.request('/admin/group', 'POST', data); await DB.sync(); UI.closeModal('modal-group'); this.renderGroups(); UI.toast('Group Saved!','success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false);
   },
-  async deleteGroup(id){ if(confirm('Delete this group?')){ UI.loader(true); try{ await API.request(`/admin/group/${id}`, 'DELETE'); await DB.sync(); this.renderGroups(); UI.toast('Deleted','warning'); }catch(e){} UI.loader(false); } },
+  async deleteGroup(id){ if(confirm('Delete this group?')){ UI.loader(true); try{ await API.request(`/admin/group/${id}`, 'DELETE'); await DB.sync(); this.renderGroups(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
   
   populateGroupSelect(selId,addAll){ const sel=document.getElementById(selId); if(sel) sel.innerHTML=(addAll?'<option value="">All Groups</option>':'')+DB.getGroups().map(g=>`<option value="${g.id}">${g.name}</option>`).join(''); },
   
@@ -615,10 +611,10 @@ const Admin = {
     const name=document.getElementById('zone-name').value.trim();
     if(!name || !Maps.tempMarker){UI.toast('Name and map location required','error');return;}
     const data={ name, groupId:document.getElementById('zone-group').value, lat:Maps.tempMarker._lat, lng:Maps.tempMarker._lng, radius:parseInt(document.getElementById('zone-radius').value)||500 };
-    UI.loader(true); try { await API.request('/admin/location', 'POST', data); await DB.sync(); Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; Maps.renderZones(); UI.toast('Saved','success'); } catch(e){UI.toast('Error','error')} UI.loader(false);
+    UI.loader(true); try { await API.request('/admin/location', 'POST', data); await DB.sync(); Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; Maps.renderZones(); UI.toast('Saved','success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false);
   },
   clearZoneForm(){ if(Maps.tempMarker) Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; },
-  async deleteZone(id){ if(confirm('Delete?')){ UI.loader(true); try{ await API.request(`/admin/location/${id}`, 'DELETE'); await DB.sync(); Maps.renderZones(); UI.toast('Deleted','warning'); }catch(e){} UI.loader(false); } },
+  async deleteZone(id){ if(confirm('Delete?')){ UI.loader(true); try{ await API.request(`/admin/location/${id}`, 'DELETE'); await DB.sync(); Maps.renderZones(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
   
   filterRecords(){
     const search=document.getElementById('rec-search').value.toLowerCase(); const date=document.getElementById('rec-date').value;
@@ -684,7 +680,7 @@ const Emp = {
         await API.request('/employee/record', 'POST', rec); await DB.sync();
         this.currentRecord=DB.getRecords().find(r=>r.employeeId===Auth.empSession.id&&r.date===DB.today());
         this.renderTodayRecord(); this.updateButtons(true); this.renderHistory(); UI.toast('Checked in!','success');
-    } catch(e) { UI.toast('Server Error','error'); }
+    } catch(e) { UI.toast(e.message,'error'); }
     UI.loader(false);
   },
   async checkOut(){
@@ -695,7 +691,7 @@ const Emp = {
         await API.request('/employee/record', 'POST', rec); await DB.sync();
         this.currentRecord=DB.getRecords().find(r=>r.employeeId===Auth.empSession.id&&r.date===DB.today());
         this.renderTodayRecord(); this.updateButtons(false); this.renderHistory(); UI.toast('Checked out!','success');
-    } catch(e) { UI.toast('Server Error','error'); }
+    } catch(e) { UI.toast(e.message,'error'); }
     UI.loader(false);
   },
   renderTodayRecord(){
