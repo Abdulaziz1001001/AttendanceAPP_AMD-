@@ -1,55 +1,45 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const bcrypt = require('bcryptjs'); // تمت إضافة هذا السطر
-const Admin = require('./models/Admin'); // تمت إضافة هذا السطر
+const bcrypt = require('bcryptjs');
+const Admin = require('./models/Admin');
 require('dotenv').config();
 
 const app = express();
 
-// Middleware
+// إعدادات الأمان واستقبال البيانات
 app.use(cors()); 
 app.use(express.json()); 
-// رادار السيرفر: طباعة أي طلب يصل في شاشة Render
+
+// 🚨 رادار السيرفر: يطبع أي طلب يصل إلى الشاشة لكي نراه في Render
 app.use((req, res, next) => {
-  console.log(`📥 طلب جديد وصل: ${req.method} ${req.url}`);
+  console.log(`📥 [${req.method}] ${req.url}`);
   next();
 });
 
-// Database Connection
+// الاتصال بقاعدة البيانات
 mongoose.connect(process.env.MONGO_URI)
   .then(async () => {
-    console.log('MongoDB Connected successfully');
-    
-    // إنشاء حساب المدير الافتراضي إذا لم يكن موجوداً
+    console.log('✅ MongoDB Connected successfully');
     try {
       const adminExists = await Admin.findOne({ username: 'admin' });
       if (!adminExists) {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash('admin123', salt);
-        
-        const newAdmin = new Admin({
-          username: 'admin',
-          password: hashedPassword,
-          name: 'System Administrator'
-        });
-        
+        const newAdmin = new Admin({ username: 'admin', password: hashedPassword, name: 'System Administrator' });
         await newAdmin.save();
-        console.log('Default Admin created successfully! (admin / admin123)');
+        console.log('✅ Default Admin created! (admin / admin123)');
       }
-    } catch (err) {
-      console.log('Error creating default admin:', err);
-    }
+    } catch (err) {}
   })
-  .catch(err => console.log('MongoDB connection error:', err));
+  .catch(err => console.log('❌ MongoDB Error:', err));
 
-// Route Imports
+// المسارات
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/employee', require('./routes/employee'));
 
-// Basic health check route
-app.get('/', (req, res) => res.send('AMD Backend API is running'));
+app.get('/', (req, res) => res.send('AMD Backend API is running perfectly!'));
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
