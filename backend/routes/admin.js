@@ -74,16 +74,19 @@ router.delete('/group/:id', async (req, res) => {
     catch (err) { res.status(500).json({ msg: 'Error' }); }
 });
 
-// 4. الخرائط والمواقع
+// الخرائط والمواقع
 router.post('/location', async (req, res) => {
   try {
     const { name, groupId, lat, lng, radius } = req.body;
     const loc = new Location({ name, groupId, lat, lng, radius });
     await loc.save();
     res.json({ msg: 'Success' });
-  } catch (err) { res.status(500).json({ msg: 'Error' }); }
+  } catch (err) { 
+    console.error("Location Save Error:", err);
+    // إرسال الخطأ الحقيقي للواجهة بدلاً من كلمة Error المجهولة
+    res.status(500).json({ msg: err.message }); 
+  }
 });
-
 router.delete('/location/:id', async (req, res) => {
     try { await Location.findByIdAndDelete(req.params.id); res.json({msg: 'Deleted'}); } 
     catch (err) { res.status(500).json({ msg: 'Error' }); }
