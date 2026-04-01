@@ -31,7 +31,9 @@ router.get('/all-data', async (req, res) => {
 router.post('/employee', async (req, res) => {
   try {
     const { id, eid, name, username, password, email, phone, groupId, workStart, workEnd, salary, active } = req.body;
+    
     if (id) {
+        // حالة التعديل
         let emp = await Employee.findById(id);
         if(emp) {
             emp.eid = eid; emp.name = name; emp.username = username; emp.email = email; emp.phone = phone;
@@ -43,13 +45,23 @@ router.post('/employee', async (req, res) => {
             await emp.save();
         }
     } else {
+        // حالة إضافة موظف جديد
+        if (!password) return res.status(400).json({ msg: 'Password is required' });
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         const emp = new Employee({ eid, name, username, password: hashedPassword, email, phone, groupId, workStart, workEnd, salary, active });
         await emp.save();
     }
     res.json({ msg: 'Success' });
-  } catch (err) { res.status(500).json({ msg: err.message }); }
+    
+  } catch (err) { 
+    console.error("Employee Save Error: ", err);
+    // إذا كان الخطأ بسبب أن اسم المستخدم مستخدم مسبقاً (رقم الخطأ 11000 في MongoDB)
+    if (err.code === 11000) {
+        return res.status(400).json({ msg: 'Error: Username already exists!' });
+    }
+    res.status(500).json({ msg: err.message }); 
+  }
 });
 
 router.delete('/employee/:id', async (req, res) => {
