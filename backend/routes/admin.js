@@ -5,6 +5,7 @@ const Group = require('../models/Group');
 const Location = require('../models/Location');
 const Record = require('../models/Record');
 const router = express.Router();
+const AdminUser = require('../models/Admin');
 
 // 1. مسار سحري يجلب كل بيانات النظام دفعة واحدة ليعرضها في الواجهة
 router.get('/all-data', async (req, res) => {
@@ -84,6 +85,34 @@ router.post('/location', async (req, res) => {
 router.delete('/location/:id', async (req, res) => {
     try { await Location.findByIdAndDelete(req.params.id); res.json({msg: 'Deleted'}); } 
     catch (err) { res.status(500).json({ msg: 'Error' }); }
+});
+// مسار تعديل الملف الشخصي للمدير
+router.post('/profile', async (req, res) => {
+  try {
+    const { adminId, username, email, password } = req.body;
+    let admin = await AdminUser.findById(adminId);
+    
+    if (!admin) return res.status(404).json({ msg: 'Admin not found' });
+
+    admin.username = username || admin.username;
+    admin.email = email || admin.email;
+
+    // إذا قام بكتابة باسوورد جديد، نقوم بتشفيره وحفظه
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      admin.password = await bcrypt.hash(password, salt);
+    }
+    
+    await admin.save();
+    
+    // إعادة بيانات المدير الجديدة للواجهة لتحديث الجلسة
+    res.json({ 
+      msg: 'Profile updated successfully', 
+      user: { id: admin._id, username: admin.username, name: admin.name, email: admin.email } 
+    });
+  } catch (err) {
+    res.status(500).json({ msg: 'Server Error while updating profile' });
+  }
 });
 
 module.exports = router;
