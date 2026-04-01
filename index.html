@@ -910,22 +910,18 @@ tbody tr:hover td{background:var(--surface2)}
 
 <!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 'use strict';
 
 /* ══════════════════════════════════════════
-   API & DATA STORE (Hybrid Mode)
+   API & CLOUD DATA STORE (Synchronized)
 ══════════════════════════════════════════ */
-const API_URL = 'https://attendanceapp-50no.onrender.com/api'; // السيرفر الخاص بك
+const API_URL = 'https://attendanceapp-50no.onrender.com/api';
 
 const API = {
   getHeaders() {
     const token = localStorage.getItem('amd_token');
-    return {
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-    };
+    return { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) };
   },
   async request(endpoint, method = 'GET', body = null) {
     const config = { method, headers: this.getHeaders() };
@@ -935,97 +931,69 @@ const API = {
       const data = await res.json();
       if (!res.ok) throw new Error(data.msg || 'API Error');
       return data;
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
+    } catch (err) { throw err; }
   }
 };
 
-// تم استرجاع هذا الكائن لأن النظام يعتمد عليه في حساب الوقت والتواريخ وتنسيقها
+// المخزن السحابي: يجلب البيانات من السيرفر بدلاً من ذاكرة الهاتف!
 const DB = {
-  _get(k){try{return JSON.parse(localStorage.getItem('amd_'+k))||null}catch{return null}},
-  _set(k,v){localStorage.setItem('amd_'+k,JSON.stringify(v))},
-  getEmployees(){return this._get('employees')||[]},
-  getGroups(){return this._get('groups')||[{id:'g1',name:'General Workers',desc:'Default',color:'#C45A28'}]},
-  getLocations(){return this._get('locations')||[]},
-  getRecords(){return this._get('records')||[]},
-  saveEmployees(d){this._set('employees',d)},
-  saveGroups(d){this._set('groups',d)},
-  saveLocations(d){this._set('locations',d)},
-  saveRecords(d){this._set('records',d)},
-  uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)},
+  data: { employees: [], groups: [], locations: [], records: [] },
+  
+  async sync() {
+    try {
+      const res = await API.request('/admin/all-data');
+      this.data = res;
+    } catch(e) { console.error("Sync Error", e); }
+  },
+
+  getEmployees(){return this.data.employees},
+  getGroups(){return this.data.groups},
+  getLocations(){return this.data.locations},
+  getRecords(){return this.data.records},
+
   today(){return new Date().toISOString().split('T')[0]},
   nowISO(){return new Date().toISOString()},
   fmtTime(iso){if(!iso)return '—';const d=new Date(iso);return d.toLocaleTimeString('en-SA',{hour:'2-digit',minute:'2-digit'})},
   fmtDate(iso){if(!iso)return '—';return new Date(iso).toLocaleDateString('en-SA')},
 };
 
-/* Seed initial local data once */
-if(!localStorage.getItem('amd_seeded')){
-  const g1=DB.uid(),g2=DB.uid();
-  DB.saveGroups([
-    {id:g1,name:'Site Workers',desc:'On-site construction workers',color:'#C45A28'},
-    {id:g2,name:'Office Staff',desc:'Administrative and office employees',color:'#3498DB'}
-  ]);
-  const e1=DB.uid(),e2=DB.uid();
-  DB.saveEmployees([
-    {id:e1,eid:'EMP001',name:'Mohammed Al-Rashidi',username:'m.rashidi',password:'1234',email:'m.rashidi@amd.sa',phone:'0501234567',groupId:g1,salary:5000,workStart:'08:00',workEnd:'16:00',active:1},
-    {id:e2,eid:'EMP002',name:'Sara Al-Otaibi',username:'s.otaibi',password:'1234',email:'s.otaibi@amd.sa',phone:'0507654321',groupId:g2,salary:6000,workStart:'09:00',workEnd:'17:00',active:1}
-  ]);
-  localStorage.setItem('amd_seeded','1');
-}
-
 /* ══════════════════════════════════════════
-   AUTH (Connected to Render API)
+   AUTH
 ══════════════════════════════════════════ */
 const Auth = {
-  adminSession: null,
-  empSession: null,
+  adminSession: null, empSession: null,
 
   async adminLogin() {
-    const u = document.getElementById('admin-username').value.trim();
-    const p = document.getElementById('admin-password').value;
     try {
-      const data = await API.request('/auth/admin-login', 'POST', { username: u, password: p });
-      localStorage.setItem('amd_token', data.token); 
-      this.adminSession = data.user;
+      const data = await API.request('/auth/admin-login', 'POST', { 
+        username: document.getElementById('admin-username').value.trim(), 
+        password: document.getElementById('admin-password').value 
+      });
+      localStorage.setItem('amd_token', data.token); this.adminSession = data.user;
       document.getElementById('admin-display-name').textContent = data.user.name;
       document.getElementById('admin-avatar-initial').textContent = data.user.name.charAt(0).toUpperCase();
-      App.goto('admin');
-      Admin.refresh(); 
-    } catch (err) {
-      UI.showErr('admin-login-err', 'admin-login-err-msg', err.message || 'Invalid username or password');
-    }
-  },
-
-  adminLogout() {
-    this.adminSession = null;
-    localStorage.removeItem('amd_token');
-    App.goto('home');
+      
+      await DB.sync(); // سحب كل البيانات من السيرفر
+      App.goto('admin'); Admin.refresh(); 
+    } catch (err) { UI.showErr('admin-login-err', 'admin-login-err-msg', err.message); }
   },
 
   async empLogin() {
-    const u = document.getElementById('emp-username').value.trim();
-    const p = document.getElementById('emp-password').value;
     try {
-      const data = await API.request('/auth/emp-login', 'POST', { username: u, password: p });
-      localStorage.setItem('amd_token', data.token);
-      this.empSession = data.user;
+      const data = await API.request('/auth/emp-login', 'POST', { 
+        username: document.getElementById('emp-username').value.trim(), 
+        password: document.getElementById('emp-password').value 
+      });
+      localStorage.setItem('amd_token', data.token); this.empSession = data.user;
       document.getElementById('emp-topbar-name').textContent = data.user.name;
-      App.goto('emp');
-      Emp.init();
-    } catch (err) {
-      UI.showErr('emp-login-err', 'emp-login-err-msg', err.message || 'Invalid username or password');
-    }
+      
+      await DB.sync(); // سحب الخرائط وقواعد الحضور من السيرفر
+      App.goto('emp'); Emp.init();
+    } catch (err) { UI.showErr('emp-login-err', 'emp-login-err-msg', err.message); }
   },
 
-  empLogout() {
-    this.empSession = null;
-    localStorage.removeItem('amd_token');
-    Emp.cleanup();
-    App.goto('home');
-  }
+  adminLogout() { this.adminSession = null; localStorage.removeItem('amd_token'); App.goto('home'); },
+  empLogout() { this.empSession = null; localStorage.removeItem('amd_token'); Emp.cleanup(); App.goto('home'); }
 };
 
 /* ══════════════════════════════════════════
@@ -1046,39 +1014,20 @@ const App = {
    UI HELPERS
 ══════════════════════════════════════════ */
 const UI = {
-  togglePw(id,btn){
-    const inp=document.getElementById(id);
-    const isText=inp.type==='text';
-    inp.type=isText?'password':'text';
-    btn.querySelector('i').className=isText?'fas fa-eye':'fas fa-eye-slash';
-  },
-  showErr(divId,spanId,msg){
-    document.getElementById(divId).classList.remove('hidden');
-    document.getElementById(spanId).textContent=msg;
-  },
-  openModal(id){document.getElementById(id).classList.add('show')},
-  closeModal(id){document.getElementById(id).classList.remove('show')},
-  toggleSidebar(){
-    document.getElementById('admin-sidebar').classList.toggle('open');
-    document.getElementById('sidebar-overlay').classList.toggle('show');
-  },
-  closeSidebar(){
-    document.getElementById('admin-sidebar').classList.remove('open');
-    document.getElementById('sidebar-overlay').classList.remove('show');
-  },
+  togglePw(id,btn){ const inp=document.getElementById(id); const isText=inp.type==='text'; inp.type=isText?'password':'text'; btn.querySelector('i').className=isText?'fas fa-eye':'fas fa-eye-slash'; },
+  showErr(divId,spanId,msg){ document.getElementById(divId).classList.remove('hidden'); document.getElementById(spanId).textContent=msg; },
+  openModal(id){document.getElementById(id).classList.add('show')}, closeModal(id){document.getElementById(id).classList.remove('show')},
+  toggleSidebar(){ document.getElementById('admin-sidebar').classList.toggle('open'); document.getElementById('sidebar-overlay').classList.toggle('show'); },
+  closeSidebar(){ document.getElementById('admin-sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('show'); },
   toast(msg,type='info'){
     const icons={success:'fa-check-circle',error:'fa-exclamation-circle',warning:'fa-exclamation-triangle',info:'fa-info-circle'};
-    const t=document.createElement('div');
-    t.className=`toast ${type}`;
-    t.innerHTML=`<i class="fas ${icons[type]||icons.info}"></i><span>${msg}</span>`;
-    document.getElementById('toast-wrap').appendChild(t);
-    setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),350)},3500);
+    const t=document.createElement('div'); t.className=`toast ${type}`; t.innerHTML=`<i class="fas ${icons[type]||icons.info}"></i><span>${msg}</span>`;
+    document.getElementById('toast-wrap').appendChild(t); setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),350)},3500);
   },
   badge(status){
     const map={present:'success',late:'warning',absent:'danger',early_leave:'warning'};
     const label={present:'Present',late:'Late',absent:'Absent',early_leave:'Early Leave',pending:'Pending'};
-    const cls=map[status]||'muted';
-    return `<span class="badge badge-${cls}">${label[status]||status}</span>`;
+    return `<span class="badge badge-${map[status]||'muted'}">${label[status]||status}</span>`;
   },
   statusDot(color){return `<span class="group-dot" style="background:${color}"></span>`}
 };
@@ -1086,117 +1035,78 @@ const UI = {
 /* ══════════════════════════════════════════
    MAPS
 ══════════════════════════════════════════ */
-initAdmin(){
-    // إذا كانت الخريطة مفتوحة مسبقاً، نجبرها على إعادة حساب حجمها لتعمل بسلاسة
-    if(this.adminMap) {
-      setTimeout(() => this.adminMap.invalidateSize(), 100);
-      return;
-    }
-    
-    const el=document.getElementById('admin-map');
-    if(!el) return;
-    
-    this.adminMap=L.map('admin-map').setView(CONFIG.center,13);
+const Maps = {
+  adminMap:null, empMap:null, tempMarker:null, tempCircle:null, zoneMarkers:{}, zoneCircles:{},
+  initAdmin(){
+    if(this.adminMap) { setTimeout(() => this.adminMap.invalidateSize(), 100); return; }
+    const el=document.getElementById('admin-map'); if(!el) return;
+    this.adminMap=L.map('admin-map').setView([24.7136,46.6753],13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OSM',maxZoom:19}).addTo(this.adminMap);
-    
     this.adminMap.on('click',e=>{
       if(App.current!=='admin' || !document.getElementById('panel-locations').classList.contains('active')) return;
       this._placeTemp(e.latlng.lat,e.latlng.lng);
     });
-    
-    this.renderZones();
-    
-    // إصلاح أبعاد الخريطة عند تشغيلها للمرة الأولى أيضاً
-    setTimeout(() => this.adminMap.invalidateSize(), 100);
+    this.renderZones(); setTimeout(() => this.adminMap.invalidateSize(), 100);
   },
-
   _placeTemp(lat,lng){
-    if(this.tempMarker) this.adminMap.removeLayer(this.tempMarker);
-    if(this.tempCircle) this.adminMap.removeLayer(this.tempCircle);
+    if(this.tempMarker) this.adminMap.removeLayer(this.tempMarker); if(this.tempCircle) this.adminMap.removeLayer(this.tempCircle);
     const radius=parseInt(document.getElementById('zone-radius').value)||500;
     this.tempMarker=L.circleMarker([lat,lng],{radius:8,fillColor:'#C45A28',color:'#fff',weight:2,fillOpacity:1}).addTo(this.adminMap);
     this.tempCircle=L.circle([lat,lng],{radius,color:'#C45A28',fillColor:'#C45A28',fillOpacity:0.1,weight:2,dashArray:'6 4'}).addTo(this.adminMap);
-    document.getElementById('zone-lat-display').textContent=`Lat: ${lat.toFixed(6)}`;
-    document.getElementById('zone-lng-display').textContent=`Lng: ${lng.toFixed(6)}`;
+    document.getElementById('zone-lat-display').textContent=`Lat: ${lat.toFixed(6)}`; document.getElementById('zone-lng-display').textContent=`Lng: ${lng.toFixed(6)}`;
     this.tempMarker._lat=lat; this.tempMarker._lng=lng;
   },
-
   renderZones(){
     if(!this.adminMap) return;
-    Object.values(this.zoneMarkers).forEach(m=>this.adminMap.removeLayer(m));
-    Object.values(this.zoneCircles).forEach(c=>this.adminMap.removeLayer(c));
+    Object.values(this.zoneMarkers).forEach(m=>this.adminMap.removeLayer(m)); Object.values(this.zoneCircles).forEach(c=>this.adminMap.removeLayer(c));
     this.zoneMarkers={}; this.zoneCircles={};
-
     DB.getLocations().forEach(loc=>{
-      const grp=DB.getGroups().find(g=>g.id===loc.groupId);
-      const color=grp?grp.color:'#C45A28';
-      const m=L.circleMarker([loc.lat,loc.lng],{radius:10,fillColor:color,color:'#fff',weight:2,fillOpacity:1})
-        .bindPopup(`<strong>${loc.name}</strong><br>Radius: ${loc.radius}m`).addTo(this.adminMap);
+      const grp=DB.getGroups().find(g=>g.id===loc.groupId); const color=grp?grp.color:'#C45A28';
+      const m=L.circleMarker([loc.lat,loc.lng],{radius:10,fillColor:color,color:'#fff',weight:2,fillOpacity:1}).bindPopup(`<strong>${loc.name}</strong><br>Radius: ${loc.radius}m`).addTo(this.adminMap);
       const c=L.circle([loc.lat,loc.lng],{radius:loc.radius,color:color,fillColor:color,fillOpacity:0.08,weight:2}).addTo(this.adminMap);
       this.zoneMarkers[loc.id]=m; this.zoneCircles[loc.id]=c;
     });
     Admin.renderZoneList();
   },
-initEmp(lat,lng,zones,userLat,userLng){
+  initEmp(lat,lng,zones,userLat,userLng){
     const center=[lat||24.7136,lng||46.6753];
     if(!this.empMap){
       this.empMap=L.map('emp-map',{zoomControl:true}).setView(center,15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OSM',maxZoom:19}).addTo(this.empMap);
-    } else { 
-      this.empMap.setView(center,15); 
-    }
-    
-    // إجبار الخريطة على تحديث حجمها لتعمل بسلاسة تامة
+    } else { this.empMap.setView(center,15); }
     setTimeout(() => this.empMap.invalidateSize(), 100);
-
     this.empMap.eachLayer(l=>{if(l instanceof L.CircleMarker||l instanceof L.Circle||l instanceof L.Marker) this.empMap.removeLayer(l);});
-
     zones.forEach(z=>{
       const col='#C45A28';
       L.circle([z.lat,z.lng],{radius:z.radius,color:col,fillColor:col,fillOpacity:0.12,weight:2}).bindPopup(z.name).addTo(this.empMap);
       L.circleMarker([z.lat,z.lng],{radius:8,fillColor:col,color:'#fff',weight:2,fillOpacity:1}).addTo(this.empMap);
     });
-    if(userLat&&userLng){
-      L.circleMarker([userLat,userLng],{radius:10,fillColor:'#3498DB',color:'#fff',weight:3,fillOpacity:1}).bindPopup('You').addTo(this.empMap);
-    }
+    if(userLat&&userLng){ L.circleMarker([userLat,userLng],{radius:10,fillColor:'#3498DB',color:'#fff',weight:3,fillOpacity:1}).bindPopup('You').addTo(this.empMap); }
   }
 };
 
-const CONFIG={center:[24.7136,46.6753]};
-
 /* ══════════════════════════════════════════
-   ADMIN LOGIC (Uses Local DB for now until fully connected)
+   ADMIN LOGIC
 ══════════════════════════════════════════ */
 const Admin = {
   currentPanel:'dashboard',
-
   showPanel(panel,el){
-    document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
-    document.getElementById('panel-'+panel).classList.add('active');
-    document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active'));
-    if(el) el.classList.add('active');
-    this.currentPanel=panel;
-    document.getElementById('admin-panel-title').innerHTML=`${panel}`;
-    UI.closeSidebar();
-
+    document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active')); document.getElementById('panel-'+panel).classList.add('active');
+    document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active')); if(el) el.classList.add('active');
+    this.currentPanel=panel; document.getElementById('admin-panel-title').innerHTML=`${panel}`; UI.closeSidebar();
     if(panel==='locations'){ setTimeout(()=>Maps.initAdmin(),200); this.populateGroupSelect('zone-group'); this.renderZoneList(); }
     if(panel==='employees'){ this.populateGroupSelect('emp-group-filter',true); this.renderEmployees(); }
     if(panel==='groups') this.renderGroups();
     if(panel==='records'){ document.getElementById('rec-date').value=DB.today(); this.filterRecords(); }
-    if(panel==='reports') this.initReports();
     if(panel==='dashboard') this.renderDashboard();
   },
-
-  refresh(){ this.showPanel(this.currentPanel); },
-
+  async refresh(){ await DB.sync(); this.showPanel(this.currentPanel); UI.toast('Data Synced', 'info'); },
   renderDashboard(){
-    const emps=DB.getEmployees().filter(e=>e.active);
-    document.getElementById('stat-total').textContent=emps.length;
+    const emps=DB.getEmployees().filter(e=>e.active); document.getElementById('stat-total').textContent=emps.length;
     const recs=DB.getRecords().filter(r=>r.date===DB.today());
     document.getElementById('stat-present').textContent=recs.filter(r=>['present','late','early_leave'].includes(r.status)).length;
     document.getElementById('stat-late').textContent=recs.filter(r=>r.status==='late').length;
     document.getElementById('stat-absent').textContent=Math.max(0,emps.length - recs.length);
-
     const tbody=document.getElementById('dash-attendance-table');
     if(!recs.length){tbody.innerHTML=`<tr><td colspan="5"><div class="empty-state"><p>No records today</p></div></td></tr>`;return;}
     tbody.innerHTML=recs.slice(0,10).map(r=>{
@@ -1204,7 +1114,6 @@ const Admin = {
       return`<tr><td>${emp.name}</td><td>—</td><td>${DB.fmtTime(r.checkIn)}</td><td>${DB.fmtTime(r.checkOut)}</td><td>${UI.badge(r.status)}</td></tr>`;
     }).join('');
   },
-
   renderEmployees(filter='',groupFilter=''){
     let emps=DB.getEmployees();
     if(filter) emps=emps.filter(e=>e.name.toLowerCase().includes(filter.toLowerCase()));
@@ -1213,112 +1122,48 @@ const Admin = {
     if(!emps.length){tbody.innerHTML=`<tr><td colspan="7" class="empty-state">No employees found</td></tr>`;return;}
     tbody.innerHTML=emps.map(e=>`
       <tr>
-        <td><code>${e.eid}</code></td><td><strong>${e.name}</strong></td><td>${e.username}</td>
-        <td>—</td><td>${e.workStart||'—'} – ${e.workEnd||'—'}</td>
+        <td><code>${e.eid}</code></td><td><strong>${e.name}</strong></td><td>${e.username}</td><td>—</td><td>${e.workStart||'—'} – ${e.workEnd||'—'}</td>
         <td>${e.active?'<span class="badge badge-success">Active</span>':'<span class="badge badge-muted">Inactive</span>'}</td>
         <td><button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteEmployee('${e.id}')"><i class="fas fa-trash"></i></button></td>
       </tr>`).join('');
   },
-
   filterEmployees(val){ this.renderEmployees(val||document.getElementById('emp-search')?.value||'', document.getElementById('emp-group-filter')?.value||''); },
-
-  openEmployeeModal(id){
-    this.populateGroupSelect('emp-modal-group');
-    document.getElementById('emp-modal-id').value='';
-    ['eid','name','user','pass','email','phone','salary'].forEach(f=>document.getElementById('emp-modal-'+f).value='');
-    UI.openModal('modal-employee');
-  },
-
+  openEmployeeModal(){ this.populateGroupSelect('emp-modal-group'); document.getElementById('emp-modal-id').value=''; ['eid','name','user','pass','email','phone','salary'].forEach(f=>document.getElementById('emp-modal-'+f).value=''); UI.openModal('modal-employee'); },
   async saveEmployee(){
-    const id=document.getElementById('emp-modal-id').value;
-    const data={
-      eid:document.getElementById('emp-modal-eid').value.trim(),
-      name:document.getElementById('emp-modal-name').value.trim(),
-      username:document.getElementById('emp-modal-user').value.trim(),
-      password:document.getElementById('emp-modal-pass').value,
-      email:document.getElementById('emp-modal-email').value.trim(),
-      phone:document.getElementById('emp-modal-phone').value.trim(),
-      groupId:document.getElementById('emp-modal-group').value,
-      active:parseInt(document.getElementById('emp-modal-status').value),
-      workStart:document.getElementById('emp-modal-start').value,
-      workEnd:document.getElementById('emp-modal-end').value,
-      salary:parseFloat(document.getElementById('emp-modal-salary').value)||0,
-    };
-    
-    if(!data.eid||!data.name||!data.username||(!id&&!data.password)){UI.toast('Please fill required fields','error');return;}
-    
-    try {
-        // إرسال الموظف إلى قاعدة البيانات الحقيقية (MongoDB)
-        if (!id) {
-            await API.request('/admin/add-employee', 'POST', data);
-        }
-        
-        // حفظ نسخة محلية لكي يظهر فوراً في الجدول أمامك
-        let emps=DB.getEmployees();
-        if(id) emps=emps.map(e=>e.id===id?data:e);
-        else { data.id = DB.uid(); emps.push(data); }
-        DB.saveEmployees(emps);
-        
-        UI.closeModal('modal-employee');
-        this.renderEmployees();
-        UI.toast('Employee saved to Database successfully!', 'success');
-        
-    } catch (err) {
-        UI.toast('Failed to save to database. Check connection.', 'error');
-    }
+    const data={ id:document.getElementById('emp-modal-id').value, eid:document.getElementById('emp-modal-eid').value.trim(), name:document.getElementById('emp-modal-name').value.trim(), username:document.getElementById('emp-modal-user').value.trim(), password:document.getElementById('emp-modal-pass').value, groupId:document.getElementById('emp-modal-group').value, active:1 };
+    if(!data.name||!data.username){UI.toast('Required fields missing','error');return;}
+    try { await API.request('/admin/employee', 'POST', data); await DB.sync(); UI.closeModal('modal-employee'); this.renderEmployees(); UI.toast('Employee Saved!','success'); } catch(e){UI.toast('Error saving','error')}
   },
-
-  deleteEmployee(id){
-    if(confirm('Delete?')){ DB.saveEmployees(DB.getEmployees().filter(e=>e.id!==id)); this.renderEmployees(); UI.toast('Deleted','warning'); }
-  },
-
+  async deleteEmployee(id){ if(confirm('Delete?')){ await API.request(`/admin/employee/${id}`, 'DELETE'); await DB.sync(); this.renderEmployees(); UI.toast('Deleted','warning'); } },
   renderGroups(){
     const groups=DB.getGroups(); const tbody=document.getElementById('groups-table');
     if(!groups.length){tbody.innerHTML=`<tr><td colspan="5" class="empty-state">No groups yet</td></tr>`;return;}
     tbody.innerHTML=groups.map(g=>`<tr><td><span class="group-dot" style="background:${g.color}"></span></td><td><strong>${g.name}</strong></td><td>${g.desc||'—'}</td><td>—</td><td><button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteGroup('${g.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('');
   },
-
   openGroupModal(){ document.getElementById('grp-modal-id').value=''; UI.openModal('modal-group'); },
-
-  saveGroup(){
-    const data={ id:DB.uid(), name:document.getElementById('grp-modal-name').value.trim(), desc:document.getElementById('grp-modal-desc').value.trim(), color:document.getElementById('grp-modal-color').value };
+  async saveGroup(){
+    const data={ id:document.getElementById('grp-modal-id').value, name:document.getElementById('grp-modal-name').value.trim(), desc:document.getElementById('grp-modal-desc').value.trim(), color:document.getElementById('grp-modal-color').value };
     if(!data.name){UI.toast('Name required','error');return;}
-    let groups=DB.getGroups(); groups.push(data); DB.saveGroups(groups);
-    UI.closeModal('modal-group'); this.renderGroups(); UI.toast('Group added','success');
+    try { await API.request('/admin/group', 'POST', data); await DB.sync(); UI.closeModal('modal-group'); this.renderGroups(); UI.toast('Group Saved!','success'); } catch(e){UI.toast('Error','error')}
   },
-
-  deleteGroup(id){ if(confirm('Delete?')){ DB.saveGroups(DB.getGroups().filter(g=>g.id!==id)); this.renderGroups(); UI.toast('Deleted','warning'); } },
-
-  populateGroupSelect(selId,addAll){
-    const sel=document.getElementById(selId);
-    if(sel) sel.innerHTML=(addAll?'<option value="">All Groups</option>':'')+DB.getGroups().map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
-  },
-
+  async deleteGroup(id){ if(confirm('Delete?')){ await API.request(`/admin/group/${id}`, 'DELETE'); await DB.sync(); this.renderGroups(); UI.toast('Deleted','warning'); } },
+  populateGroupSelect(selId,addAll){ const sel=document.getElementById(selId); if(sel) sel.innerHTML=(addAll?'<option value="">All Groups</option>':'')+DB.getGroups().map(g=>`<option value="${g.id}">${g.name}</option>`).join(''); },
   renderZoneList(){
-    const zones=DB.getLocations(); const wrap=document.getElementById('zone-list');
-    if(!wrap) return;
+    const zones=DB.getLocations(); const wrap=document.getElementById('zone-list'); if(!wrap) return;
     if(!zones.length){wrap.innerHTML='<div class="empty-state"><p>No zones yet.</p></div>';return;}
     wrap.innerHTML=zones.map(z=>`<div class="location-item"><div class="location-item-info"><h5>${z.name}</h5><small>${z.radius}m</small></div><div class="location-item-actions"><button class="btn btn-icon btn-ghost btn-sm" onclick="Admin.deleteZone('${z.id}')"><i class="fas fa-trash"></i></button></div></div>`).join('');
   },
-
   updateRadiusDisplay(v){ document.getElementById('zone-radius-val').textContent=v+' m'; if(Maps.tempCircle) Maps.tempCircle.setRadius(parseInt(v)); },
-
-  saveZone(){
+  async saveZone(){
     const name=document.getElementById('zone-name').value.trim();
     if(!name || !Maps.tempMarker){UI.toast('Name and map location required','error');return;}
-    const zone={ id:DB.uid(), name, groupId:document.getElementById('zone-group').value, lat:Maps.tempMarker._lat, lng:Maps.tempMarker._lng, radius:parseInt(document.getElementById('zone-radius').value)||500 };
-    let locs=DB.getLocations(); locs.push(zone); DB.saveLocations(locs);
-    Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null;
-    document.getElementById('zone-name').value=''; Maps.renderZones(); UI.toast('Saved','success');
+    const data={ name, groupId:document.getElementById('zone-group').value, lat:Maps.tempMarker._lat, lng:Maps.tempMarker._lng, radius:parseInt(document.getElementById('zone-radius').value)||500 };
+    try { await API.request('/admin/location', 'POST', data); await DB.sync(); Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; Maps.renderZones(); UI.toast('Saved','success'); } catch(e){UI.toast('Error','error')}
   },
-
   clearZoneForm(){ if(Maps.tempMarker) Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; },
-
-  deleteZone(id){ if(confirm('Delete?')){ DB.saveLocations(DB.getLocations().filter(l=>l.id!==id)); Maps.renderZones(); UI.toast('Deleted','warning'); } },
-
+  async deleteZone(id){ if(confirm('Delete?')){ await API.request(`/admin/location/${id}`, 'DELETE'); await DB.sync(); Maps.renderZones(); UI.toast('Deleted','warning'); } },
   filterRecords(){
-    const search=(document.getElementById('rec-search')?.value||'').toLowerCase();
-    const date=document.getElementById('rec-date')?.value||'';
+    const search=(document.getElementById('rec-search')?.value||'').toLowerCase(); const date=document.getElementById('rec-date')?.value||'';
     let recs=DB.getRecords(); const emps=DB.getEmployees();
     if(date) recs=recs.filter(r=>r.date===date);
     if(search) recs=recs.filter(r=>emps.find(e=>e.id===r.employeeId)?.name.toLowerCase().includes(search));
@@ -1328,10 +1173,7 @@ const Admin = {
       const emp=emps.find(e=>e.id===r.employeeId)||{name:'Unknown'};
       return`<tr><td><strong>${emp.name}</strong></td><td>${DB.fmtDate(r.date)}</td><td>${DB.fmtTime(r.checkIn)}</td><td>${DB.fmtTime(r.checkOut)}</td><td>—</td><td>${UI.badge(r.status)}</td><td>${r.notes||'—'}</td></tr>`;
     }).join('');
-  },
-
-  initReports(){ this.generateReport(); },
-  generateReport(){ document.getElementById('report-stats').innerHTML=`<div class="empty-state">Report system active</div>`; }
+  }
 };
 
 /* ══════════════════════════════════════════
@@ -1339,107 +1181,82 @@ const Admin = {
 ══════════════════════════════════════════ */
 const Emp = {
   watchId:null, currentPos:null, assignedZones:[], currentRecord:null, nearestZone:null,
-
   init(){
     const emp=Auth.empSession; if(!emp) return;
-    this.assignedZones=DB.getLocations();
+    this.assignedZones=DB.getLocations().filter(z => z.groupId === emp.groupId);
     this.currentRecord=DB.getRecords().find(r=>r.employeeId===emp.id&&r.date===DB.today())||null;
-    this.renderTodayRecord(); this.renderHistory(); this.renderProfile();
-    this.updateButtons(); this.startTracking();
+    this.renderTodayRecord(); this.renderHistory(); this.renderProfile(); this.updateButtons(); this.startTracking();
   },
-
   cleanup(){ if(this.watchId!==null){navigator.geolocation.clearWatch(this.watchId);this.watchId=null;} this.currentPos=null; },
-
   startTracking(){
     document.getElementById('emp-status-text').textContent='Locating...';
     if(!navigator.geolocation) return;
     this.watchId=navigator.geolocation.watchPosition(
       pos=>{
-        this.currentPos={lat:pos.coords.latitude,lng:pos.coords.longitude,acc:pos.coords.accuracy};
-        this.checkZone();
+        this.currentPos={lat:pos.coords.latitude,lng:pos.coords.longitude,acc:pos.coords.accuracy}; this.checkZone();
         Maps.initEmp(this.assignedZones[0]?.lat||pos.coords.latitude, this.assignedZones[0]?.lng||pos.coords.longitude, this.assignedZones, pos.coords.latitude, pos.coords.longitude);
       },
-      err=>{ document.getElementById('emp-status-text').textContent='Location unavailable'; document.getElementById('emp-status-dot').className='status-dot outside'; Maps.initEmp(CONFIG.center[0],CONFIG.center[1],[],null,null); },
+      err=>{ document.getElementById('emp-status-text').textContent='Location unavailable'; document.getElementById('emp-status-dot').className='status-dot outside'; },
       {enableHighAccuracy:true,timeout:15000,maximumAge:5000}
     );
   },
-
   checkZone(){
     if(!this.currentPos){ return; }
     let insideZone=null;
     this.assignedZones.forEach(z=>{
       const R=6371000,dLat=(z.lat-this.currentPos.lat)*Math.PI/180,dLon=(z.lng-this.currentPos.lng)*Math.PI/180;
       const a=Math.sin(dLat/2)**2+Math.cos(this.currentPos.lat*Math.PI/180)*Math.cos(z.lat*Math.PI/180)*Math.sin(dLon/2)**2;
-      const d=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-      if(d<=z.radius) insideZone=z;
+      const d=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); if(d<=z.radius) insideZone=z;
     });
-
-    if(insideZone){
-      document.getElementById('emp-status-dot').className='status-dot inside pulse';
-      document.getElementById('emp-status-text').textContent='Within Zone ✓';
-    } else {
-      document.getElementById('emp-status-dot').className='status-dot outside pulse';
-      document.getElementById('emp-status-text').textContent='Outside Zone';
-    }
+    if(insideZone){ document.getElementById('emp-status-dot').className='status-dot inside pulse'; document.getElementById('emp-status-text').textContent='Within Zone ✓'; } 
+    else { document.getElementById('emp-status-dot').className='status-dot outside pulse'; document.getElementById('emp-status-text').textContent='Outside Zone'; }
     this.updateButtons(!!insideZone);
   },
-
   updateButtons(insideZone){
-    const rec=this.currentRecord;
-    const checkinBtn=document.getElementById('emp-checkin-btn');
-    const checkoutBtn=document.getElementById('emp-checkout-btn');
+    const rec=this.currentRecord; const checkinBtn=document.getElementById('emp-checkin-btn'); const checkoutBtn=document.getElementById('emp-checkout-btn');
     if(!rec){ checkinBtn.classList.remove('hidden'); checkoutBtn.classList.add('hidden'); checkinBtn.disabled=!insideZone; } 
     else if(rec&&!rec.checkOut){ checkinBtn.classList.add('hidden'); checkoutBtn.classList.remove('hidden'); checkoutBtn.disabled=!insideZone; } 
     else { checkinBtn.classList.add('hidden'); checkoutBtn.classList.add('hidden'); }
   },
-
-  checkIn(){
+  async checkIn(){
     if(!this.currentPos){UI.toast('Location unavailable','error');return;}
-    const emp=Auth.empSession;
-    const rec={ id:DB.uid(), employeeId:emp.id, date:DB.today(), checkIn:DB.nowISO(), checkOut:null, checkInLat:this.currentPos.lat, checkInLng:this.currentPos.lng, status:'present', notes:'' };
-    let recs=DB.getRecords(); recs.push(rec); DB.saveRecords(recs);
-    this.currentRecord=rec; this.renderTodayRecord(); this.updateButtons(true); this.renderHistory();
-    UI.toast('Checked in successfully','success');
+    const rec={ employeeId:Auth.empSession.id, date:DB.today(), checkIn:DB.nowISO(), checkInLat:this.currentPos.lat, checkInLng:this.currentPos.lng, status:'present', notes:'' };
+    try {
+        await API.request('/employee/record', 'POST', rec);
+        await DB.sync();
+        this.currentRecord=DB.getRecords().find(r=>r.employeeId===Auth.empSession.id&&r.date===DB.today());
+        this.renderTodayRecord(); this.updateButtons(true); this.renderHistory(); UI.toast('Checked in!','success');
+    } catch(e) { UI.toast('Error','error'); }
   },
-
-  checkOut(){
+  async checkOut(){
     if(!this.currentRecord||!this.currentPos) return;
-    let recs=DB.getRecords().map(r=>{ if(r.id===this.currentRecord.id){return{...r,checkOut:DB.nowISO()};} return r; });
-    DB.saveRecords(recs);
-    this.currentRecord={...this.currentRecord,checkOut:DB.nowISO()};
-    this.renderTodayRecord(); this.updateButtons(false); this.renderHistory();
-    UI.toast('Checked out successfully','success');
+    const rec={ employeeId:Auth.empSession.id, date:DB.today(), checkOut:DB.nowISO(), checkOutLat:this.currentPos.lat, checkOutLng:this.currentPos.lng, status:this.currentRecord.status, notes:this.currentRecord.notes };
+    try {
+        await API.request('/employee/record', 'POST', rec);
+        await DB.sync();
+        this.currentRecord=DB.getRecords().find(r=>r.employeeId===Auth.empSession.id&&r.date===DB.today());
+        this.renderTodayRecord(); this.updateButtons(false); this.renderHistory(); UI.toast('Checked out!','success');
+    } catch(e) { UI.toast('Error','error'); }
   },
-
   renderTodayRecord(){
     const rec=this.currentRecord; const body=document.getElementById('today-record-body');
-    if(!rec){body.innerHTML=`<div class="empty-state"><p>No record yet for today</p></div>`;return;}
+    if(!rec){body.innerHTML=`<div class="empty-state"><p>No record yet</p></div>`;return;}
     body.innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem"><div class="profile-field"><label>Check In</label><span>${DB.fmtTime(rec.checkIn)}</span></div><div class="profile-field"><label>Check Out</label><span>${DB.fmtTime(rec.checkOut)}</span></div></div>`;
   },
-
   renderHistory(){
-    const emp=Auth.empSession; const wrap=document.getElementById('emp-history-list');
-    const recs=DB.getRecords().filter(r=>r.employeeId===emp.id);
-    if(!recs.length){wrap.innerHTML=`<div class="empty-state"><p>No history yet</p></div>`;return;}
+    const wrap=document.getElementById('emp-history-list'); const recs=DB.getRecords().filter(r=>r.employeeId===Auth.empSession.id);
+    if(!recs.length){wrap.innerHTML=`<div class="empty-state"><p>No history</p></div>`;return;}
     wrap.innerHTML=recs.map(r=>`<div class="history-row"><div><div class="history-date">${DB.fmtDate(r.date)}</div><div class="history-times">In: ${DB.fmtTime(r.checkIn)} | Out: ${DB.fmtTime(r.checkOut)}</div></div></div>`).join('');
   },
-
   renderProfile(){ document.getElementById('emp-profile-grid').innerHTML=`<div class="profile-field"><label>Name</label><span>${Auth.empSession.name}</span></div>`; },
   switchTab(tab,el){ document.querySelectorAll('.emp-tab, .emp-tab-content').forEach(e=>e.classList.remove('active')); el.classList.add('active'); document.getElementById('tab-'+tab).classList.add('active'); }
 };
 
-/* ══════════════════════════════════════════
-   KEYBOARD SHORTCUTS & INIT
-══════════════════════════════════════════ */
 document.addEventListener('keydown',e=>{
   if(e.key==='Enter'){ if(App.current==='admin-login') Auth.adminLogin(); if(App.current==='emp-login') Auth.empLogin(); }
   if(e.key==='Escape') document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));
 });
-
-document.addEventListener('DOMContentLoaded',()=>{
-  const d=document.getElementById('rec-date');
-  if(d) d.value=DB.today();
-});
+document.addEventListener('DOMContentLoaded',()=>{ const d=document.getElementById('rec-date'); if(d) d.value=DB.today(); });
 </script>
 </body>
 </html>
