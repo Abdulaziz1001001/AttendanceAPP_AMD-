@@ -514,16 +514,71 @@ const Maps = {
 
 const Admin = {
   currentPanel:'dashboard',
+  
   showPanel(panel,el){
-    document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active')); document.getElementById('panel-'+panel).classList.add('active');
-    document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active')); if(el) el.classList.add('active');
-    this.currentPanel=panel; document.getElementById('admin-panel-title').innerHTML=`${panel}`; UI.closeSidebar();
-    if(panel==='locations'){ setTimeout(()=>Maps.initAdmin(),350); this.populateGroupSelect('zone-group'); this.renderZoneList(); }
+    document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active')); 
+    document.getElementById('panel-'+panel).classList.add('active');
+    document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active')); 
+    if(el) el.classList.add('active');
+    
+    this.currentPanel=panel; 
+    document.getElementById('admin-panel-title').innerHTML=`${panel}`; 
+    UI.closeSidebar();
+    
+    // إصلاح الخريطة الجذري: إجبارها على التحديث بعد ظهور الصفحة بـ 300 جزء من الثانية
+    if(panel==='locations'){ 
+      setTimeout(() => {
+        if(!Maps.adminMap) Maps.initAdmin();
+        else Maps.adminMap.invalidateSize(true); // هذا السطر يمنع ظهور المربعات الرمادية
+      }, 300); 
+      this.populateGroupSelect('zone-group'); 
+      this.renderZoneList(); 
+    }
+    
+    // تعبئة بيانات الإعدادات تلقائياً عند فتحها
+    if(panel==='settings'){
+      document.getElementById('admin-set-user').value = Auth.adminSession.username || '';
+      document.getElementById('admin-set-email').value = Auth.adminSession.email || '';
+      document.getElementById('admin-set-pass').value = '';
+    }
+
     if(panel==='employees'){ this.populateGroupSelect('emp-group-filter',true); this.renderEmployees(); }
     if(panel==='groups') this.renderGroups();
     if(panel==='records'){ document.getElementById('rec-date').value=DB.today(); this.filterRecords(); }
     if(panel==='dashboard') this.renderDashboard();
   },
+
+  // دالة حفظ إعدادات المدير
+  async saveSettings() {
+    const u = document.getElementById('admin-set-user').value.trim();
+    const e = document.getElementById('admin-set-email').value.trim();
+    const p = document.getElementById('admin-set-pass').value;
+    
+    if(!u) { UI.toast('Username is required', 'error'); return; }
+
+    UI.loader(true);
+    try {
+      // إرسال البيانات للسيرفر
+      const data = await API.request('/admin/profile', 'POST', { 
+        adminId: Auth.adminSession.id, 
+        username: u, 
+        email: e, 
+        password: p 
+      });
+      
+      // تحديث الجلسة الحالية في المتصفح بالبيانات الجديدة
+      Auth.adminSession = data.user;
+      localStorage.setItem('amd_user', JSON.stringify(data.user));
+      
+      UI.toast('Profile Updated Successfully', 'success');
+      document.getElementById('admin-set-pass').value = ''; // تفريغ حقل الباسوورد
+    } catch(err) { 
+      UI.toast(err.message, 'error'); 
+    }
+    UI.loader(false);
+  },
+
+  // ... (باقي دوال الـ Admin تبقى كما هي: refresh, renderDashboard, الخ) ...
   async refresh(){ UI.loader(true); try{ await DB.sync(); this.showPanel(this.currentPanel); UI.toast('Data Synced', 'success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false); },
   renderDashboard(){
     const emps=DB.getEmployees().filter(e=>e.active); document.getElementById('stat-total').textContent=emps.length;
