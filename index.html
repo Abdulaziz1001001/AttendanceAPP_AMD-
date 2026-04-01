@@ -1137,13 +1137,18 @@ initAdmin(){
     });
     Admin.renderZoneList();
   },
-
-  initEmp(lat,lng,zones,userLat,userLng){
+initEmp(lat,lng,zones,userLat,userLng){
     const center=[lat||24.7136,lng||46.6753];
     if(!this.empMap){
       this.empMap=L.map('emp-map',{zoomControl:true}).setView(center,15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OSM',maxZoom:19}).addTo(this.empMap);
-    } else { this.empMap.setView(center,15); }
+    } else { 
+      this.empMap.setView(center,15); 
+    }
+    
+    // إجبار الخريطة على تحديث حجمها لتعمل بسلاسة تامة
+    setTimeout(() => this.empMap.invalidateSize(), 100);
+
     this.empMap.eachLayer(l=>{if(l instanceof L.CircleMarker||l instanceof L.Circle||l instanceof L.Marker) this.empMap.removeLayer(l);});
 
     zones.forEach(z=>{
