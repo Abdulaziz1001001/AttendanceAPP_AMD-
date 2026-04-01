@@ -139,6 +139,7 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="UI.closeSidebar()"></div>
   <aside class="sidebar" id="admin-sidebar">
     <div style="padding:1.5rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0.75rem"><svg style="width:32px;height:32px;fill:var(--accent)" viewBox="0 0 100 100"><polygon points="10,90 45,10 55,10 90,90 75,90 50,28 25,90"/><rect x="22" y="68" width="56" height="8"/></svg><div><div style="font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.08em">AMD United</div><small style="font-size:0.65rem;color:var(--text-muted)">Admin Panel</small></div></div>
+    
     <nav class="sidebar-nav">
       <span style="display:block;padding:0.75rem 1.25rem 0.4rem;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim)">Menu</span>
       <div class="nav-link active" onclick="Admin.showPanel('dashboard',this)"><i class="fas fa-th-large"></i><span>Dashboard</span></div>
@@ -146,21 +147,25 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
       <div class="nav-link" onclick="Admin.showPanel('groups',this)"><i class="fas fa-layer-group"></i><span>Groups</span></div>
       <div class="nav-link" onclick="Admin.showPanel('locations',this)"><i class="fas fa-map-marker-alt"></i><span>Locations & Zones</span></div>
       <div class="nav-link" onclick="Admin.showPanel('records',this)"><i class="fas fa-clipboard-list"></i><span>Attendance Records</span></div>
+      
+      <span style="display:block;padding:1.5rem 1.25rem 0.4rem;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim)">System</span>
+      <div class="nav-link" onclick="Admin.showPanel('settings',this)"><i class="fas fa-cog"></i><span>Settings</span></div>
     </nav>
-    <span style="display:block;padding:0.75rem 1.25rem 0.4rem;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim)">System</span>
-<div class="nav-link" onclick="Admin.showPanel('settings',this)"><i class="fas fa-cog"></i><span>Settings</span></div>
+    
     <div style="padding:1rem 1.25rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:0.75rem">
       <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700" id="admin-avatar-initial">A</div>
       <div><h4 style="font-size:0.85rem;font-weight:600" id="admin-display-name">Admin</h4><span style="font-size:0.7rem;color:var(--text-muted)">Administrator</span></div>
       <button class="btn-ghost" style="margin-left:auto;padding:0.25rem" onclick="Auth.adminLogout()"><i class="fas fa-sign-out-alt"></i></button>
     </div>
   </aside>
+  
   <div class="main-area">
     <header class="topbar">
       <button class="hamburger btn-ghost" onclick="UI.toggleSidebar()"><i class="fas fa-bars"></i></button>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;flex:1" id="admin-panel-title">Dashboard</div>
       <button class="btn btn-sm btn-outline" onclick="Admin.refresh()"><i class="fas fa-sync-alt"></i> Sync</button>
     </header>
+    
     <div class="content">
       
       <div id="panel-dashboard" class="admin-panel active">
@@ -212,10 +217,12 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
             <div class="card" style="margin:0"><div class="card-header"><div class="card-title">Saved Zones</div></div><div style="padding:0.75rem;display:flex;flex-direction:column;gap:0.5rem" id="zone-list"></div></div>
           </div>
         </div>
-      </div><div id="panel-settings" class="admin-panel">
+      </div>
+
+      <div id="panel-settings" class="admin-panel">
         <div class="card" style="max-width: 500px; margin: 0 auto; margin-top: 2rem;">
           <div class="card-header"><div class="card-title">Admin Profile Settings</div></div>
-          <div class="card-body" style="display:flex; flex-direction:column; gap:1.25rem;">
+          <div class="card-body" style="display:flex; flex-direction:column; gap:1.25rem; padding:1.5rem">
             <div class="form-group">
               <label class="form-label">Username</label>
               <input type="text" id="admin-set-user" class="form-control" placeholder="Admin username">
@@ -302,6 +309,7 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
     </div>
   </div>
 </div>
+
 <div id="modal-group" class="modal-overlay">
   <div class="modal">
     <div class="modal-header"><span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;text-transform:uppercase" id="grp-modal-title">Group</span><button class="btn-ghost" onclick="UI.closeModal('modal-group')"><i class="fas fa-times"></i></button></div>
@@ -343,7 +351,6 @@ const UI = {
   }
 };
 
-/* 🚨 الرادار الذكي: يطبع الخطأ الحقيقي للمستخدم لو فشل الاتصال */
 const API = {
   getHeaders() {
     const token = localStorage.getItem('amd_token');
@@ -357,7 +364,7 @@ const API = {
       const text = await res.text();
       let data;
       try { data = JSON.parse(text); } 
-      catch (e) { throw new Error(`Server Error (${res.status}): Please check Render logs. Route might be missing.`); }
+      catch (e) { throw new Error(`Server Error (${res.status}): Please check Render logs.`); }
       
       if (!res.ok) throw new Error(data.msg || `Error ${res.status}`);
       return data;
@@ -371,10 +378,7 @@ const DB = {
     try {
       const res = await API.request('/admin/all-data');
       this.data = res;
-    } catch(e) { 
-      console.error("Sync Failed", e); 
-      throw e; 
-    }
+    } catch(e) { throw e; }
   },
   getEmployees(){return this.data.employees||[]}, getGroups(){return this.data.groups||[]}, 
   getLocations(){return this.data.locations||[]}, getRecords(){return this.data.records||[]},
@@ -464,7 +468,7 @@ const Maps = {
   pinIcon: L.icon({ iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png', shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] }),
 
   initAdmin(){
-    if(this.adminMap) { setTimeout(() => this.adminMap.invalidateSize(), 350); return; }
+    if(this.adminMap) { setTimeout(() => this.adminMap.invalidateSize(true), 350); return; }
     const el=document.getElementById('admin-map'); if(!el) return;
     this.adminMap=L.map('admin-map').setView([24.7136,46.6753],13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(this.adminMap);
@@ -473,7 +477,7 @@ const Maps = {
       if(App.current!=='admin' || !document.getElementById('panel-locations').classList.contains('active')) return;
       this._placeTemp(e.latlng.lat,e.latlng.lng);
     });
-    this.renderZones(); setTimeout(() => this.adminMap.invalidateSize(), 350); 
+    this.renderZones(); setTimeout(() => this.adminMap.invalidateSize(true), 350); 
   },
   _placeTemp(lat,lng){
     if(this.tempMarker) this.adminMap.removeLayer(this.tempMarker); if(this.tempCircle) this.adminMap.removeLayer(this.tempCircle);
@@ -509,7 +513,7 @@ const Maps = {
       this.empMap=L.map('emp-map',{zoomControl:true}).setView(center,15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(this.empMap);
     } else { this.empMap.setView(center,15); }
-    setTimeout(() => this.empMap.invalidateSize(), 350); 
+    setTimeout(() => this.empMap.invalidateSize(true), 350); 
     
     this.empMap.eachLayer(l=>{if(l instanceof L.CircleMarker||l instanceof L.Circle||l instanceof L.Marker) this.empMap.removeLayer(l);});
     zones.forEach(z=>{
@@ -534,17 +538,12 @@ const Admin = {
     document.getElementById('admin-panel-title').innerHTML=`${panel}`; 
     UI.closeSidebar();
     
-    // إصلاح الخريطة الجذري: إجبارها على التحديث بعد ظهور الصفحة بـ 300 جزء من الثانية
     if(panel==='locations'){ 
-      setTimeout(() => {
-        if(!Maps.adminMap) Maps.initAdmin();
-        else Maps.adminMap.invalidateSize(true); // هذا السطر يمنع ظهور المربعات الرمادية
-      }, 300); 
+      setTimeout(() => { if(!Maps.adminMap) Maps.initAdmin(); else Maps.adminMap.invalidateSize(true); }, 300); 
       this.populateGroupSelect('zone-group'); 
       this.renderZoneList(); 
     }
     
-    // تعبئة بيانات الإعدادات تلقائياً عند فتحها
     if(panel==='settings'){
       document.getElementById('admin-set-user').value = Auth.adminSession.username || '';
       document.getElementById('admin-set-email').value = Auth.adminSession.email || '';
@@ -557,7 +556,6 @@ const Admin = {
     if(panel==='dashboard') this.renderDashboard();
   },
 
-  // دالة حفظ إعدادات المدير
   async saveSettings() {
     const u = document.getElementById('admin-set-user').value.trim();
     const e = document.getElementById('admin-set-email').value.trim();
@@ -567,28 +565,17 @@ const Admin = {
 
     UI.loader(true);
     try {
-      // إرسال البيانات للسيرفر
-      const data = await API.request('/admin/profile', 'POST', { 
-        adminId: Auth.adminSession.id, 
-        username: u, 
-        email: e, 
-        password: p 
-      });
-      
-      // تحديث الجلسة الحالية في المتصفح بالبيانات الجديدة
+      const data = await API.request('/admin/profile', 'POST', { adminId: Auth.adminSession.id, username: u, email: e, password: p });
       Auth.adminSession = data.user;
       localStorage.setItem('amd_user', JSON.stringify(data.user));
-      
       UI.toast('Profile Updated Successfully', 'success');
-      document.getElementById('admin-set-pass').value = ''; // تفريغ حقل الباسوورد
-    } catch(err) { 
-      UI.toast(err.message, 'error'); 
-    }
+      document.getElementById('admin-set-pass').value = '';
+    } catch(err) { UI.toast(err.message, 'error'); }
     UI.loader(false);
   },
 
-  // ... (باقي دوال الـ Admin تبقى كما هي: refresh, renderDashboard, الخ) ...
   async refresh(){ UI.loader(true); try{ await DB.sync(); this.showPanel(this.currentPanel); UI.toast('Data Synced', 'success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false); },
+  
   renderDashboard(){
     const emps=DB.getEmployees().filter(e=>e.active); document.getElementById('stat-total').textContent=emps.length;
     const recs=DB.getRecords().filter(r=>r.date===DB.today());
@@ -602,6 +589,7 @@ const Admin = {
       return`<tr><td>${emp.name}</td><td>—</td><td>${DB.fmtTime(r.checkIn)}</td><td>${DB.fmtTime(r.checkOut)}</td><td>${UI.badge(r.status)}</td></tr>`;
     }).join('');
   },
+  
   renderEmployees(filter='',groupFilter=''){
     let emps=DB.getEmployees();
     if(filter) emps=emps.filter(e=>e.name.toLowerCase().includes(filter.toLowerCase()));
@@ -645,6 +633,7 @@ const Admin = {
     }
     UI.openModal('modal-employee'); 
   },
+  
   async saveEmployee(){
     const data={ 
       id:document.getElementById('emp-modal-id').value, eid:document.getElementById('emp-modal-eid').value.trim(), 
@@ -661,6 +650,7 @@ const Admin = {
     catch(e){UI.toast(e.message,'error')}
     UI.loader(false);
   },
+  
   async deleteEmployee(id){ if(confirm('Delete this employee?')){ UI.loader(true); try{ await API.request(`/admin/employee/${id}`, 'DELETE'); await DB.sync(); this.renderEmployees(); UI.toast('Deleted','warning'); } catch(e){UI.toast(e.message, 'error');} UI.loader(false); } },
   
   renderGroups(){
@@ -668,6 +658,7 @@ const Admin = {
     if(!groups.length){tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:2rem">No groups yet</td></tr>`;return;}
     tbody.innerHTML=groups.map(g=>`<tr><td><span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:${g.color}"></span></td><td><strong>${g.name}</strong></td><td>${g.desc||'—'}</td><td><button class="btn-ghost btn-sm" onclick="Admin.openGroupModal('${g.id}')"><i class="fas fa-edit"></i></button> <button class="btn-ghost btn-sm" style="color:var(--danger)" onclick="Admin.deleteGroup('${g.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('');
   },
+  
   openGroupModal(id){ 
     if(id) {
       const g = DB.getGroups().find(x => x.id === id); document.getElementById('grp-modal-title').textContent = 'Edit Group';
@@ -679,42 +670,41 @@ const Admin = {
     }
     UI.openModal('modal-group'); 
   },
+  
   async saveGroup(){
     const data={ id:document.getElementById('grp-modal-id').value, name:document.getElementById('grp-modal-name').value.trim(), desc:document.getElementById('grp-modal-desc').value.trim(), color:document.getElementById('grp-modal-color').value };
     if(!data.name){UI.toast('Name required','error');return;}
     UI.loader(true); try { await API.request('/admin/group', 'POST', data); await DB.sync(); UI.closeModal('modal-group'); this.renderGroups(); UI.toast('Group Saved!','success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false);
   },
   async deleteGroup(id){ if(confirm('Delete this group?')){ UI.loader(true); try{ await API.request(`/admin/group/${id}`, 'DELETE'); await DB.sync(); this.renderGroups(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
+  
   populateGroupSelect(selId, addAll) { 
     const sel = document.getElementById(selId); 
     if (!sel) return; 
-    
-    // وضع خيار افتراضي دائماً لمنع انهيار شكل القائمة
     let html = addAll ? '<option value="">All Groups</option>' : '<option value="" disabled selected>-- Select Group --</option>'; 
-    
     const groups = DB.getGroups(); 
-    
-    // إذا لم يقم المدير بإنشاء أي مجموعة بعد
     if (groups.length === 0 && !addAll) {
       html += '<option value="" disabled>⚠️ No groups found! Create one first.</option>';
     } else {
       html += groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
     }
-    
     sel.innerHTML = html; 
   },  
+  
   renderZoneList(){
     const zones=DB.getLocations(); const wrap=document.getElementById('zone-list'); if(!wrap) return;
     if(!zones.length){wrap.innerHTML='<div style="text-align:center;padding:1rem;color:var(--text-muted)">No zones yet.</div>';return;}
     wrap.innerHTML=zones.map(z=>`<div style="background:var(--surface2);border:1px solid var(--border);padding:0.75rem;border-radius:4px;display:flex;justify-content:space-between;align-items:center"><div><h5 style="margin-bottom:0.2rem">${z.name}</h5><small style="color:var(--text-muted)">${z.radius}m</small></div><button class="btn-ghost" style="color:var(--danger)" onclick="Admin.deleteZone('${z.id}')"><i class="fas fa-trash"></i></button></div>`).join('');
   },
   updateRadiusDisplay(v){ document.getElementById('zone-radius-val').textContent=v+' m'; if(Maps.tempCircle) Maps.tempCircle.setRadius(parseInt(v)); },
+  
   async saveZone(){
     const name=document.getElementById('zone-name').value.trim();
     if(!name || !Maps.tempMarker){UI.toast('Name and map location required','error');return;}
     const data={ name, groupId:document.getElementById('zone-group').value, lat:Maps.tempMarker._lat, lng:Maps.tempMarker._lng, radius:parseInt(document.getElementById('zone-radius').value)||500 };
     UI.loader(true); try { await API.request('/admin/location', 'POST', data); await DB.sync(); Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; Maps.renderZones(); UI.toast('Saved','success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false);
   },
+  
   clearZoneForm(){ if(Maps.tempMarker) Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; },
   async deleteZone(id){ if(confirm('Delete?')){ UI.loader(true); try{ await API.request(`/admin/location/${id}`, 'DELETE'); await DB.sync(); Maps.renderZones(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
   
