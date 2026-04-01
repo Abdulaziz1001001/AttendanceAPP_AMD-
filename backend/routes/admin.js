@@ -33,33 +33,23 @@ router.post('/employee', async (req, res) => {
     const { id, eid, name, username, password, email, phone, groupId, workStart, workEnd, salary, active } = req.body;
     
     if (id) {
-        // حالة التعديل
-        let emp = await Employee.findById(id);
-        if(emp) {
-            emp.eid = eid; emp.name = name; emp.username = username; emp.email = email; emp.phone = phone;
-            emp.groupId = groupId; emp.workStart = workStart; emp.workEnd = workEnd; emp.salary = salary; emp.active = active;
-            if (password) {
-                const salt = await bcrypt.genSalt(10);
-                emp.password = await bcrypt.hash(password, salt);
-            }
-            await emp.save();
-        }
+        // تحديث موظف موجود
+        await Employee.findByIdAndUpdate(id, { eid, name, username, email, phone, groupId, workStart, workEnd, salary, active });
     } else {
-        // حالة إضافة موظف جديد
-        if (!password) return res.status(400).json({ msg: 'Password is required' });
+        // إضافة موظف جديد
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
         const emp = new Employee({ eid, name, username, password: hashedPassword, email, phone, groupId, workStart, workEnd, salary, active });
         await emp.save();
     }
+    console.log(`✅ تم حفظ الموظف بنجاح: ${username}`);
     res.json({ msg: 'Success' });
     
   } catch (err) { 
-    console.error("Employee Save Error: ", err);
-    // إذا كان الخطأ بسبب أن اسم المستخدم مستخدم مسبقاً (رقم الخطأ 11000 في MongoDB)
-    if (err.code === 11000) {
-        return res.status(400).json({ msg: 'Error: Username already exists!' });
-    }
+    console.error("❌ فشل الحفظ في القاعدة! السبب الحقيقي هو:");
+    console.error(err); // سيطبع هذا السطر كل تفاصيل الخطأ في Render
+    
+    if (err.code === 11000) return res.status(400).json({ msg: 'اسم المستخدم موجود مسبقاً' });
     res.status(500).json({ msg: err.message }); 
   }
 });
