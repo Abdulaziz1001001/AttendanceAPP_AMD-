@@ -63,7 +63,7 @@ a{color:inherit;text-decoration:none} button{cursor:pointer;font-family:'Barlow'
 table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding:0.75rem 1rem;text-align:left;font-size:0.7rem;text-transform:uppercase;color:var(--text-muted);font-weight:600;border-bottom:1px solid var(--border)} td{padding:0.85rem 1rem;border-bottom:1px solid var(--border);font-size:0.85rem} tr:hover td{background:var(--surface2)}
 
 .map-layout{display:grid;grid-template-columns:1fr 340px;gap:1rem;height:calc(100vh - 160px)}
-#admin-map,#emp-map{width:100%;height:100%;border-radius:var(--radius-lg);border:1px solid var(--border)}
+#admin-map,#emp-map{width:100%;height:100%;border-radius:var(--radius-lg);border:1px solid var(--border); background-color: #1a1a1a;}
 .leaflet-container{background:#1a1a1a!important; font-family:'Barlow',sans-serif;} .leaflet-tile{filter:brightness(0.7) saturate(0.8)}
 .leaflet-popup-content-wrapper{background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--border)!important;border-radius:var(--radius)!important} .leaflet-popup-tip{background:var(--surface)!important}
 
@@ -487,7 +487,6 @@ const Maps = {
     this.tempMarker = L.marker([lat,lng], {icon: this.pinIcon, draggable: true}).addTo(this.adminMap);
     this.tempCircle = L.circle([lat,lng],{radius,color:'#C45A28',fillColor:'#C45A28',fillOpacity:0.1,weight:2,dashArray:'6 4'}).addTo(this.adminMap);
     
-    // ربط الدائرة بالدبوس لتتحرك معه فوراً عند السحب
     this.tempMarker.on('drag', (e) => { 
         const pos = e.target.getLatLng(); 
         this.tempCircle.setLatLng([pos.lat, pos.lng]); 
@@ -510,7 +509,10 @@ const Maps = {
     if(!this.empMap){
       this.empMap=L.map('emp-map',{zoomControl:true}).setView(center,15);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(this.empMap);
-    } else { this.empMap.setView(center,15); }
+    } else { 
+      this.empMap.setView(center,15); 
+    }
+    // Critical fix: ensure the map resizes perfectly when the div becomes visible
     setTimeout(() => this.empMap.invalidateSize(true), 350); 
     
     this.empMap.eachLayer(l=>{if(l instanceof L.CircleMarker||l instanceof L.Circle||l instanceof L.Marker) this.empMap.removeLayer(l);});
@@ -700,14 +702,14 @@ const Admin = {
     const name=document.getElementById('zone-name').value.trim();
     if(!name || !Maps.tempMarker){UI.toast('Name and map location required','error');return;}
     
-    // جلب الإحداثيات الرسمية من الدبوس
+    // FIX 1: Grab the exact coordinates directly from the pin.
     const pos = Maps.tempMarker.getLatLng();
     
     const data={ 
       name, 
       groupId:document.getElementById('zone-group').value, 
-      lat: pos.lat,  // خط العرض
-      lng: pos.lng,  // خط الطول
+      lat: pos.lat,  
+      lng: pos.lng,  
       radius: parseInt(document.getElementById('zone-radius').value) || 500 
     };
     
@@ -722,6 +724,23 @@ const Admin = {
     } catch(e){UI.toast(e.message,'error')} 
     UI.loader(false);
   },
+  
+  clearZoneForm(){ if(Maps.tempMarker) Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; },
+  async deleteZone(id){ if(confirm('Delete?')){ UI.loader(true); try{ await API.request(`/admin/location/${id}`, 'DELETE'); await DB.sync(); Maps.renderZones(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
+  
+  filterRecords(){
+    const search=document.getElementById('rec-search').value.toLowerCase(); const date=document.getElementById('rec-date').value;
+    let recs=DB.getRecords(); const emps=DB.getEmployees();
+    if(date) recs=recs.filter(r=>r.date===date);
+    if(search) recs=recs.filter(r=>emps.find(e=>e.id===r.employeeId)?.name.toLowerCase().includes(search));
+    const tbody=document.getElementById('records-table');
+    if(!recs.length){tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted)">No records</td></tr>`;return;}
+    tbody.innerHTML=recs.map(r=>{
+      const emp=emps.find(e=>e.id===r.employeeId)||{name:'Unknown'};
+      return`<tr><td><strong>${emp.name}</strong></td><td>${DB.fmtDate(r.date)}</td><td>${DB.fmtTime(r.checkIn)}</td><td>${DB.fmtTime(r.checkOut)}</td><td>${UI.badge(r.status)}</td><td>${r.notes||'—'}</td></tr>`;
+    }).join('');
+  }
+};
 
 /* ══════════════════════════════════════════
    EMPLOYEE PORTAL LOGIC
@@ -732,6 +751,13 @@ const Emp = {
     const emp=Auth.empSession; if(!emp) return;
     this.assignedZones=DB.getLocations().filter(z => z.groupId === emp.groupId);
     this.currentRecord=DB.getRecords().find(r=>r.employeeId===emp.id&&r.date===DB.today())||null;
+    
+    // FIX 2: Initialize the map IMMEDIATELY so it's not an empty gray box
+    // It will center on the company's zone, or default to Riyadh if no zone exists yet.
+    const defaultLat = this.assignedZones[0] ? this.assignedZones[0].lat : 24.7136;
+    const defaultLng = this.assignedZones[0] ? this.assignedZones[0].lng : 46.6753;
+    Maps.initEmp(defaultLat, defaultLng, this.assignedZones, null, null);
+
     this.renderTodayRecord(); this.renderHistory(); this.updateButtons(); this.startTracking();
   },
   cleanup(){ if(this.watchId!==null){navigator.geolocation.clearWatch(this.watchId);this.watchId=null;} this.currentPos=null; },
@@ -741,6 +767,7 @@ const Emp = {
     this.watchId=navigator.geolocation.watchPosition(
       pos=>{
         this.currentPos={lat:pos.coords.latitude,lng:pos.coords.longitude,acc:pos.coords.accuracy}; this.checkZone();
+        // Update the map with the user's actual blue pin location once GPS locks on
         Maps.initEmp(this.assignedZones[0]?.lat||pos.coords.latitude, this.assignedZones[0]?.lng||pos.coords.longitude, this.assignedZones, pos.coords.latitude, pos.coords.longitude);
       },
       err=>{ document.getElementById('emp-status-text').textContent='Location unavailable'; document.getElementById('emp-status-dot').className='status-dot outside'; },
