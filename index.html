@@ -138,7 +138,7 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
 <div id="page-admin" class="page">
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="UI.closeSidebar()"></div>
   <aside class="sidebar" id="admin-sidebar">
-    <div style="padding:1.5rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0.75rem"><svg style="width:32px;height:32px;fill:var(--accent)" viewBox="0 0 100 100"><polygon points="10,90 45,10 55,10 90,90 75,90 50,28 25,90"/><rect x="22" y="68" width="56" height="8"/></svg><div><div style="font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.08em">AMD United Contracting Company</div><small style="font-size:0.65rem;color:var(--text-muted)">Admin Panel</small></div></div>
+    <div style="padding:1.5rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0.75rem"><svg style="width:32px;height:32px;fill:var(--accent)" viewBox="0 0 100 100"><polygon points="10,90 45,10 55,10 90,90 75,90 50,28 25,90"/><rect x="22" y="68" width="56" height="8"/></svg><div><div style="font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.08em">AMD United</div><small style="font-size:0.65rem;color:var(--text-muted)">Admin Panel</small></div></div>
     <nav class="sidebar-nav">
       <span style="display:block;padding:0.75rem 1.25rem 0.4rem;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim)">Menu</span>
       <div class="nav-link active" onclick="Admin.showPanel('dashboard',this)"><i class="fas fa-th-large"></i><span>Dashboard</span></div>
@@ -709,47 +709,28 @@ const Admin = {
     wrap.innerHTML=zones.map(z=>`<div style="background:var(--surface2);border:1px solid var(--border);padding:0.75rem;border-radius:4px;display:flex;justify-content:space-between;align-items:center"><div><h5 style="margin-bottom:0.2rem">${z.name}</h5><small style="color:var(--text-muted)">${z.radius}m</small></div><button class="btn-ghost" style="color:var(--danger)" onclick="Admin.deleteZone('${z.id}')"><i class="fas fa-trash"></i></button></div>`).join('');
   },
   updateRadiusDisplay(v){ document.getElementById('zone-radius-val').textContent=v+' m'; if(Maps.tempCircle) Maps.tempCircle.setRadius(parseInt(v)); },
-async saveZone() {
-    const name = document.getElementById('zone-name').value.trim();
-    const groupId = document.getElementById('zone-group').value;
-
-    if (!name || !Maps.tempMarker) {
-        UI.toast('Please enter a name and click on the map', 'error');
-        return;
-    }
-    
-    if (!groupId) {
-        UI.toast('Please select a group first', 'error');
-        return;
-    }
-
-    const data = {
-        name,
-        groupId,
-        lat: Maps.tempMarker.savedLat,
-        lng: Maps.tempMarker.savedLng,
-        radius: parseInt(document.getElementById('zone-radius').value) || 500
-    };
-
-    UI.loader(true);
-    try {
-        await API.request('/admin/location', 'POST', data);
-        await DB.sync();
-        
-        // Clean up
-        Maps.adminMap.removeLayer(Maps.tempMarker);
-        Maps.adminMap.removeLayer(Maps.tempCircle);
-        Maps.tempMarker = null;
-        Maps.tempCircle = null;
-        
-        document.getElementById('zone-name').value = '';
-        Maps.renderZones();
-        UI.toast('Zone Saved Successfully', 'success');
-    } catch (e) {
-        UI.toast(e.message, 'error');
-    }
-    UI.loader(false);
-}
+  async saveZone(){
+    const name=document.getElementById('zone-name').value.trim();
+    if(!name || !Maps.tempMarker){UI.toast('Name and map location required','error');return;}
+    const data={ name, groupId:document.getElementById('zone-group').value, lat:Maps.tempMarker._lat, lng:Maps.tempMarker._lng, radius:parseInt(document.getElementById('zone-radius').value)||500 };
+    UI.loader(true); try { await API.request('/admin/location', 'POST', data); await DB.sync(); Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; Maps.renderZones(); UI.toast('Saved','success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false);
+  },
+  clearZoneForm(){ if(Maps.tempMarker) Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; },
+  async deleteZone(id){ if(confirm('Delete?')){ UI.loader(true); try{ await API.request(`/admin/location/${id}`, 'DELETE'); await DB.sync(); Maps.renderZones(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
+  
+  filterRecords(){
+    const search=document.getElementById('rec-search').value.toLowerCase(); const date=document.getElementById('rec-date').value;
+    let recs=DB.getRecords(); const emps=DB.getEmployees();
+    if(date) recs=recs.filter(r=>r.date===date);
+    if(search) recs=recs.filter(r=>emps.find(e=>e.id===r.employeeId)?.name.toLowerCase().includes(search));
+    const tbody=document.getElementById('records-table');
+    if(!recs.length){tbody.innerHTML=`<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted)">No records</td></tr>`;return;}
+    tbody.innerHTML=recs.map(r=>{
+      const emp=emps.find(e=>e.id===r.employeeId)||{name:'Unknown'};
+      return`<tr><td><strong>${emp.name}</strong></td><td>${DB.fmtDate(r.date)}</td><td>${DB.fmtTime(r.checkIn)}</td><td>${DB.fmtTime(r.checkOut)}</td><td>${UI.badge(r.status)}</td><td>${r.notes||'—'}</td></tr>`;
+    }).join('');
+  }
+};
 
 /* ══════════════════════════════════════════
    EMPLOYEE PORTAL LOGIC
