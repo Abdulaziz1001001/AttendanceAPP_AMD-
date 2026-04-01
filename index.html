@@ -1415,7 +1415,13 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Enter'){ if(App.current==='admin-login') Auth.adminLogin(); if(App.current==='emp-login') Auth.empLogin(); }
   if(e.key==='Escape') document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show'));
 });
-document.addEventListener('DOMContentLoaded',()=>{ const d=document.getElementById('rec-date'); if(d) d.value=DB.today(); });
+document.addEventListener('DOMContentLoaded', () => { 
+  const d = document.getElementById('rec-date'); 
+  if(d) d.value = DB.today(); 
+  
+  // تشغيل الاستعادة التلقائية لتسجيل الدخول
+  Auth.restoreSession(); 
+});
 </script>
 </body>
 </html>
