@@ -480,20 +480,18 @@ const Maps = {
     this.renderZones(); setTimeout(() => this.adminMap.invalidateSize(true), 350); 
   },
   _placeTemp(lat,lng){
-    if(this.tempMarker) this.adminMap.removeLayer(this.tempMarker); if(this.tempCircle) this.adminMap.removeLayer(this.tempCircle);
+    if(this.tempMarker) this.adminMap.removeLayer(this.tempMarker); 
+    if(this.tempCircle) this.adminMap.removeLayer(this.tempCircle);
     const radius=parseInt(document.getElementById('zone-radius').value)||500;
     
     this.tempMarker = L.marker([lat,lng], {icon: this.pinIcon, draggable: true}).addTo(this.adminMap);
     this.tempCircle = L.circle([lat,lng],{radius,color:'#C45A28',fillColor:'#C45A28',fillOpacity:0.1,weight:2,dashArray:'6 4'}).addTo(this.adminMap);
     
-    const updateCoords = (newLat, newLng) => {
-        document.getElementById('zone-lat-display').textContent=`Lat: ${newLat.toFixed(5)}`; 
-        document.getElementById('zone-lng-display').textContent=`Lng: ${newLng.toFixed(5)}`;
-        this.tempMarker._lat=newLat; this.tempMarker._lng=newLng;
-        this.tempCircle.setLatLng([newLat, newLng]);
-    };
-    updateCoords(lat, lng);
-    this.tempMarker.on('drag', (e) => { const pos = e.target.getLatLng(); updateCoords(pos.lat, pos.lng); });
+    // ربط الدائرة بالدبوس لتتحرك معه فوراً عند السحب
+    this.tempMarker.on('drag', (e) => { 
+        const pos = e.target.getLatLng(); 
+        this.tempCircle.setLatLng([pos.lat, pos.lng]); 
+    });
   },
   renderZones(){
     if(!this.adminMap) return;
