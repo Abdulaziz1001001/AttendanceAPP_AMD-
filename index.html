@@ -984,17 +984,39 @@ const Emp = {
     } catch(e) { UI.toast(e.message,'error'); }
     UI.loader(false);
   },
-  async checkOut(){
-    if(!this.currentRecord||!this.currentPos) return;
-    UI.loader(true);
-    const rec={ employeeId:Auth.empSession.id, date:DB.today(), checkOut:DB.nowISO(), checkOutLat:this.currentPos.lat, checkOutLng:this.currentPos.lng, status:this.currentRecord.status, notes:this.currentRecord.notes };
-    try {
-        await API.request('/employee/record', 'POST', rec); await DB.sync();
-        this.currentRecord=DB.getRecords().find(r=>r.employeeId===Auth.empSession.id&&r.date===DB.today());
-        this.renderTodayRecord(); this.updateButtons(false); this.renderHistory(); UI.toast('Checked out!','success');
-    } catch(e) { UI.toast(e.message,'error'); }
-    UI.loader(false);
+// بدلاً من تسجيل الخروج مباشرة، نفتح نافذة السبب
+  checkOut() {
+    UI.openModal('modal-leave');
   },
+
+  async confirmLeave() {
+    const reason = document.getElementById('leave-reason').value;
+    const notes = document.getElementById('leave-notes').value.trim();
+    
+    if(!reason) { UI.toast('يرجى اختيار السبب أولاً', 'error'); return; }
+
+    UI.loader(true);
+    const rec = { 
+      employeeId: Auth.empSession.id, 
+      date: DB.today(), 
+      checkOut: DB.nowISO(), 
+      checkOutLat: this.currentPos.lat, 
+      checkOutLng: this.currentPos.lng, 
+      status: 'early_leave', // تغيير الحالة تلقائياً لاستئذان
+      notes: `[السبب: ${reason}] - ${notes}` 
+    };
+    
+    try {
+        await API.request('/employee/record', 'POST', rec); 
+        await DB.sync();
+        UI.closeModal('modal-leave');
+        this.currentRecord = DB.getRecords().find(r => r.employeeId === Auth.empSession.id && r.date === DB.today());
+        this.renderTodayRecord(); 
+        this.updateButtons(false); 
+        UI.toast('تم تسجيل الانصراف والسبب بنجاح', 'success');
+    } catch(e) { UI.toast(e.message, 'error'); }
+    UI.loader(false);
+  }
   renderTodayRecord(){
     const rec=this.currentRecord; const body=document.getElementById('today-record-body');
     if(!rec){body.innerHTML=`<div style="text-align:center;color:var(--text-muted)">No record yet</div>`;return;}
