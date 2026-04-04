@@ -364,8 +364,7 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
 'use strict';
@@ -863,26 +862,64 @@ const Admin = {
   },
 
   // استخراج ملف PDF
+// استخراج ملف PDF (داعم للغة العربية والتنسيق)
   exportPDF() {
     const data = this.getExportData();
     if(!data.length) return UI.toast('No data to export', 'warning');
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
     
-    doc.setFontSize(16);
-    doc.text(`AMD United - Attendance Report (${DB.today()})`, 14, 15);
-    
-    const headers = [["Employee Name", "Date", "Check In", "Check Out", "Status", "Notes"]];
-    const rows = data.map(obj => Object.values(obj));
-    
-    doc.autoTable({ 
-      head: headers, 
-      body: rows, 
-      startY: 20,
-      theme: 'grid',
-      headStyles: { fillColor: [196, 90, 40] } // لون شركتك البرتقالي
+    UI.loader(true); // تشغيل شاشة التحميل لأن المعالجة تأخذ ثانية
+
+    // إنشاء قالب HTML مخفي وتصميمه كتقرير رسمي
+    const container = document.createElement('div');
+    container.style.padding = '20px';
+    container.style.fontFamily = "'Barlow', 'Segoe UI', Tahoma, sans-serif";
+    container.style.direction = 'rtl'; // توجيه النص من اليمين لليسار للعربية
+    container.style.background = '#fff';
+    container.style.color = '#000';
+
+    container.innerHTML = `
+      <h2 style="text-align:center; color:#C45A28; margin-bottom:20px; font-family:'Cinzel', serif;">AMD United - تقرير الحضور (${DB.today()})</h2>
+      <table style="width:100%; border-collapse:collapse; text-align:center; font-size:14px;">
+        <thead>
+          <tr style="background-color:#C45A28; color:#fff;">
+            <th style="padding:10px; border:1px solid #ddd;">الموظف</th>
+            <th style="padding:10px; border:1px solid #ddd;">التاريخ</th>
+            <th style="padding:10px; border:1px solid #ddd;">تسجيل الدخول</th>
+            <th style="padding:10px; border:1px solid #ddd;">تسجيل الخروج</th>
+            <th style="padding:10px; border:1px solid #ddd;">الحالة</th>
+            <th style="padding:10px; border:1px solid #ddd;">الملاحظات</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(row => `
+            <tr>
+              <td style="padding:8px; border:1px solid #ddd; font-weight:bold;">${row["Employee Name"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;">${row["Date"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;" dir="ltr">${row["Check In"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;" dir="ltr">${row["Check Out"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;">${row["Status"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;">${row["Notes"]}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+
+    // إعدادات تصدير الـ PDF
+    const opt = {
+      margin:       10,
+      filename:     `AMD_Attendance_${DB.today()}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // تنفيذ الطباعة
+    html2pdf().set(opt).from(container).save().then(() => {
+      UI.loader(false);
+      UI.toast('PDF Exported Successfully!', 'success');
     });
-    
+  }
     doc.save(`AMD_Attendance_${DB.today()}.pdf`);
   }
 };
