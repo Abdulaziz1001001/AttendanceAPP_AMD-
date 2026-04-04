@@ -119,5 +119,29 @@ router.post('/profile', async (req, res) => {
     res.status(500).json({ msg: 'Server Error while updating profile' });
   }
 });
+// مسار تعديل سجل الحضور (خاص بالمدير)
+router.put('/record/:id', async (req, res) => {
+  try {
+    const { checkIn, checkOut, status, notes } = req.body;
+    
+    // البحث عن السجل باستخدام مكتبة Mongoose
+    const mongoose = require('mongoose');
+    let record = await mongoose.models.Record.findById(req.params.id);
+    
+    if(!record) return res.status(404).json({msg: 'Record not found'});
+    
+    // تحديث البيانات
+    record.checkIn = checkIn || record.checkIn;
+    record.checkOut = checkOut || record.checkOut;
+    record.status = status || record.status;
+    record.notes = notes !== undefined ? notes : record.notes;
+
+    await record.save();
+    res.json({ msg: 'Record updated successfully' });
+  } catch (err) {
+    console.error("Record Update Error:", err);
+    res.status(500).json({ msg: err.message });
+  }
+});
 
 module.exports = router;
