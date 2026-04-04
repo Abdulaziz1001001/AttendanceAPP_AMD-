@@ -287,6 +287,35 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
   </div>
 </div>
 
+<div id="modal-record" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;text-transform:uppercase">Edit Attendance Record</span>
+      <button class="btn-ghost" onclick="UI.closeModal('modal-record')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:1rem">
+      <input type="hidden" id="rec-modal-id">
+      <div class="form-group"><label class="form-label">Employee Name</label><input type="text" id="rec-modal-emp" class="form-control" disabled></div>
+      <div class="form-group"><label class="form-label">Check-in Time</label><input type="datetime-local" id="rec-modal-in" class="form-control"></div>
+      <div class="form-group"><label class="form-label">Check-out Time</label><input type="datetime-local" id="rec-modal-out" class="form-control"></div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select id="rec-modal-status" class="form-control form-select">
+          <option value="present">Present</option>
+          <option value="late">Late</option>
+          <option value="absent">Absent</option>
+          <option value="early_leave">Early Leave</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Admin Notes / Overrides</label><input type="text" id="rec-modal-notes" class="form-control" placeholder="Add custom notes here..."></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="UI.closeModal('modal-record')">Cancel</button>
+      <button class="btn btn-primary" onclick="Admin.saveRecord()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 <div id="modal-leave" class="modal-overlay">
   <div class="modal">
     <div class="modal-header">
@@ -428,14 +457,12 @@ const DB = {
   fmtTime(iso){if(!iso)return '—'; return new Date(iso).toLocaleTimeString('en-SA',{hour:'2-digit',minute:'2-digit'})},
   fmtDate(iso){if(!iso)return '—'; return new Date(iso).toLocaleDateString('en-SA')},
   
-  // تحويل التوقيت من سيرفر (ISO) إلى التوقيت المحلي لكي يسهل تعديله في النافذة
   toLocalDatetime(iso) {
       if(!iso) return '';
       const d = new Date(iso);
       d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
       return d.toISOString().slice(0,16);
   },
-  // تحويل التوقيت المحلي من النافذة إلى (ISO) ليحفظ في السيرفر
   toISO(localStr) {
       if(!localStr) return null;
       return new Date(localStr).toISOString();
@@ -767,10 +794,6 @@ const Admin = {
   clearZoneForm(){ if(Maps.tempMarker) Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; },
   async deleteZone(id){ if(confirm('Delete?')){ UI.loader(true); try{ await API.request(`/admin/location/${id}`, 'DELETE'); await DB.sync(); Maps.renderZones(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
   
-  // ==========================================
-  // قسم التقارير (تعديل + استخراج PDF & Excel)
-  // ==========================================
-  
   filterRecords(){
     const search=document.getElementById('rec-search').value.toLowerCase(); const date=document.getElementById('rec-date').value;
     let recs=DB.getRecords(); const emps=DB.getEmployees();
@@ -795,7 +818,6 @@ const Admin = {
     }).join('');
   },
   
-  // فتح نافذة تعديل سجل الحضور
   openRecordModal(id) {
     const r = DB.getRecords().find(x => x.id === id); if(!r) return;
     const emp = DB.getEmployees().find(e => e.id === r.employeeId) || {name: 'Unknown'};
@@ -810,7 +832,6 @@ const Admin = {
     UI.openModal('modal-record');
   },
 
-  // حفظ التعديلات على سجل الحضور وإرسالها للسيرفر
   async saveRecord() {
     const id = document.getElementById('rec-modal-id').value;
     const data = {
@@ -832,7 +853,6 @@ const Admin = {
     UI.loader(false);
   },
 
-  // تجهيز البيانات للاستخراج (تجميع الأسماء والتواريخ بشكل نظيف)
   getExportData() {
     const search=document.getElementById('rec-search').value.toLowerCase();
     const date=document.getElementById('rec-date').value;
@@ -853,7 +873,6 @@ const Admin = {
     });
   },
 
-  // استخراج ملف Excel
   exportExcel() {
     const data = this.getExportData();
     if(!data.length) return UI.toast('No data to export', 'warning');
@@ -863,19 +882,16 @@ const Admin = {
     XLSX.writeFile(wb, `AMD_Attendance_${DB.today()}.xlsx`);
   },
 
-  // استخراج ملف PDF
-// استخراج ملف PDF (داعم للغة العربية والتنسيق)
   exportPDF() {
     const data = this.getExportData();
     if(!data.length) return UI.toast('No data to export', 'warning');
     
-    UI.loader(true); // تشغيل شاشة التحميل لأن المعالجة تأخذ ثانية
+    UI.loader(true); 
 
-    // إنشاء قالب HTML مخفي وتصميمه كتقرير رسمي
     const container = document.createElement('div');
     container.style.padding = '20px';
     container.style.fontFamily = "'Barlow', 'Segoe UI', Tahoma, sans-serif";
-    container.style.direction = 'rtl'; // توجيه النص من اليمين لليسار للعربية
+    container.style.direction = 'rtl'; 
     container.style.background = '#fff';
     container.style.color = '#000';
 
@@ -907,7 +923,6 @@ const Admin = {
       </table>
     `;
 
-    // إعدادات تصدير الـ PDF
     const opt = {
       margin:       10,
       filename:     `AMD_Attendance_${DB.today()}.pdf`,
@@ -916,13 +931,10 @@ const Admin = {
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
 
-    // تنفيذ الطباعة
     html2pdf().set(opt).from(container).save().then(() => {
       UI.loader(false);
       UI.toast('PDF Exported Successfully!', 'success');
     });
-  }
-    doc.save(`AMD_Attendance_${DB.today()}.pdf`);
   }
 };
 
@@ -984,7 +996,7 @@ const Emp = {
     } catch(e) { UI.toast(e.message,'error'); }
     UI.loader(false);
   },
-// بدلاً من تسجيل الخروج مباشرة، نفتح نافذة السبب
+
   checkOut() {
     UI.openModal('modal-leave');
   },
@@ -1002,7 +1014,7 @@ const Emp = {
       checkOut: DB.nowISO(), 
       checkOutLat: this.currentPos.lat, 
       checkOutLng: this.currentPos.lng, 
-      status: 'early_leave', // تغيير الحالة تلقائياً لاستئذان
+      status: 'early_leave', 
       notes: `[السبب: ${reason}] - ${notes}` 
     };
     
@@ -1016,7 +1028,8 @@ const Emp = {
         UI.toast('تم تسجيل الانصراف والسبب بنجاح', 'success');
     } catch(e) { UI.toast(e.message, 'error'); }
     UI.loader(false);
-  }
+  }, // <--- هنا كانت الفاصلة المفقودة التي تسببت بتعليق النظام!
+
   renderTodayRecord(){
     const rec=this.currentRecord; const body=document.getElementById('today-record-body');
     if(!rec){body.innerHTML=`<div style="text-align:center;color:var(--text-muted)">No record yet</div>`;return;}
