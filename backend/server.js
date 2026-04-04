@@ -55,8 +55,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS  // كلمة المرور المكونة من 16 حرف
   }
 });
-
-// دالة الإرسال الأساسية
 const sendReminderEmail = async (email, subject, message) => {
   try {
     await transporter.sendMail({
