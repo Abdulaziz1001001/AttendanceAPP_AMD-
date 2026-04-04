@@ -287,31 +287,33 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
   </div>
 </div>
 
-<div id="modal-record" class="modal-overlay">
+<div id="modal-leave" class="modal-overlay">
   <div class="modal">
     <div class="modal-header">
-      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;text-transform:uppercase">Edit Attendance Record</span>
-      <button class="btn-ghost" onclick="UI.closeModal('modal-record')"><i class="fas fa-times"></i></button>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;text-transform:uppercase">طلب استئذان / انصراف</span>
+      <button class="btn-ghost" onclick="UI.closeModal('modal-leave')"><i class="fas fa-times"></i></button>
     </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:1rem">
-      <input type="hidden" id="rec-modal-id">
-      <div class="form-group"><label class="form-label">Employee Name</label><input type="text" id="rec-modal-emp" class="form-control" disabled></div>
-      <div class="form-group"><label class="form-label">Check-in Time</label><input type="datetime-local" id="rec-modal-in" class="form-control"></div>
-      <div class="form-group"><label class="form-label">Check-out Time</label><input type="datetime-local" id="rec-modal-out" class="form-control"></div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:1.25rem">
       <div class="form-group">
-        <label class="form-label">Status</label>
-        <select id="rec-modal-status" class="form-control form-select">
-          <option value="present">Present</option>
-          <option value="late">Late</option>
-          <option value="absent">Absent</option>
-          <option value="early_leave">Early Leave</option>
+        <label class="form-label">سبب الاستئذان</label>
+        <select id="leave-reason" class="form-control form-select">
+          <option value="" disabled selected>-- اختر السبب --</option>
+          <option value="ظرف صحي">ظرف صحي طارئ</option>
+          <option value="مهمة عمل">مهمة عمل خارجية</option>
+          <option value="جهة حكومية">مراجعة جهة حكومية</option>
+          <option value="ظرف عائلي">ظرف عائلي</option>
+          <option value="عطل فني">توقف العمل / عطل فني</option>
+          <option value="إذن مسبق">إذن مسبق من الإدارة</option>
         </select>
       </div>
-      <div class="form-group"><label class="form-label">Admin Notes / Overrides</label><input type="text" id="rec-modal-notes" class="form-control" placeholder="Add custom notes here..."></div>
+      <div class="form-group">
+        <label class="form-label">ملاحظات إضافية</label>
+        <textarea id="leave-notes" class="form-control" rows="3" placeholder="اكتب تفاصيل الإذن هنا..."></textarea>
+      </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline" onclick="UI.closeModal('modal-record')">Cancel</button>
-      <button class="btn btn-primary" onclick="Admin.saveRecord()">Save Changes</button>
+      <button class="btn btn-outline" onclick="UI.closeModal('modal-leave')">إلغاء</button>
+      <button class="btn btn-primary" onclick="Emp.confirmLeave()">تأكيد الانصراف</button>
     </div>
   </div>
 </div>
