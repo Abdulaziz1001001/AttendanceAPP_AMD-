@@ -373,7 +373,7 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="UI.closeModal('modal-leave')">إلغاء</button>
-      <button class="btn btn-primary" onclick="Emp.confirmLeave()">تأكيد الانصراف</button>
+      <button class="btn btn-primary" onclick="Emp.confirmLeave()">إرسال الطلب للإدارة</button>
     </div>
   </div>
 </div>
@@ -926,7 +926,7 @@ const Admin = {
   async deleteZone(id){ if(confirm('Delete?')){ UI.loader(true); try{ await API.request(`/admin/location/${id}`, 'DELETE'); await DB.sync(); Maps.renderZones(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
   
   // ==========================================
-  // قسم التقارير (شامل، مرتب حسب الأيام، مع نظام الموافقة والتعريب)
+  // قسم التقارير (شامل، مرتب، مع أزرار الموافقة)
   // ==========================================
   
   filterRecords(){
@@ -936,7 +936,6 @@ const Admin = {
     const emps=DB.getEmployees();
     const groups=DB.getGroups();
 
-    // 1. الفرز التلقائي حسب الأيام (من الأحدث للأقدم)
     recs.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     if(date) recs=recs.filter(r=>r.date===date);
@@ -949,10 +948,8 @@ const Admin = {
       const emp = emps.find(e=>e.id===r.employeeId) || {name:'Unknown', eid:'—', groupId:null};
       const grp = groups.find(g=>g.id===emp.groupId) || {name:'—'};
       
-      // بناء أزرار التعديل
       let actionButtons = `<button class="btn-ghost btn-sm" onclick="Admin.openRecordModal('${r.id}')" title="تعديل"><i class="fas fa-edit" style="color:var(--accent)"></i></button>`;
 
-      // إظهار أزرار الموافقة والرفض إذا كان الطلب معلقاً
       if(r.approvalStatus === 'pending') {
           actionButtons = `
             <button class="btn-ghost btn-sm" onclick="Admin.handleApproval('${r.id}', 'approved')" title="قبول الاستئذان"><i class="fas fa-check-circle" style="color:var(--success); font-size:1.2rem;"></i></button>
@@ -960,7 +957,6 @@ const Admin = {
           ` + actionButtons;
       }
 
-      // تعديل شارة الحالة
       let statusBadge = UI.badge(r.status);
       if(r.approvalStatus === 'pending') {
           statusBadge = `<span class="badge" style="background:var(--warning); color:#000; font-weight:bold"><i class="fas fa-hourglass-half"></i> معلق</span>`;
@@ -986,7 +982,6 @@ const Admin = {
     }).join('');
   },
 
-  // دالة التعامل مع طلبات الاستئذان
   async handleApproval(recordId, decision) {
       const isApproved = decision === 'approved';
       if(!confirm(isApproved ? 'هل أنت متأكد من قبول هذا الاستئذان؟' : 'هل أنت متأكد من رفض هذا الاستئذان؟')) return;
@@ -1185,11 +1180,50 @@ const Emp = {
     else { document.getElementById('emp-status-dot').className='status-dot outside pulse'; document.getElementById('emp-status-text').textContent='Outside Zone'; document.getElementById('emp-location-info').textContent='Please move closer to your designated work zone.'; }
     this.updateButtons(!!insideZone);
   },
+
+  // الدالة المعدلة لعرض حالة الأزرار بناءً على قرار الإدارة
   updateButtons(insideZone){
-    const rec=this.currentRecord; const checkinBtn=document.getElementById('emp-checkin-btn'); const checkoutBtn=document.getElementById('emp-checkout-btn');
-    if(!rec){ checkinBtn.classList.remove('hidden'); checkoutBtn.classList.add('hidden'); checkinBtn.disabled=!insideZone; } 
-    else if(rec&&!rec.checkOut){ checkinBtn.classList.add('hidden'); checkoutBtn.classList.remove('hidden'); checkoutBtn.disabled=!insideZone; } 
-    else { checkinBtn.classList.add('hidden'); checkoutBtn.classList.add('hidden'); document.getElementById('emp-location-info').textContent='Attendance complete for today.'; }
+    const rec=this.currentRecord; 
+    const checkinBtn=document.getElementById('emp-checkin-btn'); 
+    const checkoutBtn=document.getElementById('emp-checkout-btn');
+    
+    if(!rec){ 
+        // الموظف لم يبصم دخول بعد
+        checkinBtn.classList.remove('hidden'); 
+        checkoutBtn.classList.add('hidden'); 
+        checkinBtn.disabled=!insideZone; 
+    } 
+    else if(rec && !rec.checkOut){ 
+        // الموظف بصم دخول، لكن لم يخرج بعد
+        checkinBtn.classList.add('hidden'); 
+        checkoutBtn.classList.remove('hidden'); 
+        checkoutBtn.disabled=!insideZone; 
+        
+        // تغيير شكل الزر بناء على حالة طلب الاستئذان
+        if (rec.approvalStatus === 'pending') {
+            checkoutBtn.innerHTML = '<i class="fas fa-hourglass-half"></i> طلب قيد المراجعة';
+            checkoutBtn.style.background = 'var(--warning)';
+            checkoutBtn.style.color = '#000';
+        } else if (rec.approvalStatus === 'approved') {
+            checkoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> انصراف (تمت الموافقة)';
+            checkoutBtn.style.background = 'var(--success)';
+            checkoutBtn.style.color = '#fff';
+        } else if (rec.approvalStatus === 'rejected') {
+            checkoutBtn.innerHTML = '<i class="fas fa-ban"></i> انصراف (مرفوض)';
+            checkoutBtn.style.background = 'var(--danger)';
+            checkoutBtn.style.color = '#fff';
+        } else {
+            checkoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Check Out';
+            checkoutBtn.style.background = 'var(--danger)';
+            checkoutBtn.style.color = '#fff';
+        }
+    } 
+    else { 
+        // الموظف سجل خروج فعلياً
+        checkinBtn.classList.add('hidden'); 
+        checkoutBtn.classList.add('hidden'); 
+        document.getElementById('emp-location-info').textContent='Attendance complete for today.'; 
+    }
   },
   
   async checkIn(){
@@ -1204,7 +1238,7 @@ const Emp = {
     UI.loader(false);
   },
 
-  // الحارس الذكي لموعد الخروج (Constraint)
+  // الحارس الذكي لموعد الخروج
   checkOut() {
     const emp = Auth.empSession;
     if (!emp || !emp.workEnd) {
@@ -1212,6 +1246,7 @@ const Emp = {
       return;
     }
 
+    const rec = this.currentRecord;
     const now = new Date();
     const saudiTime = new Intl.DateTimeFormat('en-US', { 
         timeZone: 'Asia/Riyadh', 
@@ -1229,6 +1264,24 @@ const Emp = {
 
     // الخروج المبكر (قبل الموعد بأكثر من 5 دقائق)
     if (currTotalMinutes < (endTotalMinutes - 5)) {
+        
+        // التحقق من حالة الطلب المسبق
+        if (rec && rec.approvalStatus === 'pending') {
+            UI.toast('طلبك قيد المراجعة من قبل الإدارة، يرجى الانتظار.', 'warning');
+            return;
+        }
+        if (rec && rec.approvalStatus === 'rejected') {
+            UI.toast('تم رفض طلب استئذانك. يرجى الانتظار حتى نهاية الدوام.', 'error');
+            return;
+        }
+        if (rec && rec.approvalStatus === 'approved') {
+            if(confirm('تمت الموافقة على استئذانك! هل تود تسجيل الانصراف الفعلي الآن؟')) {
+                this.confirmStandardCheckOut();
+            }
+            return;
+        }
+        
+        // إذا لم يكن هناك طلب سابق، يفتح نافذة تقديم الطلب
         UI.openModal('modal-leave');
     } else {
         if(confirm('هل تود تسجيل الانصراف الرسمي الآن؟')) {
@@ -1243,7 +1296,7 @@ const Emp = {
     const rec = { 
       employeeId: Auth.empSession.id, 
       date: DB.today(), 
-      checkOut: DB.nowISO(), 
+      checkOut: DB.nowISO(), // هنا يتم إرسال وتسجيل وقت الخروج الحقيقي
       checkOutLat: this.currentPos.lat, 
       checkOutLng: this.currentPos.lng, 
       status: this.currentRecord.status,
@@ -1255,7 +1308,7 @@ const Emp = {
         this.currentRecord = DB.getRecords().find(r => r.employeeId === Auth.empSession.id && r.date === DB.today());
         this.renderTodayRecord(); 
         this.updateButtons(false); 
-        UI.toast('تم تسجيل الانصراف الرسمي بنجاح', 'success');
+        UI.toast('تم تسجيل الانصراف الفعلي بنجاح', 'success');
     } catch(e) { UI.toast(e.message, 'error'); }
     UI.loader(false);
   },
@@ -1269,11 +1322,9 @@ const Emp = {
     const rec = { 
       employeeId: Auth.empSession.id, 
       date: DB.today(), 
-      checkOut: DB.nowISO(), 
-      checkOutLat: this.currentPos.lat, 
-      checkOutLng: this.currentPos.lng, 
+      // لاحظ أننا لا نرسل CheckOut هنا! الطلب معلق ولم يخرج بعد.
       status: 'early_leave', 
-      approvalStatus: 'pending', // يبدأ كمعلق
+      approvalStatus: 'pending',
       notes: `[طلب استئذان - ${reason}] ${notes}` 
     };
     try {
@@ -1282,8 +1333,8 @@ const Emp = {
         UI.closeModal('modal-leave');
         this.currentRecord = DB.getRecords().find(r => r.employeeId === Auth.empSession.id && r.date === DB.today());
         this.renderTodayRecord(); 
-        this.updateButtons(false); 
-        UI.toast('تم إرسال طلب الاستئذان للإدارة', 'success');
+        this.updateButtons(true); // يظل true لكي يبقى الزر ظاهراً بشكله الجديد
+        UI.toast('تم إرسال طلب الاستئذان للإدارة بنجاح. يرجى انتظار الموافقة.', 'success');
     } catch(e) { UI.toast(e.message, 'error'); }
     UI.loader(false);
   },
@@ -1293,11 +1344,11 @@ const Emp = {
     if(!rec){body.innerHTML=`<div style="text-align:center;color:var(--text-muted)">No record yet</div>`;return;}
     body.innerHTML=`<div style="display:flex;justify-content:space-between;padding:1rem;background:var(--surface2);border-radius:4px"><div><small style="color:var(--text-muted);display:block">Check In</small><strong>${DB.fmtTime(rec.checkIn)}</strong></div><div><small style="color:var(--text-muted);display:block">Check Out</small><strong>${DB.fmtTime(rec.checkOut)}</strong></div></div>`;
   },
+  
   renderHistory(){
     const wrap=document.getElementById('emp-history-list'); const recs=DB.getRecords().filter(r=>r.employeeId===Auth.empSession.id);
     if(!recs.length){wrap.innerHTML=`<div style="text-align:center;padding:1rem;color:var(--text-muted)">No history</div>`;return;}
     
-    // عرض تاريخ الموظف الشخصي مرتباً
     recs.sort((a, b) => new Date(b.date) - new Date(a.date));
     
     wrap.innerHTML=recs.map(r=>{
