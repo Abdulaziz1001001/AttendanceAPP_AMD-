@@ -928,18 +928,34 @@ const Admin = {
   clearZoneForm(){ if(Maps.tempMarker) Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; },
   async deleteZone(id){ if(confirm('Delete?')){ UI.loader(true); try{ await API.request(`/admin/location/${id}`, 'DELETE'); await DB.sync(); Maps.renderZones(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
   
+// ==========================================
+  // قسم التقارير (شامل، مرتب حسب الأيام، ومُعرب)
+  // ==========================================
+  
   filterRecords(){
-    const search=document.getElementById('rec-search').value.toLowerCase(); const date=document.getElementById('rec-date').value;
-    let recs=DB.getRecords(); const emps=DB.getEmployees();
+    const search=document.getElementById('rec-search').value.toLowerCase(); 
+    const date=document.getElementById('rec-date').value;
+    let recs=DB.getRecords(); 
+    const emps=DB.getEmployees();
+    const groups=DB.getGroups(); // جلب المجموعات
+
+    // 1. الفرز التلقائي حسب الأيام (من الأحدث للأقدم)
+    recs.sort((a, b) => new Date(b.date) - new Date(a.date));
+
     if(date) recs=recs.filter(r=>r.date===date);
     if(search) recs=recs.filter(r=>emps.find(e=>e.id===r.employeeId)?.name.toLowerCase().includes(search));
+    
     const tbody=document.getElementById('records-table-body');
-    if(!recs.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">No records found</td></tr>`;return;}
+    if(!recs.length){tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted)">No records found</td></tr>`;return;}
     
     tbody.innerHTML=recs.map(r=>{
-      const emp=emps.find(e=>e.id===r.employeeId)||{name:'Unknown'};
+      const emp = emps.find(e=>e.id===r.employeeId) || {name:'Unknown', eid:'—', groupId:null};
+      const grp = groups.find(g=>g.id===emp.groupId) || {name:'—'};
+      
       return`<tr>
+        <td><code>${emp.eid || '—'}</code></td>
         <td><strong>${emp.name}</strong></td>
+        <td>${grp.name}</td>
         <td>${DB.fmtDate(r.date)}</td>
         <td>${DB.fmtTime(r.checkIn)}</td>
         <td>${DB.fmtTime(r.checkOut)}</td>
@@ -951,75 +967,52 @@ const Admin = {
       </tr>`;
     }).join('');
   },
-  
-  openRecordModal(id) {
-    const r = DB.getRecords().find(x => x.id === id); if(!r) return;
-    const emp = DB.getEmployees().find(e => e.id === r.employeeId) || {name: 'Unknown'};
-    
-    document.getElementById('rec-modal-id').value = r.id;
-    document.getElementById('rec-modal-emp').value = emp.name + ` (${r.date})`;
-    document.getElementById('rec-modal-in').value = DB.toLocalDatetime(r.checkIn);
-    document.getElementById('rec-modal-out').value = DB.toLocalDatetime(r.checkOut);
-    document.getElementById('rec-modal-status').value = r.status || 'present';
-    document.getElementById('rec-modal-notes').value = r.notes || '';
-    
-    UI.openModal('modal-record');
-  },
-
-  async saveRecord() {
-    const id = document.getElementById('rec-modal-id').value;
-    const data = {
-      checkIn: DB.toISO(document.getElementById('rec-modal-in').value),
-      checkOut: DB.toISO(document.getElementById('rec-modal-out').value),
-      status: document.getElementById('rec-modal-status').value,
-      notes: document.getElementById('rec-modal-notes').value.trim()
-    };
-    
-    UI.loader(true);
-    try { 
-      await API.request(`/admin/record/${id}`, 'PUT', data); 
-      await DB.sync(); 
-      UI.closeModal('modal-record'); 
-      this.filterRecords(); 
-      UI.toast('Record Updated Successfully!','success'); 
-    } 
-    catch(e){ UI.toast(e.message,'error') }
-    UI.loader(false);
-  },
 
   getExportData() {
     const search=document.getElementById('rec-search').value.toLowerCase();
     const date=document.getElementById('rec-date').value;
-    let recs=DB.getRecords(); const emps=DB.getEmployees();
+    let recs=DB.getRecords(); 
+    const emps=DB.getEmployees();
+    const groups=DB.getGroups();
+
+    // الترتيب الزمني للتقارير المستخرجة
+    recs.sort((a, b) => new Date(b.date) - new Date(a.date));
+
     if(date) recs=recs.filter(r=>r.date===date);
     if(search) recs=recs.filter(r=>emps.find(e=>e.id===r.employeeId)?.name.toLowerCase().includes(search));
     
     return recs.map(r => {
-        const emp=emps.find(e=>e.id===r.employeeId)||{name:'Unknown'};
+        const emp = emps.find(e=>e.id===r.employeeId) || {name:'Unknown', eid:'—'};
+        const grp = groups.find(g=>g.id===emp.groupId) || {name:'—'};
+        
+        // تعريب أسماء الأعمدة لتظهر بشكل احترافي في الإكسل
         return {
-            "Employee Name": emp.name,
-            "Date": r.date,
-            "Check In": r.checkIn ? new Date(r.checkIn).toLocaleString('en-SA') : 'N/A',
-            "Check Out": r.checkOut ? new Date(r.checkOut).toLocaleString('en-SA') : 'N/A',
-            "Status": r.status.toUpperCase(),
-            "Notes": r.notes || ''
+            "الرقم الوظيفي": emp.eid || '—',
+            "اسم الموظف": emp.name,
+            "القسم / المجموعة": grp.name,
+            "التاريخ": r.date,
+            "وقت الدخول": r.checkIn ? new Date(r.checkIn).toLocaleString('en-SA') : '—',
+            "وقت الخروج": r.checkOut ? new Date(r.checkOut).toLocaleString('en-SA') : '—',
+            "الحالة": r.status.toUpperCase(),
+            "الملاحظات": r.notes || ''
         };
     });
   },
 
   exportExcel() {
     const data = this.getExportData();
-    if(!data.length) return UI.toast('No data to export', 'warning');
+    if(!data.length) return UI.toast('لا توجد بيانات لاستخراجها', 'warning');
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Attendance");
-    XLSX.writeFile(wb, `AMD_Attendance_${DB.today()}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, "سجل الحضور");
+    XLSX.writeFile(wb, `AMD_Attendance_Report_${DB.today()}.xlsx`);
   },
 
   exportPDF() {
     const data = this.getExportData();
-    if(!data.length) return UI.toast('No data to export', 'warning');
+    if(!data.length) return UI.toast('لا توجد بيانات لاستخراجها', 'warning');
     
+    const dateFilter = document.getElementById('rec-date').value;
     UI.loader(true); 
 
     const container = document.createElement('div');
@@ -1029,15 +1022,20 @@ const Admin = {
     container.style.background = '#fff';
     container.style.color = '#000';
 
+    // قالب التقرير الشامل
     container.innerHTML = `
-      <h2 style="text-align:center; color:#C45A28; margin-bottom:20px; font-family:'Cinzel', serif;">AMD United - تقرير الحضور (${DB.today()})</h2>
-      <table style="width:100%; border-collapse:collapse; text-align:center; font-size:14px;">
+      <h2 style="text-align:center; color:#C45A28; margin-bottom:5px; font-family:'Cinzel', serif;">AMD United - التقرير الشامل للحضور والانصراف</h2>
+      <h4 style="text-align:center; color:#555; margin-bottom:20px; font-weight:normal;">${dateFilter ? `تقرير يوم: ${dateFilter}` : `تقرير جميع الأيام حتى تاريخ: ${DB.today()}`}</h4>
+      
+      <table style="width:100%; border-collapse:collapse; text-align:center; font-size:13px;">
         <thead>
           <tr style="background-color:#C45A28; color:#fff;">
+            <th style="padding:10px; border:1px solid #ddd;">الرقم الوظيفي</th>
             <th style="padding:10px; border:1px solid #ddd;">الموظف</th>
+            <th style="padding:10px; border:1px solid #ddd;">القسم</th>
             <th style="padding:10px; border:1px solid #ddd;">التاريخ</th>
-            <th style="padding:10px; border:1px solid #ddd;">تسجيل الدخول</th>
-            <th style="padding:10px; border:1px solid #ddd;">تسجيل الخروج</th>
+            <th style="padding:10px; border:1px solid #ddd;">وقت الدخول</th>
+            <th style="padding:10px; border:1px solid #ddd;">وقت الخروج</th>
             <th style="padding:10px; border:1px solid #ddd;">الحالة</th>
             <th style="padding:10px; border:1px solid #ddd;">الملاحظات</th>
           </tr>
@@ -1045,12 +1043,14 @@ const Admin = {
         <tbody>
           ${data.map(row => `
             <tr>
-              <td style="padding:8px; border:1px solid #ddd; font-weight:bold;">${row["Employee Name"]}</td>
-              <td style="padding:8px; border:1px solid #ddd;">${row["Date"]}</td>
-              <td style="padding:8px; border:1px solid #ddd;" dir="ltr">${row["Check In"]}</td>
-              <td style="padding:8px; border:1px solid #ddd;" dir="ltr">${row["Check Out"]}</td>
-              <td style="padding:8px; border:1px solid #ddd;">${row["Status"]}</td>
-              <td style="padding:8px; border:1px solid #ddd;">${row["Notes"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;"><code>${row["الرقم الوظيفي"]}</code></td>
+              <td style="padding:8px; border:1px solid #ddd; font-weight:bold;">${row["اسم الموظف"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;">${row["القسم / المجموعة"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;">${row["التاريخ"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;" dir="ltr">${row["وقت الدخول"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;" dir="ltr">${row["وقت الخروج"]}</td>
+              <td style="padding:8px; border:1px solid #ddd; font-weight:bold;">${row["الحالة"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;">${row["الملاحظات"]}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -1059,15 +1059,15 @@ const Admin = {
 
     const opt = {
       margin:       10,
-      filename:     `AMD_Attendance_${DB.today()}.pdf`,
+      filename:     `AMD_Report_${DB.today()}.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
       html2canvas:  { scale: 2, useCORS: true },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' } // orientation landscape لجعل الورقة بالعرض لتستوعب البيانات الإضافية
     };
 
     html2pdf().set(opt).from(container).save().then(() => {
       UI.loader(false);
-      UI.toast('PDF Exported Successfully!', 'success');
+      UI.toast('تم تصدير التقرير بنجاح!', 'success');
     });
   }
 };
