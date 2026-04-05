@@ -120,12 +120,18 @@ router.post('/profile', async (req, res) => {
   }
 });
 // مسار تعديل سجل الحضور (خاص بالمدير)
+// مسار قبول أو رفض الاستئذان
 router.put('/approve-record/:id', async (req, res) => {
   try {
-    const { status } = req.body; // ستكون إما 'approved' أو 'rejected'
+    const { status } = req.body; 
+    const mongoose = require('mongoose');
     const record = await mongoose.models.Record.findByIdAndUpdate(req.params.id, { approvalStatus: status });
-    res.json({ msg: 'تم تحديث حالة الطلب بنجاح' });
-  } catch (err) { res.status(500).json({ msg: err.message }); }
+    if(!record) return res.status(404).json({ msg: 'Record not found' });
+    res.json({ msg: 'Success' });
+  } catch (err) { 
+    console.error("Approval Error:", err);
+    res.status(500).json({ msg: err.message }); 
+  }
 });
 
 module.exports = router;
