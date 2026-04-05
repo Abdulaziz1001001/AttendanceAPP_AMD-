@@ -63,7 +63,7 @@ a{color:inherit;text-decoration:none} button{cursor:pointer;font-family:inherit;
 
 #page-admin{flex-direction:row}
 .sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:transform 0.3s}
-.nav-link{display:flex;align-items:center;gap:0.75rem;padding:0.65rem 1.25rem;color:var(--text-muted);font-size:0.85rem;cursor:pointer;border-left:2px solid transparent} .nav-link:hover{color:var(--text);background:var(--surface2)} .nav-link.active{color:var(--accent);border-left-color:var(--accent);background:var(--accent-glow)}
+.nav-link{display:flex;align-items:center;gap:0.75rem;padding:0.65rem 1.25rem;color:var(--text-muted);font-size:0.85rem;cursor:pointer;} .nav-link:hover{color:var(--text);background:var(--surface2)} .nav-link.active{color:var(--accent);background:var(--accent-glow)}
 .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden} .topbar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.5rem;gap:1rem}
 .content{flex:1;overflow-y:auto;padding:1.5rem}
 .admin-panel{display:none} .admin-panel.active{display:block}
@@ -165,7 +165,7 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
     <nav class="sidebar-nav">
       <span style="display:block;padding:0.75rem 1.25rem 0.4rem;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim)">Menu</span>
       <div class="nav-link active" onclick="Admin.showPanel('dashboard',this)"><i class="fas fa-th-large" style="width:20px"></i><span>Dashboard</span></div>
-      <div class="nav-link" onclick="Admin.showPanel('analytics',this)"><i class="fas fa-chart-pie" style="width:20px"></i><span>Analytics</span></div>
+      <div class="nav-link" onclick="Admin.showPanel('analytics',this)"><i class="fas fa-chart-pie" style="width:20px"></i><span>Analytics <span class="badge badge-success" style="margin-left:5px">NEW</span></span></div>
       <div class="nav-link" onclick="Admin.showPanel('employees',this)"><i class="fas fa-users" style="width:20px"></i><span>Employees</span></div>
       <div class="nav-link" onclick="Admin.showPanel('groups',this)"><i class="fas fa-layer-group" style="width:20px"></i><span>Groups</span></div>
       <div class="nav-link" onclick="Admin.showPanel('locations',this)"><i class="fas fa-map-marker-alt" style="width:20px"></i><span>Locations & Zones</span></div>
@@ -185,9 +185,9 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
   <div class="main-area">
     <header class="topbar">
       <button class="hamburger btn-ghost" onclick="UI.toggleSidebar()"><i class="fas fa-bars"></i></button>
-      <div style="font-size:1.1rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;flex:1" id="admin-panel-title">Dashboard</div>
+      <div style="font-size:1.1rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">Dashboard</div>
       
-      <div style="display:flex; align-items:center; gap:0.25rem;">
+      <div style="display:flex; align-items:center; gap:0.25rem; margin-left:auto;">
         <button class="btn-ghost btn-icon" onclick="UI.toggleTheme()" title="Theme">
             <i class="theme-icon fas fa-sun"></i>
         </button>
@@ -324,9 +324,9 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
 <div id="page-emp" class="page">
   <div style="height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.5rem;gap:1rem">
     <svg style="width:28px;height:28px;fill:var(--accent)" viewBox="0 0 100 100"><polygon points="10,90 45,10 55,10 90,90 75,90 50,28 25,90"/><rect x="22" y="68" width="56" height="8"/></svg>
-    <div style="font-size:0.9rem;flex:1;font-weight:bold" id="emp-topbar-name">Employee Portal</div>
+    <div style="font-size:0.9rem;font-weight:bold" id="emp-topbar-name">Employee Portal</div>
     
-    <div style="display:flex; align-items:center; gap:0.25rem;">
+    <div style="display:flex; align-items:center; gap:0.25rem; margin-left:auto;">
         <button class="btn-ghost btn-icon" onclick="UI.toggleTheme()" title="Theme">
             <i class="theme-icon fas fa-sun"></i>
         </button>
@@ -349,37 +349,6 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
         <div class="card"><div class="card-header"><div class="card-title">Today's Record</div></div><div style="padding:1.25rem" id="today-record-body"></div></div>
         <div class="card"><div class="card-header"><div class="card-title">Recent History</div></div><div style="padding:0.5rem 1.25rem" id="emp-history-list"></div></div>
       </div>
-    </div>
-  </div>
-</div>
-
-<div id="modal-leave" class="modal-overlay">
-  <div class="modal">
-    <div class="modal-header">
-      <span style="font-weight:700;font-size:1.1rem;text-transform:uppercase">Early Leave Request</span>
-      <button class="btn-ghost" onclick="UI.closeModal('modal-leave')"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:1.25rem">
-      <div class="form-group">
-        <label class="form-label">Reason</label>
-        <select id="leave-reason" class="form-control form-select">
-          <option value="" disabled selected>-- Select Reason --</option>
-          <option value="Health Emergency">Health Emergency</option>
-          <option value="External Work Task">External Work Task</option>
-          <option value="Government Appointment">Government Appointment</option>
-          <option value="Family Issue">Family Issue</option>
-          <option value="Technical Issue">Technical Issue</option>
-          <option value="Pre-approved Leave">Pre-approved Leave</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Additional Notes</label>
-        <textarea id="leave-notes" class="form-control" rows="3"></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="UI.closeModal('modal-leave')">Cancel</button>
-      <button class="btn btn-primary" onclick="Emp.confirmLeave()">Send Request</button>
     </div>
   </div>
 </div>
@@ -677,7 +646,7 @@ const Admin = {
     document.getElementById('stat-late').textContent=recs.filter(r=>r.status==='late').length;
     document.getElementById('stat-absent').textContent=Math.max(0,emps.length - recs.length);
     const tbody=document.getElementById('dash-attendance-table');
-    if(!recs.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted)">No records today</td></tr>`;return;}
+    if(!recs.length){tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted)">No records today</td></tr>`;return;}
     tbody.innerHTML=recs.slice(0,10).map(r=>{
       const emp=DB.getEmployees().find(e=>e.id===r.employeeId)||{name:'Unknown'};
       return`<tr><td>${emp.name}</td><td><span dir="ltr">${DB.fmtTime(r.checkIn)}</span></td><td><span dir="ltr">${DB.fmtTime(r.checkOut)}</span></td><td>${UI.badge(r.status)}</td></tr>`;
@@ -803,78 +772,45 @@ const Admin = {
   async deleteZone(id){ if(confirm('Delete?')){ UI.loader(true); try{ await API.request(`/admin/location/${id}`, 'DELETE'); await DB.sync(); Maps.renderZones(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
   
   // ==========================================
-  // REPORTS WITH APPROVAL SYSTEM
+  // CLEAN ENGLISH REPORTS (NO ACTIONS, NO APPROVALS)
   // ==========================================
   filterRecords(){
     const search=document.getElementById('rec-search').value.toLowerCase(); 
     const date=document.getElementById('rec-date').value;
-    let recs=DB.getRecords(); const emps=DB.getEmployees(); const groups=DB.getGroups();
+    let recs=DB.getRecords(); const emps=DB.getEmployees();
+    
     recs.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
     if(date) recs=recs.filter(r=>r.date===date);
     if(search) recs=recs.filter(r=>emps.find(e=>e.id===r.employeeId)?.name.toLowerCase().includes(search));
     
     const tbody=document.getElementById('records-table-body');
-    if(!recs.length){tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted)">No records found</td></tr>`;return;}
+    if(!recs.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">No records found</td></tr>`;return;}
     
     tbody.innerHTML=recs.map(r=>{
-      const emp = emps.find(e=>e.id===r.employeeId) || {name:'Unknown', eid:'—', groupId:null};
-      const grp = groups.find(g=>g.id===emp.groupId) || {name:'—'}; // NOTE: We don't display 'grp' to match exactly 8 columns requested
-      
-      let actionButtons = `—`; 
-      if(r.approvalStatus === 'pending') {
-          actionButtons = `
-            <button class="btn-ghost btn-sm" onclick="Admin.handleApproval('${r.id}', 'approved')" title="Approve"><i class="fas fa-check-circle" style="color:var(--success); font-size:1.2rem;"></i></button>
-            <button class="btn-ghost btn-sm" onclick="Admin.handleApproval('${r.id}', 'rejected')" title="Reject"><i class="fas fa-times-circle" style="color:var(--danger); font-size:1.2rem;"></i></button>
-          `;
-      }
-
-      let statusBadge = UI.badge(r.status);
-      if(r.approvalStatus === 'pending') statusBadge = `<span class="badge" style="background:var(--warning); color:#000;"><i class="fas fa-hourglass-half"></i> Pending</span>`;
-      else if (r.approvalStatus === 'rejected') statusBadge = `<span class="badge" style="background:var(--danger); color:#fff"><i class="fas fa-ban"></i> Rejected</span>`;
-      else if (r.approvalStatus === 'approved') statusBadge = `<span class="badge" style="background:var(--success); color:#fff"><i class="fas fa-check"></i> Approved</span>`;
-
-      // Exactly 8 columns: ID, Employee, Date, Check In, Check Out, Status, Notes, Action
+      const emp = emps.find(e=>e.id===r.employeeId) || {name:'Unknown', eid:'—'};
       return`<tr>
         <td><code>${emp.eid || '—'}</code></td>
         <td><strong>${emp.name}</strong></td>
         <td>${DB.fmtDate(r.date)}</td>
         <td><span dir="ltr">${DB.fmtTime(r.checkIn)}</span></td>
         <td><span dir="ltr">${DB.fmtTime(r.checkOut)}</span></td>
-        <td>${statusBadge}</td>
-        <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${r.notes||''}">${r.notes||'—'}</td>
-        <td style="text-align:center; min-width:80px;">${actionButtons}</td>
+        <td>${UI.badge(r.status)}</td>
+        <td style="max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${r.notes||''}">${r.notes||'—'}</td>
       </tr>`;
     }).join('');
   },
 
-  async handleApproval(recordId, decision) {
-      const isApproved = decision === 'approved';
-      if(!confirm(isApproved ? 'Approve this request?' : 'Reject this request?')) return;
-      UI.loader(true);
-      try {
-          await API.request(`/admin/approve-record/${recordId}`, 'PUT', { status: decision });
-          await DB.sync(); this.filterRecords(); 
-          UI.toast(isApproved ? 'Approved' : 'Rejected', isApproved ? 'success' : 'warning');
-      } catch(e) { UI.toast(e.message, 'error'); }
-      UI.loader(false);
-  },
-
   getExportData() {
     const search=document.getElementById('rec-search').value.toLowerCase(); const date=document.getElementById('rec-date').value;
-    let recs=DB.getRecords(); const emps=DB.getEmployees(); const groups=DB.getGroups();
+    let recs=DB.getRecords(); const emps=DB.getEmployees();
     recs.sort((a, b) => new Date(b.date) - new Date(a.date));
     if(date) recs=recs.filter(r=>r.date===date);
     if(search) recs=recs.filter(r=>emps.find(e=>e.id===r.employeeId)?.name.toLowerCase().includes(search));
     
     return recs.map(r => {
         const emp = emps.find(e=>e.id===r.employeeId) || {name:'Unknown', eid:'—'};
-        const grp = groups.find(g=>g.id===emp.groupId) || {name:'—'};
-        let finalStatus = r.status.toUpperCase();
-        if(r.approvalStatus === 'pending') finalStatus += ' (Pending)';
-        if(r.approvalStatus === 'approved') finalStatus += ' (Approved)';
-        if(r.approvalStatus === 'rejected') finalStatus += ' (Rejected)';
-
-        return { "ID": emp.eid || '—', "Name": emp.name, "Group": grp.name, "Date": r.date, "Check In": r.checkIn ? new Date(r.checkIn).toLocaleString('en-US') : '—', "Check Out": r.checkOut ? new Date(r.checkOut).toLocaleString('en-US') : '—', "Status": finalStatus, "Notes": r.notes || '' };
+        return { "ID": emp.eid || '—', "Name": emp.name, "Date": r.date, "Check In": r.checkIn ? new Date(r.checkIn).toLocaleString('en-US') : '—', "Check Out": r.checkOut ? new Date(r.checkOut).toLocaleString('en-US') : '—', "Status": r.status.toUpperCase(), "Notes": r.notes || '' };
     });
   },
 
@@ -902,18 +838,17 @@ const Admin = {
       <h2 style="text-align:center; color:#C45A28; margin-bottom:5px; font-family:'Cinzel', serif;">AMD United - Attendance Report</h2>
       <h4 style="text-align:center; color:#555; margin-bottom:20px; font-weight:normal;">${dateFilter ? dateFilter : DB.today()}</h4>
       <table style="width:100%; border-collapse:collapse; text-align:left; font-size:12px;">
-        <thead><tr style="background-color:#C45A28; color:#fff;"><th>ID</th><th>Name</th><th>Group</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Notes</th></tr></thead>
+        <thead><tr style="background-color:#C45A28; color:#fff;"><th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Notes</th></tr></thead>
         <tbody>
           ${data.map(row => `
             <tr>
               <td style="padding:6px; border:1px solid #ddd;"><code>${Object.values(row)[0]}</code></td>
               <td style="padding:6px; border:1px solid #ddd; font-weight:bold;">${Object.values(row)[1]}</td>
               <td style="padding:6px; border:1px solid #ddd;">${Object.values(row)[2]}</td>
-              <td style="padding:6px; border:1px solid #ddd;">${Object.values(row)[3]}</td>
+              <td style="padding:6px; border:1px solid #ddd;" dir="ltr">${Object.values(row)[3]}</td>
               <td style="padding:6px; border:1px solid #ddd;" dir="ltr">${Object.values(row)[4]}</td>
-              <td style="padding:6px; border:1px solid #ddd;" dir="ltr">${Object.values(row)[5]}</td>
-              <td style="padding:6px; border:1px solid #ddd; font-weight:bold;">${Object.values(row)[6]}</td>
-              <td style="padding:6px; border:1px solid #ddd;">${Object.values(row)[7]}</td>
+              <td style="padding:6px; border:1px solid #ddd; font-weight:bold;">${Object.values(row)[5]}</td>
+              <td style="padding:6px; border:1px solid #ddd;">${Object.values(row)[6]}</td>
             </tr>`).join('')}
         </tbody>
       </table>`;
@@ -924,7 +859,7 @@ const Admin = {
 };
 
 /* ══════════════════════════════════════════
-   EMPLOYEE PORTAL LOGIC
+   EMPLOYEE PORTAL LOGIC (Strict Constraints)
 ══════════════════════════════════════════ */
 const Emp = {
   watchId:null, currentPos:null, assignedZones:[], currentRecord:null, nearestZone:null,
@@ -968,19 +903,6 @@ const Emp = {
         checkinBtn.classList.remove('hidden'); checkoutBtn.classList.add('hidden'); checkinBtn.disabled=!insideZone; 
     } else if(rec && !rec.checkOut){ 
         checkinBtn.classList.add('hidden'); checkoutBtn.classList.remove('hidden'); checkoutBtn.disabled=!insideZone; 
-        
-        // Dynamic Button Rendering based on Approval Status
-        if (rec.approvalStatus === 'pending') {
-            checkoutBtn.innerHTML = `<i class="fas fa-hourglass-half"></i> Pending Approval`;
-            checkoutBtn.style.background = 'var(--warning)'; checkoutBtn.style.color = '#000';
-        } else if (rec.approvalStatus === 'approved') {
-            checkoutBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Clock Out (Approved)`;
-            checkoutBtn.style.background = 'var(--success)'; checkoutBtn.style.color = '#fff';
-        } else {
-            // 'rejected' or 'none' uses standard button
-            checkoutBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Check Out`;
-            checkoutBtn.style.background = 'var(--danger)'; checkoutBtn.style.color = '#fff';
-        }
     } else { 
         checkinBtn.classList.add('hidden'); checkoutBtn.classList.add('hidden'); document.getElementById('emp-location-info').textContent='Attendance complete for today.'; 
     }
@@ -993,7 +915,7 @@ const Emp = {
     let finalStatus = 'present';
     const emp = Auth.empSession;
     
-    // Accurate Late Calculation using UTC (Avoids Safari formatting bugs)
+    // Strict Late Calculation (UTC Riyadh +3)
     if (emp && emp.workStart) {
         const now = new Date();
         const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
@@ -1025,15 +947,17 @@ const Emp = {
     UI.loader(false);
   },
 
+  // Strict Checkout Constraint (Absolute Block)
   checkOut() {
-    const emp = Auth.empSession; const rec = this.currentRecord;
+    const emp = Auth.empSession; 
     
+    // If old employee has no schedule, let them leave.
     if (!emp || !emp.workEnd) { 
-        this.confirmStandardCheckOut();
+        if(confirm('Do you want to officially clock out now?')) this.confirmStandardCheckOut();
         return; 
     }
 
-    // Accurate Early Leave Calculation using UTC
+    // Accurate Time Calculation
     const now = new Date(); 
     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
     const riyadhDate = new Date(utc + (3600000 * 3));
@@ -1044,19 +968,19 @@ const Emp = {
     const [endH, endM] = emp.workEnd.split(':').map(Number); 
     const endTotalMinutes = (endH * 60) + endM;
 
-    if (currTotalMinutes < (endTotalMinutes - 5)) {
-        if (rec && rec.approvalStatus === 'pending') { 
-            UI.toast('Request is pending admin approval.', 'warning'); 
-            return; 
-        }
-        if (rec && rec.approvalStatus === 'approved') {
-            this.confirmStandardCheckOut(); // Direct checkout if approved
-            return;
-        }
-        // If rejected or no request made, open modal
-        UI.openModal('modal-leave');
-    } else {
-        // Correct time - Direct checkout
+    // If attempting to leave before shift ends -> Strict ERROR (No Bypass)
+    if (currTotalMinutes < endTotalMinutes) {
+        let msg = emp.workEnd;
+        // Convert military time to readable AM/PM for the error message
+        let dispH = endH > 12 ? endH - 12 : (endH === 0 ? 12 : endH);
+        let ampm = endH >= 12 ? 'PM' : 'AM';
+        let dispM = endM < 10 ? '0'+endM : endM;
+        
+        UI.toast(`You cannot clock out before your shift ends at ${dispH}:${dispM} ${ampm}.`, 'error');
+        return; // Stops here completely.
+    } 
+    
+    if(confirm('Officially clock out now?')) {
         this.confirmStandardCheckOut();
     }
   },
@@ -1073,19 +997,6 @@ const Emp = {
     UI.loader(false);
   },
 
-  async confirmLeave() {
-    const reason = document.getElementById('leave-reason').value; const notes = document.getElementById('leave-notes').value.trim();
-    if(!reason) return UI.toast('Select a reason', 'error');
-    UI.loader(true);
-    const rec = { employeeId: Auth.empSession.id, date: DB.today(), status: 'early_leave', approvalStatus: 'pending', notes: `[${reason}] ${notes}` };
-    try {
-        await API.request('/employee/record', 'POST', rec); await DB.sync(); UI.closeModal('modal-leave');
-        this.currentRecord = DB.getRecords().find(r => r.employeeId === Auth.empSession.id && r.date === DB.today());
-        this.renderTodayRecord(); this.updateButtons(true); UI.toast('Request sent to admin', 'success');
-    } catch(e) { UI.toast(e.message, 'error'); }
-    UI.loader(false);
-  },
-
   renderTodayRecord(){
     const rec=this.currentRecord; const body=document.getElementById('today-record-body');
     if(!rec){body.innerHTML=`<div style="text-align:center;color:var(--text-muted)">No record yet</div>`;return;}
@@ -1097,11 +1008,7 @@ const Emp = {
     if(!recs.length){wrap.innerHTML=`<div style="text-align:center;padding:1rem;color:var(--text-muted)">No history</div>`;return;}
     recs.sort((a, b) => new Date(b.date) - new Date(a.date));
     wrap.innerHTML=recs.map(r=>{
-        let badge = UI.badge(r.status);
-        if(r.approvalStatus === 'pending') badge = `<span class="badge" style="background:var(--warning); color:#000;">Pending</span>`;
-        if(r.approvalStatus === 'rejected') badge = `<span class="badge" style="background:var(--danger); color:#fff;">Rejected</span>`;
-        if(r.approvalStatus === 'approved') badge = `<span class="badge" style="background:var(--success); color:#fff;">Approved</span>`;
-        return `<div style="padding:0.75rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><div><strong style="display:block;font-size:0.9rem">${DB.fmtDate(r.date)}</strong><small style="color:var(--text-muted)"><span dir="ltr">In: ${DB.fmtTime(r.checkIn)} | Out: ${DB.fmtTime(r.checkOut)}</span></small></div>${badge}</div>`;
+        return `<div style="padding:0.75rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><div><strong style="display:block;font-size:0.9rem">${DB.fmtDate(r.date)}</strong><small style="color:var(--text-muted)"><span dir="ltr">In: ${DB.fmtTime(r.checkIn)} | Out: ${DB.fmtTime(r.checkOut)}</span></small></div>${UI.badge(r.status)}</div>`;
     }).join('');
   }
 };
