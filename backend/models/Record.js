@@ -10,7 +10,7 @@ const RecordSchema = new mongoose.Schema({
   checkOutLng: Number,
   zoneId: { type: mongoose.Schema.Types.ObjectId, ref: 'Location' },
   status: { type: String, enum: ['present', 'late', 'absent', 'early_leave'] },
-  notes: String
+  notes: String,
   approvalStatus: { type: String, enum: ['pending', 'approved', 'rejected', 'none'], default: 'none' }
 });
 module.exports = mongoose.models.Record || mongoose.model('Record', RecordSchema);
