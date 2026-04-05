@@ -287,7 +287,21 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
           <button class="btn btn-outline btn-sm" onclick="Admin.exportPDF()"><i class="fas fa-file-pdf" style="color:#e74c3c"></i> Export PDF</button>
         </div>
         <div class="card"><div style="overflow-x:auto">
-          <table id="records-table"><thead><tr><th>ID</th><th>Employee</th><th>Group</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Notes</th><th>Actions</th></tr></thead><tbody id="records-table-body"></tbody></table>
+          <table id="records-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Employee</th>
+                <th>Group</th>
+                <th>Date</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Status</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody id="records-table-body"></tbody>
+          </table>
         </div></div>
       </div>
 
@@ -318,62 +332,33 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
   </div>
 </div>
 
-<div id="modal-record" class="modal-overlay">
-  <div class="modal">
-    <div class="modal-header">
-      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;text-transform:uppercase">Edit Attendance Record</span>
-      <button class="btn-ghost" onclick="UI.closeModal('modal-record')"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="modal-body" style="display:flex;flex-direction:column;gap:1rem">
-      <input type="hidden" id="rec-modal-id">
-      <div class="form-group"><label class="form-label">Employee Name</label><input type="text" id="rec-modal-emp" class="form-control" disabled></div>
-      <div class="form-group"><label class="form-label">Check-in Time</label><input type="datetime-local" id="rec-modal-in" class="form-control"></div>
-      <div class="form-group"><label class="form-label">Check-out Time</label><input type="datetime-local" id="rec-modal-out" class="form-control"></div>
-      <div class="form-group">
-        <label class="form-label">Status</label>
-        <select id="rec-modal-status" class="form-control form-select">
-          <option value="present">Present</option>
-          <option value="late">Late</option>
-          <option value="absent">Absent</option>
-          <option value="early_leave">Early Leave</option>
-        </select>
-      </div>
-      <div class="form-group"><label class="form-label">Admin Notes / Overrides</label><input type="text" id="rec-modal-notes" class="form-control" placeholder="Add custom notes here..."></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="UI.closeModal('modal-record')">Cancel</button>
-      <button class="btn btn-primary" onclick="Admin.saveRecord()">Save Changes</button>
-    </div>
-  </div>
-</div>
-
 <div id="modal-leave" class="modal-overlay">
   <div class="modal">
     <div class="modal-header">
-      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;text-transform:uppercase">طلب استئذان / انصراف</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;text-transform:uppercase">Early Leave Checkout</span>
       <button class="btn-ghost" onclick="UI.closeModal('modal-leave')"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:1.25rem">
       <div class="form-group">
-        <label class="form-label">سبب الاستئذان</label>
+        <label class="form-label">Reason for Leave</label>
         <select id="leave-reason" class="form-control form-select">
-          <option value="" disabled selected>-- اختر السبب --</option>
-          <option value="ظرف صحي طارئ">ظرف صحي طارئ</option>
-          <option value="مهمة عمل خارجية">مهمة عمل خارجية</option>
-          <option value="مراجعة جهة حكومية">مراجعة جهة حكومية</option>
-          <option value="ظرف عائلي">ظرف عائلي</option>
-          <option value="توقف العمل / عطل فني">توقف العمل / عطل فني</option>
-          <option value="إذن مسبق من الإدارة">إذن مسبق من الإدارة</option>
+          <option value="" disabled selected>-- Select Reason --</option>
+          <option value="Medical Emergency">Medical Emergency</option>
+          <option value="External Work Task">External Work Task</option>
+          <option value="Government Appointment">Government Appointment</option>
+          <option value="Family Issue">Family Issue</option>
+          <option value="Technical Issue">Technical Issue / Work Stoppage</option>
+          <option value="Pre-approved Leave">Pre-approved Leave</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">ملاحظات إضافية</label>
-        <textarea id="leave-notes" class="form-control" rows="3" placeholder="اكتب تفاصيل الإذن هنا..."></textarea>
+        <label class="form-label">Additional Notes</label>
+        <textarea id="leave-notes" class="form-control" rows="3" placeholder="Enter details here..."></textarea>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline" onclick="UI.closeModal('modal-leave')">إلغاء</button>
-      <button class="btn btn-primary" onclick="Emp.confirmLeave()">إرسال الطلب للإدارة</button>
+      <button class="btn btn-outline" onclick="UI.closeModal('modal-leave')">Cancel</button>
+      <button class="btn btn-primary" onclick="Emp.confirmLeave()">Confirm Checkout</button>
     </div>
   </div>
 </div>
@@ -486,8 +471,8 @@ const DB = {
   getEmployees(){return this.data.employees||[]}, getGroups(){return this.data.groups||[]}, 
   getLocations(){return this.data.locations||[]}, getRecords(){return this.data.records||[]},
   today(){return new Date().toISOString().split('T')[0]}, nowISO(){return new Date().toISOString()},
-  fmtTime(iso){if(!iso)return '—'; return new Date(iso).toLocaleTimeString('en-SA',{hour:'2-digit',minute:'2-digit'})},
-  fmtDate(iso){if(!iso)return '—'; return new Date(iso).toLocaleDateString('en-SA')},
+  fmtTime(iso){if(!iso)return '—'; return new Date(iso).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})},
+  fmtDate(iso){if(!iso)return '—'; return new Date(iso).toLocaleDateString('en-US')},
   
   toLocalDatetime(iso) {
       if(!iso) return '';
@@ -926,7 +911,7 @@ const Admin = {
   async deleteZone(id){ if(confirm('Delete?')){ UI.loader(true); try{ await API.request(`/admin/location/${id}`, 'DELETE'); await DB.sync(); Maps.renderZones(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
   
   // ==========================================
-  // قسم التقارير (شامل، مرتب، مع أزرار الموافقة)
+  // Clean English Reports (No Actions/Edits)
   // ==========================================
   
   filterRecords(){
@@ -942,30 +927,12 @@ const Admin = {
     if(search) recs=recs.filter(r=>emps.find(e=>e.id===r.employeeId)?.name.toLowerCase().includes(search));
     
     const tbody=document.getElementById('records-table-body');
-    if(!recs.length){tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted)">لا توجد سجلات</td></tr>`;return;}
+    if(!recs.length){tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted)">No records found</td></tr>`;return;}
     
     tbody.innerHTML=recs.map(r=>{
       const emp = emps.find(e=>e.id===r.employeeId) || {name:'Unknown', eid:'—', groupId:null};
       const grp = groups.find(g=>g.id===emp.groupId) || {name:'—'};
       
-      let actionButtons = `<button class="btn-ghost btn-sm" onclick="Admin.openRecordModal('${r.id}')" title="تعديل"><i class="fas fa-edit" style="color:var(--accent)"></i></button>`;
-
-      if(r.approvalStatus === 'pending') {
-          actionButtons = `
-            <button class="btn-ghost btn-sm" onclick="Admin.handleApproval('${r.id}', 'approved')" title="قبول الاستئذان"><i class="fas fa-check-circle" style="color:var(--success); font-size:1.2rem;"></i></button>
-            <button class="btn-ghost btn-sm" onclick="Admin.handleApproval('${r.id}', 'rejected')" title="رفض الاستئذان"><i class="fas fa-times-circle" style="color:var(--danger); font-size:1.2rem;"></i></button>
-          ` + actionButtons;
-      }
-
-      let statusBadge = UI.badge(r.status);
-      if(r.approvalStatus === 'pending') {
-          statusBadge = `<span class="badge" style="background:var(--warning); color:#000; font-weight:bold"><i class="fas fa-hourglass-half"></i> معلق</span>`;
-      } else if (r.approvalStatus === 'rejected') {
-          statusBadge = `<span class="badge" style="background:var(--danger); color:#fff"><i class="fas fa-ban"></i> مرفوض</span>`;
-      } else if (r.approvalStatus === 'approved') {
-          statusBadge = `<span class="badge" style="background:var(--success); color:#fff"><i class="fas fa-check"></i> مقبول</span>`;
-      }
-
       return`<tr>
         <td><code>${emp.eid || '—'}</code></td>
         <td><strong>${emp.name}</strong></td>
@@ -973,64 +940,10 @@ const Admin = {
         <td>${DB.fmtDate(r.date)}</td>
         <td><span dir="ltr">${DB.fmtTime(r.checkIn)}</span></td>
         <td><span dir="ltr">${DB.fmtTime(r.checkOut)}</span></td>
-        <td>${statusBadge}</td>
-        <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${r.notes||''}">${r.notes||'—'}</td>
-        <td style="display:flex; gap:0.5rem; align-items:center;">
-          ${actionButtons}
-        </td>
+        <td>${UI.badge(r.status)}</td>
+        <td style="max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${r.notes||''}">${r.notes||'—'}</td>
       </tr>`;
     }).join('');
-  },
-
-  async handleApproval(recordId, decision) {
-      const isApproved = decision === 'approved';
-      if(!confirm(isApproved ? 'هل أنت متأكد من قبول هذا الاستئذان؟' : 'هل أنت متأكد من رفض هذا الاستئذان؟')) return;
-      
-      UI.loader(true);
-      try {
-          await API.request(`/admin/approve-record/${recordId}`, 'PUT', { status: decision });
-          await DB.sync();
-          this.filterRecords(); 
-          UI.toast(isApproved ? 'تم القبول بنجاح ✅' : 'تم الرفض ❌', isApproved ? 'success' : 'warning');
-      } catch(e) {
-          UI.toast(e.message, 'error');
-      }
-      UI.loader(false);
-  },
-
-  openRecordModal(id) {
-    const r = DB.getRecords().find(x => x.id === id); if(!r) return;
-    const emp = DB.getEmployees().find(e => e.id === r.employeeId) || {name: 'Unknown'};
-    
-    document.getElementById('rec-modal-id').value = r.id;
-    document.getElementById('rec-modal-emp').value = emp.name + ` (${r.date})`;
-    document.getElementById('rec-modal-in').value = DB.toLocalDatetime(r.checkIn);
-    document.getElementById('rec-modal-out').value = DB.toLocalDatetime(r.checkOut);
-    document.getElementById('rec-modal-status').value = r.status || 'present';
-    document.getElementById('rec-modal-notes').value = r.notes || '';
-    
-    UI.openModal('modal-record');
-  },
-
-  async saveRecord() {
-    const id = document.getElementById('rec-modal-id').value;
-    const data = {
-      checkIn: DB.toISO(document.getElementById('rec-modal-in').value),
-      checkOut: DB.toISO(document.getElementById('rec-modal-out').value),
-      status: document.getElementById('rec-modal-status').value,
-      notes: document.getElementById('rec-modal-notes').value.trim()
-    };
-    
-    UI.loader(true);
-    try { 
-      await API.request(`/admin/record/${id}`, 'PUT', data); 
-      await DB.sync(); 
-      UI.closeModal('modal-record'); 
-      this.filterRecords(); 
-      UI.toast('Record Updated Successfully!','success'); 
-    } 
-    catch(e){ UI.toast(e.message,'error') }
-    UI.loader(false);
   },
 
   getExportData() {
@@ -1049,36 +962,31 @@ const Admin = {
         const emp = emps.find(e=>e.id===r.employeeId) || {name:'Unknown', eid:'—'};
         const grp = groups.find(g=>g.id===emp.groupId) || {name:'—'};
         
-        let finalStatus = r.status.toUpperCase();
-        if(r.approvalStatus === 'pending') finalStatus += ' (معلق)';
-        if(r.approvalStatus === 'approved') finalStatus += ' (مقبول)';
-        if(r.approvalStatus === 'rejected') finalStatus += ' (مرفوض)';
-
         return {
-            "الرقم الوظيفي": emp.eid || '—',
-            "اسم الموظف": emp.name,
-            "القسم / المجموعة": grp.name,
-            "التاريخ": r.date,
-            "وقت الدخول": r.checkIn ? new Date(r.checkIn).toLocaleString('en-SA') : '—',
-            "وقت الخروج": r.checkOut ? new Date(r.checkOut).toLocaleString('en-SA') : '—',
-            "الحالة": finalStatus,
-            "الملاحظات": r.notes || ''
+            "Employee ID": emp.eid || '—',
+            "Employee Name": emp.name,
+            "Group": grp.name,
+            "Date": r.date,
+            "Check In": r.checkIn ? new Date(r.checkIn).toLocaleString('en-US') : '—',
+            "Check Out": r.checkOut ? new Date(r.checkOut).toLocaleString('en-US') : '—',
+            "Status": r.status.toUpperCase(),
+            "Notes": r.notes || ''
         };
     });
   },
 
   exportExcel() {
     const data = this.getExportData();
-    if(!data.length) return UI.toast('لا توجد بيانات لاستخراجها', 'warning');
+    if(!data.length) return UI.toast('No data to export', 'warning');
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "سجل الحضور");
+    XLSX.utils.book_append_sheet(wb, ws, "Attendance");
     XLSX.writeFile(wb, `AMD_Attendance_Report_${DB.today()}.xlsx`);
   },
 
   exportPDF() {
     const data = this.getExportData();
-    if(!data.length) return UI.toast('لا توجد بيانات لاستخراجها', 'warning');
+    if(!data.length) return UI.toast('No data to export', 'warning');
     
     const dateFilter = document.getElementById('rec-date').value;
     UI.loader(true); 
@@ -1086,38 +994,38 @@ const Admin = {
     const container = document.createElement('div');
     container.style.padding = '20px';
     container.style.fontFamily = "'Barlow', 'Segoe UI', Tahoma, sans-serif";
-    container.style.direction = 'rtl'; 
+    container.style.direction = 'ltr'; 
     container.style.background = '#fff';
     container.style.color = '#000';
 
     container.innerHTML = `
-      <h2 style="text-align:center; color:#C45A28; margin-bottom:5px; font-family:'Cinzel', serif;">AMD United - التقرير الشامل للحضور والانصراف</h2>
-      <h4 style="text-align:center; color:#555; margin-bottom:20px; font-weight:normal;">${dateFilter ? `تقرير يوم: ${dateFilter}` : `تقرير جميع الأيام حتى تاريخ: ${DB.today()}`}</h4>
+      <h2 style="text-align:center; color:#C45A28; margin-bottom:5px; font-family:'Cinzel', serif;">AMD United - Attendance Report</h2>
+      <h4 style="text-align:center; color:#555; margin-bottom:20px; font-weight:normal;">${dateFilter ? `Date: ${dateFilter}` : `All records up to: ${DB.today()}`}</h4>
       
-      <table style="width:100%; border-collapse:collapse; text-align:center; font-size:13px;">
+      <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px;">
         <thead>
           <tr style="background-color:#C45A28; color:#fff;">
-            <th style="padding:10px; border:1px solid #ddd;">الرقم الوظيفي</th>
-            <th style="padding:10px; border:1px solid #ddd;">الموظف</th>
-            <th style="padding:10px; border:1px solid #ddd;">القسم</th>
-            <th style="padding:10px; border:1px solid #ddd;">التاريخ</th>
-            <th style="padding:10px; border:1px solid #ddd;">وقت الدخول</th>
-            <th style="padding:10px; border:1px solid #ddd;">وقت الخروج</th>
-            <th style="padding:10px; border:1px solid #ddd;">الحالة</th>
-            <th style="padding:10px; border:1px solid #ddd;">الملاحظات</th>
+            <th style="padding:10px; border:1px solid #ddd;">Emp ID</th>
+            <th style="padding:10px; border:1px solid #ddd;">Name</th>
+            <th style="padding:10px; border:1px solid #ddd;">Group</th>
+            <th style="padding:10px; border:1px solid #ddd;">Date</th>
+            <th style="padding:10px; border:1px solid #ddd;">Check In</th>
+            <th style="padding:10px; border:1px solid #ddd;">Check Out</th>
+            <th style="padding:10px; border:1px solid #ddd;">Status</th>
+            <th style="padding:10px; border:1px solid #ddd;">Notes</th>
           </tr>
         </thead>
         <tbody>
           ${data.map(row => `
             <tr>
-              <td style="padding:8px; border:1px solid #ddd;"><code>${row["الرقم الوظيفي"]}</code></td>
-              <td style="padding:8px; border:1px solid #ddd; font-weight:bold;">${row["اسم الموظف"]}</td>
-              <td style="padding:8px; border:1px solid #ddd;">${row["القسم / المجموعة"]}</td>
-              <td style="padding:8px; border:1px solid #ddd;">${row["التاريخ"]}</td>
-              <td style="padding:8px; border:1px solid #ddd;" dir="ltr">${row["وقت الدخول"]}</td>
-              <td style="padding:8px; border:1px solid #ddd;" dir="ltr">${row["وقت الخروج"]}</td>
-              <td style="padding:8px; border:1px solid #ddd; font-weight:bold;">${row["الحالة"]}</td>
-              <td style="padding:8px; border:1px solid #ddd;">${row["الملاحظات"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;"><code>${row["Employee ID"]}</code></td>
+              <td style="padding:8px; border:1px solid #ddd; font-weight:bold;">${row["Employee Name"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;">${row["Group"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;">${row["Date"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;">${row["Check In"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;">${row["Check Out"]}</td>
+              <td style="padding:8px; border:1px solid #ddd; font-weight:bold;">${row["Status"]}</td>
+              <td style="padding:8px; border:1px solid #ddd;">${row["Notes"]}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -1134,13 +1042,13 @@ const Admin = {
 
     html2pdf().set(opt).from(container).save().then(() => {
       UI.loader(false);
-      UI.toast('تم تصدير التقرير بنجاح!', 'success');
+      UI.toast('PDF Exported Successfully!', 'success');
     });
   }
 };
 
 /* ══════════════════════════════════════════
-   EMPLOYEE PORTAL LOGIC (Smart Constraints)
+   EMPLOYEE PORTAL LOGIC
 ══════════════════════════════════════════ */
 const Emp = {
   watchId:null, currentPos:null, assignedZones:[], currentRecord:null, nearestZone:null,
@@ -1180,46 +1088,22 @@ const Emp = {
     else { document.getElementById('emp-status-dot').className='status-dot outside pulse'; document.getElementById('emp-status-text').textContent='Outside Zone'; document.getElementById('emp-location-info').textContent='Please move closer to your designated work zone.'; }
     this.updateButtons(!!insideZone);
   },
-
-  // الدالة المعدلة لعرض حالة الأزرار بناءً على قرار الإدارة
   updateButtons(insideZone){
     const rec=this.currentRecord; 
     const checkinBtn=document.getElementById('emp-checkin-btn'); 
     const checkoutBtn=document.getElementById('emp-checkout-btn');
     
     if(!rec){ 
-        // الموظف لم يبصم دخول بعد
         checkinBtn.classList.remove('hidden'); 
         checkoutBtn.classList.add('hidden'); 
         checkinBtn.disabled=!insideZone; 
     } 
     else if(rec && !rec.checkOut){ 
-        // الموظف بصم دخول، لكن لم يخرج بعد
         checkinBtn.classList.add('hidden'); 
         checkoutBtn.classList.remove('hidden'); 
         checkoutBtn.disabled=!insideZone; 
-        
-        // تغيير شكل الزر بناء على حالة طلب الاستئذان
-        if (rec.approvalStatus === 'pending') {
-            checkoutBtn.innerHTML = '<i class="fas fa-hourglass-half"></i> طلب قيد المراجعة';
-            checkoutBtn.style.background = 'var(--warning)';
-            checkoutBtn.style.color = '#000';
-        } else if (rec.approvalStatus === 'approved') {
-            checkoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> انصراف (تمت الموافقة)';
-            checkoutBtn.style.background = 'var(--success)';
-            checkoutBtn.style.color = '#fff';
-        } else if (rec.approvalStatus === 'rejected') {
-            checkoutBtn.innerHTML = '<i class="fas fa-ban"></i> انصراف (مرفوض)';
-            checkoutBtn.style.background = 'var(--danger)';
-            checkoutBtn.style.color = '#fff';
-        } else {
-            checkoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Check Out';
-            checkoutBtn.style.background = 'var(--danger)';
-            checkoutBtn.style.color = '#fff';
-        }
     } 
     else { 
-        // الموظف سجل خروج فعلياً
         checkinBtn.classList.add('hidden'); 
         checkoutBtn.classList.add('hidden'); 
         document.getElementById('emp-location-info').textContent='Attendance complete for today.'; 
@@ -1238,7 +1122,6 @@ const Emp = {
     UI.loader(false);
   },
 
-  // الحارس الذكي لموعد الخروج
   checkOut() {
     const emp = Auth.empSession;
     if (!emp || !emp.workEnd) {
@@ -1246,7 +1129,6 @@ const Emp = {
       return;
     }
 
-    const rec = this.currentRecord;
     const now = new Date();
     const saudiTime = new Intl.DateTimeFormat('en-US', { 
         timeZone: 'Asia/Riyadh', 
@@ -1262,29 +1144,10 @@ const Emp = {
     const [endH, endM] = emp.workEnd.split(':').map(Number);
     const endTotalMinutes = (endH * 60) + endM;
 
-    // الخروج المبكر (قبل الموعد بأكثر من 5 دقائق)
     if (currTotalMinutes < (endTotalMinutes - 5)) {
-        
-        // التحقق من حالة الطلب المسبق
-        if (rec && rec.approvalStatus === 'pending') {
-            UI.toast('طلبك قيد المراجعة من قبل الإدارة، يرجى الانتظار.', 'warning');
-            return;
-        }
-        if (rec && rec.approvalStatus === 'rejected') {
-            UI.toast('تم رفض طلب استئذانك. يرجى الانتظار حتى نهاية الدوام.', 'error');
-            return;
-        }
-        if (rec && rec.approvalStatus === 'approved') {
-            if(confirm('تمت الموافقة على استئذانك! هل تود تسجيل الانصراف الفعلي الآن؟')) {
-                this.confirmStandardCheckOut();
-            }
-            return;
-        }
-        
-        // إذا لم يكن هناك طلب سابق، يفتح نافذة تقديم الطلب
         UI.openModal('modal-leave');
     } else {
-        if(confirm('هل تود تسجيل الانصراف الرسمي الآن؟')) {
+        if(confirm('Do you want to officially clock out now?')) {
             this.confirmStandardCheckOut();
         }
     }
@@ -1296,7 +1159,7 @@ const Emp = {
     const rec = { 
       employeeId: Auth.empSession.id, 
       date: DB.today(), 
-      checkOut: DB.nowISO(), // هنا يتم إرسال وتسجيل وقت الخروج الحقيقي
+      checkOut: DB.nowISO(),
       checkOutLat: this.currentPos.lat, 
       checkOutLng: this.currentPos.lng, 
       status: this.currentRecord.status,
@@ -1308,7 +1171,7 @@ const Emp = {
         this.currentRecord = DB.getRecords().find(r => r.employeeId === Auth.empSession.id && r.date === DB.today());
         this.renderTodayRecord(); 
         this.updateButtons(false); 
-        UI.toast('تم تسجيل الانصراف الفعلي بنجاح', 'success');
+        UI.toast('Checked out successfully', 'success');
     } catch(e) { UI.toast(e.message, 'error'); }
     UI.loader(false);
   },
@@ -1316,16 +1179,17 @@ const Emp = {
   async confirmLeave() {
     const reason = document.getElementById('leave-reason').value;
     const notes = document.getElementById('leave-notes').value.trim();
-    if(!reason) { UI.toast('يرجى اختيار السبب أولاً', 'error'); return; }
+    if(!reason) { UI.toast('Please select a reason.', 'error'); return; }
 
     UI.loader(true);
     const rec = { 
       employeeId: Auth.empSession.id, 
       date: DB.today(), 
-      // لاحظ أننا لا نرسل CheckOut هنا! الطلب معلق ولم يخرج بعد.
+      checkOut: DB.nowISO(), 
+      checkOutLat: this.currentPos.lat, 
+      checkOutLng: this.currentPos.lng, 
       status: 'early_leave', 
-      approvalStatus: 'pending',
-      notes: `[طلب استئذان - ${reason}] ${notes}` 
+      notes: `[Early Leave: ${reason}] ${notes}` 
     };
     try {
         await API.request('/employee/record', 'POST', rec); 
@@ -1333,8 +1197,8 @@ const Emp = {
         UI.closeModal('modal-leave');
         this.currentRecord = DB.getRecords().find(r => r.employeeId === Auth.empSession.id && r.date === DB.today());
         this.renderTodayRecord(); 
-        this.updateButtons(true); // يظل true لكي يبقى الزر ظاهراً بشكله الجديد
-        UI.toast('تم إرسال طلب الاستئذان للإدارة بنجاح. يرجى انتظار الموافقة.', 'success');
+        this.updateButtons(false); 
+        UI.toast('Early checkout registered', 'success');
     } catch(e) { UI.toast(e.message, 'error'); }
     UI.loader(false);
   },
@@ -1352,12 +1216,7 @@ const Emp = {
     recs.sort((a, b) => new Date(b.date) - new Date(a.date));
     
     wrap.innerHTML=recs.map(r=>{
-        let badge = UI.badge(r.status);
-        if(r.approvalStatus === 'pending') badge = `<span class="badge" style="background:var(--warning); color:#000;">معلق</span>`;
-        if(r.approvalStatus === 'rejected') badge = `<span class="badge" style="background:var(--danger); color:#fff;">مرفوض</span>`;
-        if(r.approvalStatus === 'approved') badge = `<span class="badge" style="background:var(--success); color:#fff;">مقبول</span>`;
-        
-        return `<div style="padding:0.75rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><div><strong style="display:block;font-size:0.9rem">${DB.fmtDate(r.date)}</strong><small style="color:var(--text-muted)">In: ${DB.fmtTime(r.checkIn)} | Out: ${DB.fmtTime(r.checkOut)}</small></div>${badge}</div>`;
+        return `<div style="padding:0.75rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><div><strong style="display:block;font-size:0.9rem">${DB.fmtDate(r.date)}</strong><small style="color:var(--text-muted)">In: ${DB.fmtTime(r.checkIn)} | Out: ${DB.fmtTime(r.checkOut)}</small></div>${UI.badge(r.status)}</div>`;
     }).join('');
   }
 };
