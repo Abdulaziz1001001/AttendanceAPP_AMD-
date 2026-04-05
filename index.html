@@ -303,14 +303,14 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
           <table id="records-table">
             <thead>
               <tr>
-                <th>ID</th>
+                <th style="width: 80px;">ID</th>
                 <th>Employee</th>
-                <th>Group</th>
-                <th>Date</th>
-                <th>Check In</th>
-                <th>Check Out</th>
-                <th>Status</th>
+                <th style="width: 100px;">Date</th>
+                <th style="width: 100px;">Check In</th>
+                <th style="width: 100px;">Check Out</th>
+                <th style="width: 100px;">Status</th>
                 <th>Notes</th>
+                <th style="width: 80px; text-align:center;">Action</th>
               </tr>
             </thead>
             <tbody id="records-table-body"></tbody>
@@ -421,7 +421,7 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
       <input type="hidden" id="grp-modal-id">
       <div><label class="form-label">Name</label><input type="text" id="grp-modal-name" class="form-control"></div>
       <div><label class="form-label">Description</label><input type="text" id="grp-modal-desc" class="form-control"></div>
-      <div><label class="form-label">Color</label><input type="color" id="grp-modal-color" class="form-control" value="#C45A28" style="height:45px;padding:0"></div>
+      <div><label class="form-label">Color Marker</label><input type="color" id="grp-modal-color" class="form-control" value="#C45A28" style="height:45px;padding:0"></div>
     </div>
     <div class="modal-footer"><button class="btn btn-outline" onclick="UI.closeModal('modal-group')">Cancel</button><button class="btn btn-primary" onclick="Admin.saveGroup()">Save</button></div>
   </div>
@@ -815,13 +815,13 @@ const Admin = {
     if(search) recs=recs.filter(r=>emps.find(e=>e.id===r.employeeId)?.name.toLowerCase().includes(search));
     
     const tbody=document.getElementById('records-table-body');
-    if(!recs.length){tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted)">No records found</td></tr>`;return;}
+    if(!recs.length){tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted)">No records found</td></tr>`;return;}
     
     tbody.innerHTML=recs.map(r=>{
       const emp = emps.find(e=>e.id===r.employeeId) || {name:'Unknown', eid:'—', groupId:null};
-      const grp = groups.find(g=>g.id===emp.groupId) || {name:'—'};
+      const grp = groups.find(g=>g.id===emp.groupId) || {name:'—'}; // NOTE: We don't display 'grp' to match exactly 8 columns requested
       
-      let actionButtons = ``; 
+      let actionButtons = `—`; 
       if(r.approvalStatus === 'pending') {
           actionButtons = `
             <button class="btn-ghost btn-sm" onclick="Admin.handleApproval('${r.id}', 'approved')" title="Approve"><i class="fas fa-check-circle" style="color:var(--success); font-size:1.2rem;"></i></button>
@@ -834,12 +834,16 @@ const Admin = {
       else if (r.approvalStatus === 'rejected') statusBadge = `<span class="badge" style="background:var(--danger); color:#fff"><i class="fas fa-ban"></i> Rejected</span>`;
       else if (r.approvalStatus === 'approved') statusBadge = `<span class="badge" style="background:var(--success); color:#fff"><i class="fas fa-check"></i> Approved</span>`;
 
+      // Exactly 8 columns: ID, Employee, Date, Check In, Check Out, Status, Notes, Action
       return`<tr>
-        <td><code>${emp.eid || '—'}</code></td><td><strong>${emp.name}</strong></td><td>${grp.name}</td><td>${DB.fmtDate(r.date)}</td>
-        <td><span dir="ltr">${DB.fmtTime(r.checkIn)}</span></td><td><span dir="ltr">${DB.fmtTime(r.checkOut)}</span></td>
+        <td><code>${emp.eid || '—'}</code></td>
+        <td><strong>${emp.name}</strong></td>
+        <td>${DB.fmtDate(r.date)}</td>
+        <td><span dir="ltr">${DB.fmtTime(r.checkIn)}</span></td>
+        <td><span dir="ltr">${DB.fmtTime(r.checkOut)}</span></td>
         <td>${statusBadge}</td>
         <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${r.notes||''}">${r.notes||'—'}</td>
-        <td style="white-space:nowrap; width:100px; text-align:center;">${actionButtons}</td>
+        <td style="text-align:center; min-width:80px;">${actionButtons}</td>
       </tr>`;
     }).join('');
   },
@@ -965,16 +969,16 @@ const Emp = {
         checkinBtn.classList.remove('hidden'); checkoutBtn.classList.add('hidden'); checkinBtn.disabled=!insideZone; 
     } else if(rec && !rec.checkOut){ 
         checkinBtn.classList.add('hidden'); checkoutBtn.classList.remove('hidden'); checkoutBtn.disabled=!insideZone; 
+        
+        // Dynamic Button Rendering based on Approval Status
         if (rec.approvalStatus === 'pending') {
             checkoutBtn.innerHTML = `<i class="fas fa-hourglass-half"></i> Pending Approval`;
             checkoutBtn.style.background = 'var(--warning)'; checkoutBtn.style.color = '#000';
         } else if (rec.approvalStatus === 'approved') {
             checkoutBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Clock Out (Approved)`;
             checkoutBtn.style.background = 'var(--success)'; checkoutBtn.style.color = '#fff';
-        } else if (rec.approvalStatus === 'rejected') {
-            checkoutBtn.innerHTML = `<i class="fas fa-ban"></i> Leave Rejected`;
-            checkoutBtn.style.background = 'var(--danger)'; checkoutBtn.style.color = '#fff';
         } else {
+            // 'rejected' or 'none' uses standard button
             checkoutBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Check Out`;
             checkoutBtn.style.background = 'var(--danger)'; checkoutBtn.style.color = '#fff';
         }
@@ -990,17 +994,13 @@ const Emp = {
     let finalStatus = 'present';
     const emp = Auth.empSession;
     
+    // Accurate Late Calculation using UTC (Avoids Safari formatting bugs)
     if (emp && emp.workStart) {
         const now = new Date();
-        const formatter = new Intl.DateTimeFormat('en-GB', { 
-            timeZone: 'Asia/Riyadh', 
-            hour: '2-digit', 
-            minute: '2-digit',
-            hour12: false
-        });
-        const saudiTimeStr = formatter.format(now); 
-        let [currH, currM] = saudiTimeStr.split(':').map(Number);
-        if(currH === 24) currH = 0;
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const riyadhDate = new Date(utc + (3600000 * 3));
+        const currH = riyadhDate.getHours();
+        const currM = riyadhDate.getMinutes();
         const currTotalMinutes = (currH * 60) + currM;
 
         const [startH, startM] = emp.workStart.split(':').map(Number);
@@ -1029,39 +1029,39 @@ const Emp = {
   checkOut() {
     const emp = Auth.empSession; const rec = this.currentRecord;
     
-    // If no workEnd is defined, allow normal checkout without trapping them
     if (!emp || !emp.workEnd) { 
-        if(confirm('Do you want to officially clock out now?')) this.confirmStandardCheckOut();
+        this.confirmStandardCheckOut();
         return; 
     }
 
+    // Accurate Early Leave Calculation using UTC
     const now = new Date(); 
-    const formatter = new Intl.DateTimeFormat('en-GB', { 
-        timeZone: 'Asia/Riyadh', 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false
-    });
-    const saudiTimeStr = formatter.format(now); 
-    let [currH, currM] = saudiTimeStr.split(':').map(Number); 
-    if(currH === 24) currH = 0;
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const riyadhDate = new Date(utc + (3600000 * 3));
+    const currH = riyadhDate.getHours();
+    const currM = riyadhDate.getMinutes();
     const currTotalMinutes = (currH * 60) + currM;
     
     const [endH, endM] = emp.workEnd.split(':').map(Number); 
     const endTotalMinutes = (endH * 60) + endM;
 
     if (currTotalMinutes < (endTotalMinutes - 5)) {
-        if (rec && rec.approvalStatus === 'pending') { UI.toast('Request is pending admin approval.', 'warning'); return; }
-        if (rec && rec.approvalStatus === 'rejected') { UI.toast('Leave rejected. Wait until shift ends.', 'error'); return; }
+        if (rec && rec.approvalStatus === 'pending') { 
+            UI.toast('Request is pending admin approval.', 'warning'); 
+            return; 
+        }
         if (rec && rec.approvalStatus === 'approved') {
-            if(confirm('Approved! Clock out now?')) this.confirmStandardCheckOut();
+            this.confirmStandardCheckOut(); // Direct checkout if approved
             return;
         }
+        // If rejected or no request made, open modal
         UI.openModal('modal-leave');
     } else {
-        if(confirm('Officially clock out now?')) this.confirmStandardCheckOut();
+        // Correct time - Direct checkout
+        this.confirmStandardCheckOut();
     }
   },
+
   async confirmStandardCheckOut() {
     if(!this.currentRecord || !this.currentPos) return;
     UI.loader(true);
@@ -1073,6 +1073,7 @@ const Emp = {
     } catch(e) { UI.toast(e.message, 'error'); }
     UI.loader(false);
   },
+
   async confirmLeave() {
     const reason = document.getElementById('leave-reason').value; const notes = document.getElementById('leave-notes').value.trim();
     if(!reason) return UI.toast('Select a reason', 'error');
@@ -1085,11 +1086,13 @@ const Emp = {
     } catch(e) { UI.toast(e.message, 'error'); }
     UI.loader(false);
   },
+
   renderTodayRecord(){
     const rec=this.currentRecord; const body=document.getElementById('today-record-body');
     if(!rec){body.innerHTML=`<div style="text-align:center;color:var(--text-muted)">No record yet</div>`;return;}
     body.innerHTML=`<div style="display:flex;justify-content:space-between;padding:1rem;background:var(--surface2);border-radius:4px"><div><small style="color:var(--text-muted);display:block">Check In</small><strong><span dir="ltr">${DB.fmtTime(rec.checkIn)}</span></strong></div><div><small style="color:var(--text-muted);display:block">Check Out</small><strong><span dir="ltr">${DB.fmtTime(rec.checkOut)}</span></strong></div></div>`;
   },
+  
   renderHistory(){
     const wrap=document.getElementById('emp-history-list'); const recs=DB.getRecords().filter(r=>r.employeeId===Auth.empSession.id);
     if(!recs.length){wrap.innerHTML=`<div style="text-align:center;padding:1rem;color:var(--text-muted)">No history</div>`;return;}
