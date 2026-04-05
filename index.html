@@ -1193,8 +1193,7 @@ const Emp = {
     UI.loader(false);
   },
 
-  async confirmLeave() {
-    // هذه الدالة التي تعمل عند ظهور نافذة الاستئذان (قبل الموعد بـ 5 دقائق)
+ async confirmLeave() {
     const reason = document.getElementById('leave-reason').value;
     const notes = document.getElementById('leave-notes').value.trim();
     if(!reason) { UI.toast('يرجى اختيار السبب أولاً', 'error'); return; }
@@ -1204,10 +1203,9 @@ const Emp = {
       employeeId: Auth.empSession.id, 
       date: DB.today(), 
       checkOut: DB.nowISO(), 
-      checkOutLat: this.currentPos.lat, 
-      checkOutLng: this.currentPos.lng, 
       status: 'early_leave', 
-      notes: `[انصراف مبكر - السبب: ${reason}] ${notes}` 
+      approvalStatus: 'pending', // الطلب يبدأ كمعلق
+      notes: `[طلب مغادرة] السبب: ${reason} | ${notes}` 
     };
     try {
         await API.request('/employee/record', 'POST', rec); 
