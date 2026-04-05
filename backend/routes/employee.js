@@ -5,14 +5,13 @@ const router = express.Router();
 // مسار تسجيل الحضور والانصراف للموظف
 router.post('/record', async (req, res) => {
   try {
-    const { employeeId, date, checkIn, checkOut, checkInLat, checkInLng, checkOutLat, checkOutLng, status, notes } = req.body;
+    // 1. أضفنا المتغير approvalStatus هنا ليستقبله من الواجهة
+    const { employeeId, date, checkIn, checkOut, checkInLat, checkInLng, checkOutLat, checkOutLng, status, notes, approvalStatus } = req.body;
 
-    // استدعاء ملفات قواعد البيانات (تأكد من توافق الأسماء مع مشروعك)
     const mongoose = require('mongoose');
     const Record = mongoose.models.Record;
     const Employee = mongoose.models.Employee;
 
-    // البحث عن سجل اليوم لهذا الموظف
     let record = await Record.findOne({ employeeId, date });
 
     if (record) {
@@ -21,12 +20,15 @@ router.post('/record', async (req, res) => {
       record.checkOutLat = checkOutLat || record.checkOutLat;
       record.checkOutLng = checkOutLng || record.checkOutLng;
       
-      // إذا كان الموظف يستأذن (early_leave)، نحدث حالته، وإلا نحتفظ بحالته الصباحية (سواء كان حاضر أو متأخر)
       if (status === 'early_leave') {
           record.status = 'early_leave';
       }
       
-      // دمج الملاحظات الجديدة مع القديمة إن وجدت
+      // 2. السطر الأهم: حفظ حالة الموافقة (معلق) في قاعدة البيانات
+      if (approvalStatus) {
+          record.approvalStatus = approvalStatus;
+      }
+      
       if (notes) {
           record.notes = record.notes ? record.notes + " | " + notes : notes;
       }
@@ -36,20 +38,16 @@ router.post('/record', async (req, res) => {
 
     } else {
       // ===== حالة الحضور (الدخول لأول مرة في اليوم) =====
-      
-      // جلب بيانات الموظف لمعرفة وقت بداية دوامه
       const emp = await Employee.findById(employeeId);
       if (!emp) return res.status(404).json({ msg: 'Employee not found' });
 
       let finalStatus = status || 'present'; 
 
-      // حساب التأخير إذا كان للموظف وقت بداية محدد (workStart)
+      // حساب التأخير 15 دقيقة
       if (checkIn && emp.workStart) {
-          // 1. تحويل وقت بداية دوام الموظف إلى دقائق (مثال: 09:00 تصبح 540 دقيقة)
           const [startHour, startMin] = emp.workStart.split(':').map(Number);
           const expectedStartMinutes = (startHour * 60) + startMin;
 
-          // 2. تحويل وقت البصمة إلى توقيت السعودية (الرياض) بدقة
           const checkInDate = new Date(checkIn);
           const saudiTimeFormatter = new Intl.DateTimeFormat('en-US', { 
               timeZone: 'Asia/Riyadh', 
@@ -58,21 +56,15 @@ router.post('/record', async (req, res) => {
               hour12: false 
           });
           
-          // استخراج الساعة والدقيقة الحقيقية للبصمة
           let [actualHour, actualMin] = saudiTimeFormatter.format(checkInDate).split(':').map(Number);
-          if (actualHour === 24) actualHour = 0; // معالجة منتصف الليل
-
-          // تحويل وقت البصمة إلى دقائق
+          if (actualHour === 24) actualHour = 0; 
           const actualMinutes = (actualHour * 60) + actualMin;
 
-          // 3. الحكم النهائي (15 دقيقة فترة سماح)
-          // إذا كان وقت البصمة أكبر من (وقت الدوام + 15 دقيقة)
           if (actualMinutes > (expectedStartMinutes + 15)) {
-              finalStatus = 'late'; // تغيير الحالة إلى متأخر إجبارياً
+              finalStatus = 'late'; 
           }
       }
 
-      // إنشاء السجل الجديد بالحالة النهائية
       const newRecord = new Record({ 
           employeeId, 
           date, 
@@ -80,6 +72,7 @@ router.post('/record', async (req, res) => {
           checkInLat, 
           checkInLng, 
           status: finalStatus, 
+          approvalStatus: approvalStatus || 'none', // حفظ الحالة هنا أيضاً
           notes 
       });
       await newRecord.save();
@@ -91,5 +84,4 @@ router.post('/record', async (req, res) => {
     res.status(500).json({ msg: err.message });
   }
 });
-
 module.exports = router;
