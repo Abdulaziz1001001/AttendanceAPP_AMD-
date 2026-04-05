@@ -1132,14 +1132,72 @@ const Emp = {
     UI.loader(false);
   },
 
+ // الحارس الذكي لموعد الخروج
   checkOut() {
-    UI.openModal('modal-leave');
+    const emp = Auth.empSession;
+    if (!emp || !emp.workEnd) {
+      // إذا لم يكن هناك وقت نهاية محدد، نفتح نافذة الاستئذان للأمان
+      UI.openModal('modal-leave');
+      return;
+    }
+
+    // 1. جلب وقت البصمة الحالي بتوقيت السعودية
+    const now = new Date();
+    const saudiTime = new Intl.DateTimeFormat('en-US', { 
+        timeZone: 'Asia/Riyadh', 
+        hour: 'numeric', 
+        minute: 'numeric', 
+        hour12: false 
+    }).format(now);
+    
+    const [currH, currM] = saudiTime.split(':').map(Number);
+    const currTotalMinutes = (currH * 60) + currM;
+
+    // 2. جلب وقت نهاية دوام الموظف (مثلاً 17:00)
+    const [endH, endM] = emp.workEnd.split(':').map(Number);
+    const endTotalMinutes = (endH * 60) + endM;
+
+    // 3. تطبيق القيد (قبل الموعد بـ 5 دقائق)
+    // إذا كان الوقت الحالي أقل من (وقت النهاية - 5 دقائق)
+    if (currTotalMinutes < (endTotalMinutes - 5)) {
+        // الموظف خرج مبكراً -> إجبار على كتابة السبب
+        UI.openModal('modal-leave');
+    } else {
+        // الموظف خرج في وقته الرسمي (أو بعده) -> خروج مباشر
+        if(confirm('هل تود تسجيل الانصراف الرسمي الآن؟')) {
+            this.confirmStandardCheckOut();
+        }
+    }
+  },
+
+  // دالة الانصراف الرسمي (بدون نافذة استئذان)
+  async confirmStandardCheckOut() {
+    if(!this.currentRecord || !this.currentPos) return;
+    UI.loader(true);
+    const rec = { 
+      employeeId: Auth.empSession.id, 
+      date: DB.today(), 
+      checkOut: DB.nowISO(), 
+      checkOutLat: this.currentPos.lat, 
+      checkOutLng: this.currentPos.lng, 
+      status: this.currentRecord.status, // الحفاظ على حالته (حاضر أو متأخر)
+      notes: this.currentRecord.notes 
+    };
+    try {
+        await API.request('/employee/record', 'POST', rec); 
+        await DB.sync();
+        this.currentRecord = DB.getRecords().find(r => r.employeeId === Auth.empSession.id && r.date === DB.today());
+        this.renderTodayRecord(); 
+        this.updateButtons(false); 
+        UI.toast('تم تسجيل الانصراف الرسمي بنجاح', 'success');
+    } catch(e) { UI.toast(e.message, 'error'); }
+    UI.loader(false);
   },
 
   async confirmLeave() {
+    // هذه الدالة التي تعمل عند ظهور نافذة الاستئذان (قبل الموعد بـ 5 دقائق)
     const reason = document.getElementById('leave-reason').value;
     const notes = document.getElementById('leave-notes').value.trim();
-    
     if(!reason) { UI.toast('يرجى اختيار السبب أولاً', 'error'); return; }
 
     UI.loader(true);
@@ -1150,9 +1208,8 @@ const Emp = {
       checkOutLat: this.currentPos.lat, 
       checkOutLng: this.currentPos.lng, 
       status: 'early_leave', 
-      notes: `[السبب: ${reason}] - ${notes}` 
+      notes: `[انصراف مبكر - السبب: ${reason}] ${notes}` 
     };
-    
     try {
         await API.request('/employee/record', 'POST', rec); 
         await DB.sync();
@@ -1160,11 +1217,10 @@ const Emp = {
         this.currentRecord = DB.getRecords().find(r => r.employeeId === Auth.empSession.id && r.date === DB.today());
         this.renderTodayRecord(); 
         this.updateButtons(false); 
-        UI.toast('تم تسجيل الانصراف والسبب بنجاح', 'success');
+        UI.toast('تم تسجيل الاستئذان بنجاح', 'success');
     } catch(e) { UI.toast(e.message, 'error'); }
     UI.loader(false);
   },
-
   renderTodayRecord(){
     const rec=this.currentRecord; const body=document.getElementById('today-record-body');
     if(!rec){body.innerHTML=`<div style="text-align:center;color:var(--text-muted)">No record yet</div>`;return;}
