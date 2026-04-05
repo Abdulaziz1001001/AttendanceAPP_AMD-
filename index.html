@@ -41,7 +41,7 @@ a{color:inherit;text-decoration:none} button{cursor:pointer;font-family:inherit;
 .btn-block{width:100%} .btn-primary{background:var(--accent);color:white} .btn-primary:hover{background:var(--accent-light);transform:translateY(-1px)}
 .btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text)} .btn-outline:hover{border-color:var(--accent);color:var(--accent)}
 .btn-ghost{background:transparent;border:none;color:var(--text-muted)} .btn-ghost:hover{color:var(--accent)}
-.btn-success{background:var(--success);color:white} .btn-danger{background:var(--danger);color:white}
+.btn-success{background:var(--success);color:white} .btn-danger{background:var(--danger);color:white} .btn-warning{background:var(--warning);color:#000}
 .btn-sm{padding:0.4rem 0.9rem;font-size:0.75rem}
 
 .form-group{margin-bottom:1.25rem} .form-label{display:block;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.5rem}
@@ -63,7 +63,7 @@ a{color:inherit;text-decoration:none} button{cursor:pointer;font-family:inherit;
 
 #page-admin{flex-direction:row}
 .sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:transform 0.3s}
-.nav-link{display:flex;align-items:center;gap:0.75rem;padding:0.65rem 1.25rem;color:var(--text-muted);font-size:0.85rem;cursor:pointer;} .nav-link:hover{color:var(--text);background:var(--surface2)} .nav-link.active{color:var(--accent);background:var(--accent-glow)}
+.nav-link{display:flex;align-items:center;gap:0.75rem;padding:0.65rem 1.25rem;color:var(--text-muted);font-size:0.85rem;cursor:pointer;border-left:2px solid transparent} .nav-link:hover{color:var(--text);background:var(--surface2)} .nav-link.active{color:var(--accent);border-left-color:var(--accent);background:var(--accent-glow)}
 .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden} .topbar{height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.5rem;gap:1rem}
 .content{flex:1;overflow-y:auto;padding:1.5rem}
 .admin-panel{display:none} .admin-panel.active{display:block}
@@ -185,9 +185,9 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
   <div class="main-area">
     <header class="topbar">
       <button class="hamburger btn-ghost" onclick="UI.toggleSidebar()"><i class="fas fa-bars"></i></button>
-      <div style="font-size:1.1rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">Dashboard</div>
+      <div style="font-size:1.1rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;flex:1" id="admin-panel-title">Dashboard</div>
       
-      <div style="display:flex; align-items:center; gap:0.25rem; margin-left:auto;">
+      <div style="display:flex; align-items:center; gap:0.25rem;">
         <button class="btn-ghost btn-icon" onclick="UI.toggleTheme()" title="Theme">
             <i class="theme-icon fas fa-sun"></i>
         </button>
@@ -310,6 +310,7 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
                 <th style="width: 100px;">Check Out</th>
                 <th style="width: 100px;">Status</th>
                 <th>Notes</th>
+                <th style="width: 100px; text-align:center;">Action</th>
               </tr>
             </thead>
             <tbody id="records-table-body"></tbody>
@@ -324,9 +325,9 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
 <div id="page-emp" class="page">
   <div style="height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.5rem;gap:1rem">
     <svg style="width:28px;height:28px;fill:var(--accent)" viewBox="0 0 100 100"><polygon points="10,90 45,10 55,10 90,90 75,90 50,28 25,90"/><rect x="22" y="68" width="56" height="8"/></svg>
-    <div style="font-size:0.9rem;font-weight:bold" id="emp-topbar-name">Employee Portal</div>
+    <div style="font-size:0.9rem;flex:1;font-weight:bold" id="emp-topbar-name">Employee Portal</div>
     
-    <div style="display:flex; align-items:center; gap:0.25rem; margin-left:auto;">
+    <div style="display:flex; align-items:center; gap:0.25rem;">
         <button class="btn-ghost btn-icon" onclick="UI.toggleTheme()" title="Theme">
             <i class="theme-icon fas fa-sun"></i>
         </button>
@@ -344,11 +345,51 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
           <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem"><div class="status-dot unknown pulse" id="emp-status-dot"></div><span id="emp-status-text" style="font-weight:600">Locating...</span></div>
           <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.5rem;line-height:1.6" id="emp-location-info">Please allow GPS access...</div>
           <button id="emp-checkin-btn" class="btn btn-success btn-block" style="padding:1rem;font-size:1.1rem" onclick="Emp.checkIn()" disabled><i class="fas fa-map-marker-check"></i> Check In</button>
-          <button id="emp-checkout-btn" class="btn btn-danger btn-block hidden" style="padding:1rem;font-size:1.1rem;margin-top:0.5rem" onclick="Emp.checkOut()"><i class="fas fa-sign-out-alt"></i> Check Out</button>
+          
+          <div id="checkout-container" class="hidden">
+              <button id="emp-checkout-btn" class="btn btn-danger btn-block" style="padding:1rem;font-size:1.1rem;margin-bottom:0.5rem" onclick="Emp.checkOut()"><i class="fas fa-sign-out-alt"></i> Check Out</button>
+              <button id="emp-leave-btn" class="btn btn-warning btn-block" style="padding:1rem;font-size:1.1rem" onclick="UI.openModal('modal-leave')"><i class="fas fa-file-signature"></i> Request Leave</button>
+          </div>
         </div>
         <div class="card"><div class="card-header"><div class="card-title">Today's Record</div></div><div style="padding:1.25rem" id="today-record-body"></div></div>
         <div class="card"><div class="card-header"><div class="card-title">Recent History</div></div><div style="padding:0.5rem 1.25rem" id="emp-history-list"></div></div>
       </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-leave" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span style="font-weight:700;font-size:1.1rem;text-transform:uppercase">Permission / Leave Request</span>
+      <button class="btn-ghost" onclick="UI.closeModal('modal-leave')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:1.25rem">
+      <div class="form-group">
+        <label class="form-label">Reason</label>
+        <select id="leave-reason" class="form-control form-select">
+          <option value="" disabled selected>-- Select Reason --</option>
+          <option value="Health Emergency">Health Emergency</option>
+          <option value="External Work Task">External Work Task</option>
+          <option value="Government Appointment">Government Appointment</option>
+          <option value="Family Issue">Family Issue</option>
+          <option value="Technical Issue">Technical Issue</option>
+          <option value="Pre-approved Leave">Pre-approved Leave</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Attachment (Image/PDF)</label>
+        <input type="file" id="leave-attachment" class="form-control" accept="image/*,.pdf" style="padding: 0.5rem 1rem;">
+        <small style="color:var(--text-muted); font-size:0.7rem; margin-top:0.25rem; display:block;">Max size: 2MB</small>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Additional Notes</label>
+        <textarea id="leave-notes" class="form-control" rows="3" placeholder="Explain the reason for leaving early..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="UI.closeModal('modal-leave')">Cancel</button>
+      <button class="btn btn-primary" onclick="Emp.submitLeaveRequest()">Submit Request</button>
     </div>
   </div>
 </div>
@@ -474,6 +515,16 @@ const DB = {
   today(){return new Date().toISOString().split('T')[0]}, nowISO(){return new Date().toISOString()},
   fmtTime(iso){if(!iso)return '—'; return new Date(iso).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})},
   fmtDate(iso){if(!iso)return '—'; return new Date(iso).toLocaleDateString('en-US')}
+};
+
+// Helper function to convert file to Base64 string
+const getBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
 };
 
 const Auth = {
@@ -772,7 +823,7 @@ const Admin = {
   async deleteZone(id){ if(confirm('Delete?')){ UI.loader(true); try{ await API.request(`/admin/location/${id}`, 'DELETE'); await DB.sync(); Maps.renderZones(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
   
   // ==========================================
-  // CLEAN ENGLISH REPORTS (NO ACTIONS, NO APPROVALS)
+  // REPORTS WITH FILE ATTACHMENTS & APPROVALS
   // ==========================================
   filterRecords(){
     const search=document.getElementById('rec-search').value.toLowerCase(); 
@@ -785,20 +836,53 @@ const Admin = {
     if(search) recs=recs.filter(r=>emps.find(e=>e.id===r.employeeId)?.name.toLowerCase().includes(search));
     
     const tbody=document.getElementById('records-table-body');
-    if(!recs.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">No records found</td></tr>`;return;}
+    if(!recs.length){tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted)">No records found</td></tr>`;return;}
     
     tbody.innerHTML=recs.map(r=>{
       const emp = emps.find(e=>e.id===r.employeeId) || {name:'Unknown', eid:'—'};
+      
+      let actionButtons = `—`; 
+      if(r.approvalStatus === 'pending') {
+          actionButtons = `
+            <button class="btn-ghost btn-sm" onclick="Admin.handleApproval('${r.id}', 'approved')" title="Approve"><i class="fas fa-check-circle" style="color:var(--success); font-size:1.2rem;"></i></button>
+            <button class="btn-ghost btn-sm" onclick="Admin.handleApproval('${r.id}', 'rejected')" title="Reject"><i class="fas fa-times-circle" style="color:var(--danger); font-size:1.2rem;"></i></button>
+          `;
+      }
+
+      let statusBadge = UI.badge(r.status);
+      if(r.approvalStatus === 'pending') statusBadge = `<span class="badge" style="background:var(--warning); color:#000;"><i class="fas fa-hourglass-half"></i> Pending</span>`;
+      else if (r.approvalStatus === 'rejected') statusBadge = `<span class="badge" style="background:var(--danger); color:#fff"><i class="fas fa-ban"></i> Rejected</span>`;
+      else if (r.approvalStatus === 'approved') statusBadge = `<span class="badge" style="background:var(--success); color:#fff"><i class="fas fa-check"></i> Approved</span>`;
+
+      // إضافة رابط مشاهدة المرفق في خانة الملاحظات إن وجد
+      let attachmentLink = r.attachment ? `<div style="margin-top:0.4rem"><a href="${r.attachment}" target="_blank" style="color:var(--info); font-size:0.75rem; font-weight:bold; text-decoration:underline;"><i class="fas fa-paperclip"></i> View Attachment</a></div>` : '';
+
       return`<tr>
         <td><code>${emp.eid || '—'}</code></td>
         <td><strong>${emp.name}</strong></td>
         <td>${DB.fmtDate(r.date)}</td>
         <td><span dir="ltr">${DB.fmtTime(r.checkIn)}</span></td>
         <td><span dir="ltr">${DB.fmtTime(r.checkOut)}</span></td>
-        <td>${UI.badge(r.status)}</td>
-        <td style="max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${r.notes||''}">${r.notes||'—'}</td>
+        <td>${statusBadge}</td>
+        <td style="max-width:250px; white-space:normal; overflow:hidden; text-overflow:ellipsis;">
+            ${r.notes||'—'}
+            ${attachmentLink}
+        </td>
+        <td style="text-align:center; min-width:80px;">${actionButtons}</td>
       </tr>`;
     }).join('');
+  },
+
+  async handleApproval(recordId, decision) {
+      const isApproved = decision === 'approved';
+      if(!confirm(isApproved ? 'Approve this request?' : 'Reject this request?')) return;
+      UI.loader(true);
+      try {
+          await API.request(`/admin/approve-record/${recordId}`, 'PUT', { status: decision });
+          await DB.sync(); this.filterRecords(); 
+          UI.toast(isApproved ? 'Approved' : 'Rejected', isApproved ? 'success' : 'warning');
+      } catch(e) { UI.toast(e.message, 'error'); }
+      UI.loader(false);
   },
 
   getExportData() {
@@ -810,7 +894,15 @@ const Admin = {
     
     return recs.map(r => {
         const emp = emps.find(e=>e.id===r.employeeId) || {name:'Unknown', eid:'—'};
-        return { "ID": emp.eid || '—', "Name": emp.name, "Date": r.date, "Check In": r.checkIn ? new Date(r.checkIn).toLocaleString('en-US') : '—', "Check Out": r.checkOut ? new Date(r.checkOut).toLocaleString('en-US') : '—', "Status": r.status.toUpperCase(), "Notes": r.notes || '' };
+        let finalStatus = r.status.toUpperCase();
+        if(r.approvalStatus === 'pending') finalStatus += ' (Pending)';
+        if(r.approvalStatus === 'approved') finalStatus += ' (Approved)';
+        if(r.approvalStatus === 'rejected') finalStatus += ' (Rejected)';
+        
+        let notesText = r.notes || '';
+        if(r.attachment) notesText += ' [Has Attachment]';
+
+        return { "ID": emp.eid || '—', "Name": emp.name, "Date": r.date, "Check In": r.checkIn ? new Date(r.checkIn).toLocaleString('en-US') : '—', "Check Out": r.checkOut ? new Date(r.checkOut).toLocaleString('en-US') : '—', "Status": finalStatus, "Notes": notesText };
     });
   },
 
@@ -859,7 +951,7 @@ const Admin = {
 };
 
 /* ══════════════════════════════════════════
-   EMPLOYEE PORTAL LOGIC (Strict Constraints)
+   EMPLOYEE PORTAL LOGIC 
 ══════════════════════════════════════════ */
 const Emp = {
   watchId:null, currentPos:null, assignedZones:[], currentRecord:null, nearestZone:null,
@@ -897,14 +989,45 @@ const Emp = {
     else { document.getElementById('emp-status-dot').className='status-dot outside pulse'; document.getElementById('emp-status-text').textContent='Outside Zone'; document.getElementById('emp-location-info').textContent='Please move closer to your designated work zone.'; }
     this.updateButtons(!!insideZone);
   },
+  
   updateButtons(insideZone){
-    const rec=this.currentRecord; const checkinBtn=document.getElementById('emp-checkin-btn'); const checkoutBtn=document.getElementById('emp-checkout-btn');
+    const rec=this.currentRecord; 
+    const checkinBtn=document.getElementById('emp-checkin-btn'); 
+    const checkoutContainer=document.getElementById('checkout-container');
+    const checkoutBtn=document.getElementById('emp-checkout-btn');
+    const leaveBtn=document.getElementById('emp-leave-btn');
+    
     if(!rec){ 
-        checkinBtn.classList.remove('hidden'); checkoutBtn.classList.add('hidden'); checkinBtn.disabled=!insideZone; 
+        checkinBtn.classList.remove('hidden'); 
+        checkoutContainer.classList.add('hidden'); 
+        checkinBtn.disabled=!insideZone; 
     } else if(rec && !rec.checkOut){ 
-        checkinBtn.classList.add('hidden'); checkoutBtn.classList.remove('hidden'); checkoutBtn.disabled=!insideZone; 
+        checkinBtn.classList.add('hidden'); 
+        checkoutContainer.classList.remove('hidden'); 
+        checkoutBtn.disabled=!insideZone; 
+        
+        // إخفاء زر الاستئذان إذا كان هناك طلب معلق لتجنب التكرار
+        if (rec.approvalStatus === 'pending') {
+            checkoutBtn.innerHTML = `<i class="fas fa-hourglass-half"></i> Leave Request Pending`;
+            checkoutBtn.style.background = 'var(--warning)'; checkoutBtn.style.color = '#000';
+            leaveBtn.classList.add('hidden');
+        } else if (rec.approvalStatus === 'approved') {
+            checkoutBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Clock Out (Approved)`;
+            checkoutBtn.style.background = 'var(--success)'; checkoutBtn.style.color = '#fff';
+            leaveBtn.classList.add('hidden');
+        } else if (rec.approvalStatus === 'rejected') {
+            checkoutBtn.innerHTML = `<i class="fas fa-ban"></i> Leave Rejected`;
+            checkoutBtn.style.background = 'var(--danger)'; checkoutBtn.style.color = '#fff';
+            leaveBtn.classList.remove('hidden'); // يمكنه تقديم طلب آخر بملف جديد
+        } else {
+            checkoutBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Check Out`;
+            checkoutBtn.style.background = 'var(--danger)'; checkoutBtn.style.color = '#fff';
+            leaveBtn.classList.remove('hidden'); // إظهار زر طلب الاستئذان المستقل
+        }
     } else { 
-        checkinBtn.classList.add('hidden'); checkoutBtn.classList.add('hidden'); document.getElementById('emp-location-info').textContent='Attendance complete for today.'; 
+        checkinBtn.classList.add('hidden'); 
+        checkoutContainer.classList.add('hidden'); 
+        document.getElementById('emp-location-info').textContent='Attendance complete for today.'; 
     }
   },
   
@@ -915,7 +1038,6 @@ const Emp = {
     let finalStatus = 'present';
     const emp = Auth.empSession;
     
-    // Strict Late Calculation (UTC Riyadh +3)
     if (emp && emp.workStart) {
         const now = new Date();
         const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
@@ -947,17 +1069,14 @@ const Emp = {
     UI.loader(false);
   },
 
-  // Strict Checkout Constraint (Absolute Block)
   checkOut() {
-    const emp = Auth.empSession; 
+    const emp = Auth.empSession; const rec = this.currentRecord;
     
-    // If old employee has no schedule, let them leave.
     if (!emp || !emp.workEnd) { 
         if(confirm('Do you want to officially clock out now?')) this.confirmStandardCheckOut();
         return; 
     }
 
-    // Accurate Time Calculation
     const now = new Date(); 
     const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
     const riyadhDate = new Date(utc + (3600000 * 3));
@@ -968,20 +1087,22 @@ const Emp = {
     const [endH, endM] = emp.workEnd.split(':').map(Number); 
     const endTotalMinutes = (endH * 60) + endM;
 
-    // If attempting to leave before shift ends -> Strict ERROR (No Bypass)
     if (currTotalMinutes < endTotalMinutes) {
-        let msg = emp.workEnd;
-        // Convert military time to readable AM/PM for the error message
+        if (rec && rec.approvalStatus === 'pending') { 
+            UI.toast('Request is pending admin approval.', 'warning'); 
+            return; 
+        }
+        if (rec && rec.approvalStatus === 'approved') {
+            if(confirm('Approved! Clock out now?')) this.confirmStandardCheckOut();
+            return;
+        }
+        // Block early exit completely if not approved
         let dispH = endH > 12 ? endH - 12 : (endH === 0 ? 12 : endH);
         let ampm = endH >= 12 ? 'PM' : 'AM';
         let dispM = endM < 10 ? '0'+endM : endM;
-        
-        UI.toast(`You cannot clock out before your shift ends at ${dispH}:${dispM} ${ampm}.`, 'error');
-        return; // Stops here completely.
-    } 
-    
-    if(confirm('Officially clock out now?')) {
-        this.confirmStandardCheckOut();
+        UI.toast(`You cannot clock out before your shift ends at ${dispH}:${dispM} ${ampm}. Please submit a Leave Request instead.`, 'error');
+    } else {
+        if(confirm('Officially clock out now?')) this.confirmStandardCheckOut();
     }
   },
 
@@ -997,6 +1118,59 @@ const Emp = {
     UI.loader(false);
   },
 
+  // دالة إرسال طلب الاستئذان الجديد مع معالجة الملفات
+  async submitLeaveRequest() {
+    const reason = document.getElementById('leave-reason').value; 
+    const notes = document.getElementById('leave-notes').value.trim();
+    const fileInput = document.getElementById('leave-attachment');
+
+    if(!reason) return UI.toast('Please select a reason', 'error');
+
+    UI.loader(true);
+    let attachmentData = null;
+
+    // قراءة الملف وتحويله إلى Base64
+    if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        // الحد الأقصى 2 ميجابايت لحماية قاعدة البيانات
+        if (file.size > 2 * 1024 * 1024) { 
+            UI.loader(false);
+            return UI.toast('File too large. Max size is 2MB.', 'error');
+        }
+        try {
+            attachmentData = await getBase64(file);
+        } catch (error) {
+            UI.loader(false);
+            return UI.toast('Error reading file.', 'error');
+        }
+    }
+
+    const rec = { 
+        employeeId: Auth.empSession.id, 
+        date: DB.today(), 
+        status: 'early_leave', 
+        approvalStatus: 'pending', 
+        notes: `[Leave: ${reason}] ${notes}`,
+        attachment: attachmentData 
+    };
+
+    try {
+        await API.request('/employee/record', 'POST', rec); 
+        await DB.sync(); 
+        UI.closeModal('modal-leave');
+        this.currentRecord = DB.getRecords().find(r => r.employeeId === Auth.empSession.id && r.date === DB.today());
+        this.renderTodayRecord(); 
+        this.updateButtons(true); 
+        UI.toast('Request sent to admin', 'success');
+        
+        // تنظيف الحقول
+        document.getElementById('leave-reason').value = '';
+        document.getElementById('leave-notes').value = '';
+        document.getElementById('leave-attachment').value = '';
+    } catch(e) { UI.toast(e.message, 'error'); }
+    UI.loader(false);
+  },
+
   renderTodayRecord(){
     const rec=this.currentRecord; const body=document.getElementById('today-record-body');
     if(!rec){body.innerHTML=`<div style="text-align:center;color:var(--text-muted)">No record yet</div>`;return;}
@@ -1008,7 +1182,11 @@ const Emp = {
     if(!recs.length){wrap.innerHTML=`<div style="text-align:center;padding:1rem;color:var(--text-muted)">No history</div>`;return;}
     recs.sort((a, b) => new Date(b.date) - new Date(a.date));
     wrap.innerHTML=recs.map(r=>{
-        return `<div style="padding:0.75rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><div><strong style="display:block;font-size:0.9rem">${DB.fmtDate(r.date)}</strong><small style="color:var(--text-muted)"><span dir="ltr">In: ${DB.fmtTime(r.checkIn)} | Out: ${DB.fmtTime(r.checkOut)}</span></small></div>${UI.badge(r.status)}</div>`;
+        let badge = UI.badge(r.status);
+        if(r.approvalStatus === 'pending') badge = `<span class="badge" style="background:var(--warning); color:#000;">Pending</span>`;
+        if(r.approvalStatus === 'rejected') badge = `<span class="badge" style="background:var(--danger); color:#fff;">Rejected</span>`;
+        if(r.approvalStatus === 'approved') badge = `<span class="badge" style="background:var(--success); color:#fff;">Approved</span>`;
+        return `<div style="padding:0.75rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><div><strong style="display:block;font-size:0.9rem">${DB.fmtDate(r.date)}</strong><small style="color:var(--text-muted)"><span dir="ltr">In: ${DB.fmtTime(r.checkIn)} | Out: ${DB.fmtTime(r.checkOut)}</span></small></div>${badge}</div>`;
     }).join('');
   }
 };
