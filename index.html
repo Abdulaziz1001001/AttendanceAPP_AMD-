@@ -18,6 +18,8 @@
   --success: #27AE60; --warning: #F1C40F; --danger: #E74C3C; --info: #3498DB;
   --radius: 4px; --radius-lg: 8px; --shadow: 0 4px 24px rgba(0,0,0,0.4);
 }
+
+/* CSS VARIABLES (LIGHT MODE) */
 html[data-theme="light"] {
   --bg: #F0F2F5; --surface: #FFFFFF; --surface2: #F9FAFB; --surface3: #E5E7EB;
   --border: #E5E7EB; --border2: #D1D5DA;
@@ -39,7 +41,7 @@ a{color:inherit;text-decoration:none} button{cursor:pointer;font-family:inherit;
 .btn-block{width:100%} .btn-primary{background:var(--accent);color:white} .btn-primary:hover{background:var(--accent-light);transform:translateY(-1px)}
 .btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text)} .btn-outline:hover{border-color:var(--accent);color:var(--accent)}
 .btn-ghost{background:transparent;border:none;color:var(--text-muted)} .btn-ghost:hover{color:var(--accent)}
-.btn-success{background:var(--success);color:white} .btn-danger{background:var(--danger);color:white} .btn-warning{background:var(--warning);color:#000}
+.btn-success{background:var(--success);color:white} .btn-danger{background:var(--danger);color:white}
 .btn-sm{padding:0.4rem 0.9rem;font-size:0.75rem}
 
 .form-group{margin-bottom:1.25rem} .form-label{display:block;font-size:0.7rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:0.5rem}
@@ -105,6 +107,9 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
 <body>
 
 <div id="public-controls">
+    <button class="btn-ghost btn-sm" onclick="Lang.toggle()" style="display:flex; align-items:center; gap:0.4rem;">
+        <i class="fas fa-globe"></i> <span class="lang-text" style="font-weight:600; font-size:0.75rem;">عربي</span>
+    </button>
     <button class="btn-ghost btn-icon" onclick="UI.toggleTheme()">
         <i class="theme-icon fas fa-sun"></i>
     </button>
@@ -112,7 +117,7 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
 
 <div id="global-loader" class="loader-overlay">
   <div class="spinner"></div>
-  <h3 style="color:var(--accent)">CONNECTING TO SECURE SERVER...</h3>
+  <h3 style="color:var(--accent)"><span class="tr" data-en="CONNECTING TO SECURE SERVER..." data-ar="جاري الاتصال بالسيرفر...">CONNECTING TO SECURE SERVER...</span></h3>
 </div>
 
 <div id="page-home" class="page active">
@@ -127,50 +132,50 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
       <div style="font-size:0.8rem;color:var(--text-muted);letter-spacing:0.3em;text-transform:uppercase;margin-top:0.5rem; text-align:center;">United Contracting Company</div>
     </div>
     
-    <div><p style="font-family:'Cinzel',serif;font-size:1.1rem;color:var(--text-muted);letter-spacing:0.15em;text-transform:uppercase">Attendance Management System</p></div>
+    <div><p style="font-family:'Cinzel',serif;font-size:1.1rem;color:var(--text-muted);letter-spacing:0.15em;text-transform:uppercase" class="tr" data-en="Attendance Management System" data-ar="نظــام إدارة الحضــور والانصــراف">Attendance Management System</p></div>
     <div class="portal-cards">
-      <div class="portal-card" onclick="App.goto('admin-login')"><i class="fas fa-shield-alt" style="font-size:2rem;color:var(--accent);margin-bottom:1rem;display:block"></i><h3 style="font-family:'Barlow Condensed';font-size:1.1rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem">Admin Portal</h3><p style="font-size:0.8rem;color:var(--text-muted)">Manage zones, teams & reports</p></div>
-      <div class="portal-card" onclick="App.goto('emp-login')"><i class="fas fa-user-hard-hat" style="font-size:2rem;color:var(--accent);margin-bottom:1rem;display:block"></i><h3 style="font-family:'Barlow Condensed';font-size:1.1rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem">Employee Portal</h3><p style="font-size:0.8rem;color:var(--text-muted)">GPS check-in & attendance log</p></div>
+      <div class="portal-card" onclick="App.goto('admin-login')"><i class="fas fa-shield-alt" style="font-size:2rem;color:var(--accent);margin-bottom:1rem;display:block"></i><h3 style="font-family:'Barlow Condensed';font-size:1.1rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem" class="tr" data-en="Admin Portal" data-ar="بوابة الإدارة">Admin Portal</h3><p style="font-size:0.8rem;color:var(--text-muted)" class="tr" data-en="Manage zones, teams & reports" data-ar="إدارة المواقع والتقارير">Manage zones, teams & reports</p></div>
+      <div class="portal-card" onclick="App.goto('emp-login')"><i class="fas fa-user-hard-hat" style="font-size:2rem;color:var(--accent);margin-bottom:1rem;display:block"></i><h3 style="font-family:'Barlow Condensed';font-size:1.1rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.4rem" class="tr" data-en="Employee Portal" data-ar="بوابة الموظف">Employee Portal</h3><p style="font-size:0.8rem;color:var(--text-muted)" class="tr" data-en="GPS check-in & attendance log" data-ar="تسجيل الحضور الجغرافي">GPS check-in & attendance log</p></div>
     </div>
   </div>
 </div>
 
 <div id="page-admin-login" class="page">
   <div class="auth-box">
-    <div class="auth-header"><div class="auth-back" style="cursor:pointer; color:var(--text-muted); margin-bottom:1rem;" onclick="App.goto('home')"><i class="fas fa-arrow-left"></i> Back</div><h1 style="font-family:'Barlow Condensed';font-size:2rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.4rem">Admin Login</h1></div>
+    <div class="auth-header"><div class="auth-back" style="cursor:pointer; color:var(--text-muted); margin-bottom:1rem;" onclick="App.goto('home')"><i class="fas fa-arrow-left"></i> <span class="tr" data-en="Back" data-ar="رجوع">Back</span></div><h1 style="font-family:'Barlow Condensed';font-size:2rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.4rem" class="tr" data-en="Admin Login" data-ar="دخول الإدارة">Admin Login</h1></div>
     <div id="admin-login-err" class="alert alert-danger hidden"><i class="fas fa-exclamation-circle"></i><span id="admin-login-err-msg">Error</span></div>
-    <div class="form-group"><label class="form-label">Username</label><div class="input-icon-wrap"><i class="fas fa-user"></i><input type="text" id="admin-username" class="form-control" placeholder="Enter username"></div></div>
-    <div class="form-group"><label class="form-label">Password</label><div class="input-icon-wrap"><i class="fas fa-lock"></i><input type="password" id="admin-password" class="form-control" placeholder="Enter password"><button class="toggle-pw" onclick="UI.togglePw('admin-password',this)"><i class="fas fa-eye"></i></button></div></div>
-    <button class="btn btn-primary btn-block" onclick="Auth.adminLogin()"><span>Sign In</span></button>
+    <div class="form-group"><label class="form-label tr" data-en="Username" data-ar="المعرف">Username</label><div class="input-icon-wrap"><i class="fas fa-user"></i><input type="text" id="admin-username" class="form-control ph-tr" data-phen="Enter username" data-phar="أدخل المعرف" placeholder="Enter username"></div></div>
+    <div class="form-group"><label class="form-label tr" data-en="Password" data-ar="كلمة المرور">Password</label><div class="input-icon-wrap"><i class="fas fa-lock"></i><input type="password" id="admin-password" class="form-control ph-tr" data-phen="Enter password" data-phar="أدخل كلمة المرور" placeholder="Enter password"><button class="toggle-pw" onclick="UI.togglePw('admin-password',this)"><i class="fas fa-eye"></i></button></div></div>
+    <button class="btn btn-primary btn-block" onclick="Auth.adminLogin()"><span class="tr" data-en="Sign In" data-ar="دخول">Sign In</span></button>
   </div>
 </div>
 
 <div id="page-emp-login" class="page">
   <div class="auth-box">
-    <div class="auth-header"><div class="auth-back" style="cursor:pointer; color:var(--text-muted); margin-bottom:1rem;" onclick="App.goto('home')"><i class="fas fa-arrow-left"></i> Back</div><h1 style="font-family:'Barlow Condensed';font-size:2rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.4rem">Employee Login</h1></div>
+    <div class="auth-header"><div class="auth-back" style="cursor:pointer; color:var(--text-muted); margin-bottom:1rem;" onclick="App.goto('home')"><i class="fas fa-arrow-left"></i> <span class="tr" data-en="Back" data-ar="رجوع">Back</span></div><h1 style="font-family:'Barlow Condensed';font-size:2rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.4rem" class="tr" data-en="Employee Login" data-ar="دخول الموظف">Employee Login</h1></div>
     <div id="emp-login-err" class="alert alert-danger hidden"><i class="fas fa-exclamation-circle"></i><span id="emp-login-err-msg">Error</span></div>
-    <div class="form-group"><label class="form-label">Username</label><div class="input-icon-wrap"><i class="fas fa-user"></i><input type="text" id="emp-username" class="form-control" placeholder="Enter username"></div></div>
-    <div class="form-group"><label class="form-label">Password</label><div class="input-icon-wrap"><i class="fas fa-lock"></i><input type="password" id="emp-password" class="form-control" placeholder="Enter password"><button class="toggle-pw" onclick="UI.togglePw('emp-password',this)"><i class="fas fa-eye"></i></button></div></div>
-    <button class="btn btn-success btn-block" onclick="Auth.empLogin()"><span>Sign In</span></button>
+    <div class="form-group"><label class="form-label tr" data-en="Username" data-ar="المعرف">Username</label><div class="input-icon-wrap"><i class="fas fa-user"></i><input type="text" id="emp-username" class="form-control ph-tr" data-phen="Enter username" data-phar="أدخل المعرف" placeholder="Enter username"></div></div>
+    <div class="form-group"><label class="form-label tr" data-en="Password" data-ar="كلمة المرور">Password</label><div class="input-icon-wrap"><i class="fas fa-lock"></i><input type="password" id="emp-password" class="form-control ph-tr" data-phen="Enter password" data-phar="أدخل كلمة المرور" placeholder="Enter password"><button class="toggle-pw" onclick="UI.togglePw('emp-password',this)"><i class="fas fa-eye"></i></button></div></div>
+    <button class="btn btn-success btn-block" onclick="Auth.empLogin()"><span class="tr" data-en="Sign In" data-ar="دخول">Sign In</span></button>
   </div>
 </div>
 
 <div id="page-admin" class="page">
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="UI.closeSidebar()"></div>
   <aside class="sidebar" id="admin-sidebar">
-    <div style="padding:1.5rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0.75rem"><svg style="width:32px;height:32px;fill:var(--accent)" viewBox="0 0 100 100"><polygon points="10,90 45,10 55,10 90,90 75,90 50,28 25,90"/><rect x="22" y="68" width="56" height="8"/></svg><div><div style="font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.08em">AMD United</div><small style="font-size:0.65rem;color:var(--text-muted)">Admin Panel</small></div></div>
+    <div style="padding:1.5rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0.75rem"><svg style="width:32px;height:32px;fill:var(--accent)" viewBox="0 0 100 100"><polygon points="10,90 45,10 55,10 90,90 75,90 50,28 25,90"/><rect x="22" y="68" width="56" height="8"/></svg><div><div style="font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.08em">AMD United</div><small style="font-size:0.65rem;color:var(--text-muted)" class="tr" data-en="Admin Panel" data-ar="لوحة الإدارة">Admin Panel</small></div></div>
     
     <nav class="sidebar-nav">
-      <span style="display:block;padding:0.75rem 1.25rem 0.4rem;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim)">Menu</span>
-      <div class="nav-link active" onclick="Admin.showPanel('dashboard',this)"><i class="fas fa-th-large" style="width:20px"></i><span>Dashboard</span></div>
-      <div class="nav-link" onclick="Admin.showPanel('analytics',this)"><i class="fas fa-chart-pie" style="width:20px"></i><span>Analytics <span class="badge badge-success" style="margin-left:5px">NEW</span></span></div>
-      <div class="nav-link" onclick="Admin.showPanel('employees',this)"><i class="fas fa-users" style="width:20px"></i><span>Employees</span></div>
-      <div class="nav-link" onclick="Admin.showPanel('groups',this)"><i class="fas fa-layer-group" style="width:20px"></i><span>Groups</span></div>
-      <div class="nav-link" onclick="Admin.showPanel('locations',this)"><i class="fas fa-map-marker-alt" style="width:20px"></i><span>Locations & Zones</span></div>
-      <div class="nav-link" onclick="Admin.showPanel('records',this)"><i class="fas fa-clipboard-list" style="width:20px"></i><span>Attendance Records</span></div>
+      <span style="display:block;padding:0.75rem 1.25rem 0.4rem;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim)" class="tr" data-en="Menu" data-ar="القائمة">Menu</span>
+      <div class="nav-link active" onclick="Admin.showPanel('dashboard',this)"><i class="fas fa-th-large" style="width:20px"></i><span class="tr" data-en="Dashboard" data-ar="الرئيسية">Dashboard</span></div>
+      <div class="nav-link" onclick="Admin.showPanel('analytics',this)"><i class="fas fa-chart-pie" style="width:20px"></i><span class="tr" data-en="Analytics" data-ar="التحليلات">Analytics</span></div>
+      <div class="nav-link" onclick="Admin.showPanel('employees',this)"><i class="fas fa-users" style="width:20px"></i><span class="tr" data-en="Employees" data-ar="الموظفين">Employees</span></div>
+      <div class="nav-link" onclick="Admin.showPanel('groups',this)"><i class="fas fa-layer-group" style="width:20px"></i><span class="tr" data-en="Groups" data-ar="المجموعات">Groups</span></div>
+      <div class="nav-link" onclick="Admin.showPanel('locations',this)"><i class="fas fa-map-marker-alt" style="width:20px"></i><span class="tr" data-en="Locations" data-ar="المواقع">Locations</span></div>
+      <div class="nav-link" onclick="Admin.showPanel('records',this)"><i class="fas fa-clipboard-list" style="width:20px"></i><span class="tr" data-en="Records" data-ar="التقارير">Records</span></div>
       
-      <span style="display:block;padding:1.5rem 1.25rem 0.4rem;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim)">System</span>
-      <div class="nav-link" onclick="Admin.showPanel('settings',this)"><i class="fas fa-cog" style="width:20px"></i><span>Settings</span></div>
+      <span style="display:block;padding:1.5rem 1.25rem 0.4rem;font-size:0.65rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim)" class="tr" data-en="System" data-ar="النظام">System</span>
+      <div class="nav-link" onclick="Admin.showPanel('settings',this)"><i class="fas fa-cog" style="width:20px"></i><span class="tr" data-en="Settings" data-ar="الإعدادات">Settings</span></div>
     </nav>
     
     <div style="padding:1rem 1.25rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:0.75rem;margin-top:auto;">
@@ -183,15 +188,18 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
   <div class="main-area">
     <header class="topbar">
       <button class="hamburger btn-ghost" onclick="UI.toggleSidebar()"><i class="fas fa-bars"></i></button>
-      <div style="font-size:1.1rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;flex:1" id="admin-panel-title">Dashboard</div>
+      <div style="font-size:1.1rem;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;flex:1" id="admin-panel-title" class="tr" data-en="Dashboard" data-ar="الرئيسية">Dashboard</div>
       
       <div style="display:flex; align-items:center; gap:0.25rem;">
+        <button class="btn-ghost btn-sm" onclick="Lang.toggle()" title="Language" style="display:flex; align-items:center; gap:0.4rem;">
+            <i class="fas fa-globe"></i> <span class="lang-text" style="font-weight:600; font-size:0.75rem;">عربي</span>
+        </button>
         <button class="btn-ghost btn-icon" onclick="UI.toggleTheme()" title="Theme">
             <i class="theme-icon fas fa-sun"></i>
         </button>
         <div style="width:1px; height:1.2rem; background:var(--border2); margin:0 0.5rem;"></div>
         <button class="btn btn-sm btn-outline" onclick="Admin.refresh()">
-            <i class="fas fa-sync-alt"></i> Sync
+            <i class="fas fa-sync-alt"></i> <span class="tr" data-en="Sync" data-ar="مزامنة">Sync</span>
         </button>
       </div>
     </header>
@@ -199,15 +207,15 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
     <div class="content">
       <div id="panel-dashboard" class="admin-panel active">
         <div class="stats-grid">
-          <div class="stat-card" style="border-left:3px solid var(--accent)"><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.5rem">Total Employees</div><div class="stat-value" id="stat-total">0</div></div>
-          <div class="stat-card" style="border-left:3px solid var(--success)"><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.5rem">Present Today</div><div class="stat-value" id="stat-present">0</div></div>
-          <div class="stat-card" style="border-left:3px solid var(--warning)"><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.5rem">Late Today</div><div class="stat-value" id="stat-late">0</div></div>
-          <div class="stat-card" style="border-left:3px solid var(--danger)"><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.5rem">Absent Today</div><div class="stat-value" id="stat-absent">0</div></div>
+          <div class="stat-card" style="border-left:3px solid var(--accent)"><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.5rem" class="tr" data-en="Total Employees" data-ar="الكل">Total Employees</div><div class="stat-value" id="stat-total">0</div></div>
+          <div class="stat-card" style="border-left:3px solid var(--success)"><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.5rem" class="tr" data-en="Present Today" data-ar="حاضر">Present Today</div><div class="stat-value" id="stat-present">0</div></div>
+          <div class="stat-card" style="border-left:3px solid var(--warning)"><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.5rem" class="tr" data-en="Late Today" data-ar="متأخر">Late Today</div><div class="stat-value" id="stat-late">0</div></div>
+          <div class="stat-card" style="border-left:3px solid var(--danger)"><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.5rem" class="tr" data-en="Absent Today" data-ar="غائب">Absent Today</div><div class="stat-value" id="stat-absent">0</div></div>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title">Live Attendance</div></div>
+          <div class="card-header"><div class="card-title tr" data-en="Live Attendance" data-ar="الحضور المباشر">Live Attendance</div></div>
           <div style="overflow-x:auto">
-            <table><thead><tr><th>Employee</th><th>Check In</th><th>Check Out</th><th>Status</th></tr></thead><tbody id="dash-attendance-table"></tbody></table>
+            <table><thead><tr><th class="tr" data-en="Employee" data-ar="الموظف">Employee</th><th class="tr" data-en="Check In" data-ar="الدخول">Check In</th><th class="tr" data-en="Check Out" data-ar="الخروج">Check Out</th><th class="tr" data-en="Status" data-ar="الحالة">Status</th></tr></thead><tbody id="dash-attendance-table"></tbody></table>
           </div>
         </div>
       </div>
@@ -215,25 +223,25 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
       <div id="panel-analytics" class="admin-panel">
         <div style="display:flex; justify-content:space-between; margin-bottom:1.5rem;">
            <div>
-             <h2 style="color:var(--accent); margin-bottom:0.2rem; text-transform:uppercase;">Data Analytics</h2>
+             <h2 style="color:var(--accent); margin-bottom:0.2rem; text-transform:uppercase;" class="tr" data-en="Data Analytics" data-ar="التحليلات">Data Analytics</h2>
            </div>
-           <button class="btn btn-outline btn-sm" style="height:fit-content" onclick="Admin.renderAnalytics()"><i class="fas fa-sync"></i> Refresh</button>
+           <button class="btn btn-outline btn-sm" style="height:fit-content" onclick="Admin.renderAnalytics()"><i class="fas fa-sync"></i> <span class="tr" data-en="Refresh" data-ar="تحديث">Refresh</span></button>
         </div>
         <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
           <div class="card">
-            <div class="card-header"><div class="card-title">Today's Overview</div></div>
+            <div class="card-header"><div class="card-title tr" data-en="Today's Overview" data-ar="نظرة اليوم">Today's Overview</div></div>
             <div class="card-body" style="padding:1rem; position:relative; height:300px; display:flex; align-items:center; justify-content:center;">
               <canvas id="chart-today"></canvas>
             </div>
           </div>
           <div class="card">
-            <div class="card-header"><div class="card-title">Attendance by Group</div></div>
+            <div class="card-header"><div class="card-title tr" data-en="Attendance by Group" data-ar="حسب المجموعات">Attendance by Group</div></div>
             <div class="card-body" style="padding:1rem; position:relative; height:300px; display:flex; align-items:center; justify-content:center;">
               <canvas id="chart-groups"></canvas>
             </div>
           </div>
           <div class="card" style="grid-column: 1 / -1;">
-            <div class="card-header"><div class="card-title">7-Day Trend</div></div>
+            <div class="card-header"><div class="card-title tr" data-en="7-Day Trend" data-ar="مؤشر الأسبوع">7-Day Trend</div></div>
             <div class="card-body" style="padding:1rem; position:relative; height:350px; display:flex; align-items:center; justify-content:center;">
               <canvas id="chart-trend"></canvas>
             </div>
@@ -243,19 +251,19 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
 
       <div id="panel-employees" class="admin-panel">
         <div style="display:flex;gap:0.75rem;margin-bottom:1.25rem">
-          <input type="text" class="form-control" placeholder="Search..." oninput="Admin.filterEmployees()" id="emp-search" style="max-width:200px">
+          <input type="text" class="form-control ph-tr" data-phen="Search..." data-phar="بحث..." oninput="Admin.filterEmployees()" id="emp-search" style="max-width:200px">
           <select class="form-control form-select" id="emp-group-filter" onchange="Admin.filterEmployees()" style="max-width:150px"></select>
-          <button class="btn btn-primary btn-sm" onclick="Admin.openEmployeeModal()"><i class="fas fa-plus"></i> Add</button>
+          <button class="btn btn-primary btn-sm" onclick="Admin.openEmployeeModal()"><i class="fas fa-plus"></i> <span class="tr" data-en="Add" data-ar="إضافة">Add</span></button>
         </div>
         <div class="card"><div style="overflow-x:auto">
-          <table><thead><tr><th>ID</th><th>Name</th><th>Username</th><th>Group</th><th>Shift</th><th>Status</th><th><i class="fas fa-cogs"></i></th></tr></thead><tbody id="employees-table"></tbody></table>
+          <table><thead><tr><th>ID</th><th class="tr" data-en="Name" data-ar="الاسم">Name</th><th class="tr" data-en="Username" data-ar="المعرف">Username</th><th class="tr" data-en="Group" data-ar="المجموعة">Group</th><th class="tr" data-en="Shift" data-ar="الدوام">Shift</th><th class="tr" data-en="Status" data-ar="الحالة">Status</th><th><i class="fas fa-cogs"></i></th></tr></thead><tbody id="employees-table"></tbody></table>
         </div></div>
       </div>
 
       <div id="panel-groups" class="admin-panel">
-        <div style="margin-bottom:1.25rem;text-align:right"><button class="btn btn-primary btn-sm" onclick="Admin.openGroupModal()"><i class="fas fa-plus"></i> Add Group</button></div>
+        <div style="margin-bottom:1.25rem;text-align:right"><button class="btn btn-primary btn-sm" onclick="Admin.openGroupModal()"><i class="fas fa-plus"></i> <span class="tr" data-en="Add Group" data-ar="مجموعة جديدة">Add Group</span></button></div>
         <div class="card"><div style="overflow-x:auto">
-          <table><thead><tr><th><i class="fas fa-palette"></i></th><th>Group Name</th><th>Description</th><th><i class="fas fa-cogs"></i></th></tr></thead><tbody id="groups-table"></tbody></table>
+          <table><thead><tr><th><i class="fas fa-palette"></i></th><th class="tr" data-en="Group Name" data-ar="المجموعة">Group Name</th><th class="tr" data-en="Description" data-ar="الوصف">Description</th><th><i class="fas fa-cogs"></i></th></tr></thead><tbody id="groups-table"></tbody></table>
         </div></div>
       </div>
 
@@ -264,34 +272,34 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
           <div style="border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border)"><div id="admin-map"></div></div>
           <div style="display:flex;flex-direction:column;gap:1rem;overflow-y:auto">
             <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem">
-              <h4 style="color:var(--accent);margin-bottom:1rem;text-transform:uppercase">Zone Settings</h4>
-              <div class="form-group"><label class="form-label">Zone Name</label><input type="text" id="zone-name" class="form-control"></div>
-              <div class="form-group"><label class="form-label">Group Access</label><select id="zone-group" class="form-control form-select"></select></div>
-              <div class="form-group"><label class="form-label">Radius (Meters)</label>
-                <div style="display:flex;align-items:center;gap:0.5rem"><input type="range" id="zone-radius" min="50" max="2000" value="500" step="50" oninput="Admin.updateRadiusDisplay(this.value)" style="flex:1;"><span id="zone-radius-val" style="color:var(--accent);font-weight:700;min-width:50px">500 m</span></div>
+              <h4 style="color:var(--accent);margin-bottom:1rem;text-transform:uppercase" class="tr" data-en="Zone Settings" data-ar="إعدادات الموقع">Zone Settings</h4>
+              <div class="form-group"><label class="form-label tr" data-en="Zone Name" data-ar="الاسم">Zone Name</label><input type="text" id="zone-name" class="form-control"></div>
+              <div class="form-group"><label class="form-label tr" data-en="Group Access" data-ar="المجموعة">Group Access</label><select id="zone-group" class="form-control form-select"></select></div>
+              <div class="form-group"><label class="form-label tr" data-en="Radius (Meters)" data-ar="النطاق (متر)">Radius (Meters)</label>
+                <div style="display:flex;align-items:center;gap:0.5rem"><input type="range" id="zone-radius" min="50" max="2000" value="500" step="50" oninput="Admin.updateRadiusDisplay(this.value)" style="flex:1;"><span id="zone-radius-val" style="color:var(--accent);font-weight:700;min-width:50px" dir="ltr">500 m</span></div>
               </div>
-              <div style="display:flex;gap:0.5rem"><button class="btn btn-primary btn-sm" style="flex:1" onclick="Admin.saveZone()">Save Zone</button><button class="btn btn-outline btn-sm" onclick="Admin.clearZoneForm()"><i class="fas fa-times"></i></button></div>
+              <div style="display:flex;gap:0.5rem"><button class="btn btn-primary btn-sm" style="flex:1" onclick="Admin.saveZone()"><span class="tr" data-en="Save Zone" data-ar="حفظ">Save Zone</span></button><button class="btn btn-outline btn-sm" onclick="Admin.clearZoneForm()"><i class="fas fa-times"></i></button></div>
             </div>
-            <div class="card" style="margin:0"><div class="card-header"><div class="card-title">Saved Zones</div></div><div style="padding:0.75rem;display:flex;flex-direction:column;gap:0.5rem" id="zone-list"></div></div>
+            <div class="card" style="margin:0"><div class="card-header"><div class="card-title tr" data-en="Saved Zones" data-ar="المواقع المحفوظة">Saved Zones</div></div><div style="padding:0.75rem;display:flex;flex-direction:column;gap:0.5rem" id="zone-list"></div></div>
           </div>
         </div>
       </div>
 
       <div id="panel-settings" class="admin-panel">
         <div class="card" style="max-width: 500px; margin: 0 auto; margin-top: 2rem;">
-          <div class="card-header"><div class="card-title">Profile Settings</div></div>
+          <div class="card-header"><div class="card-title tr" data-en="Profile Settings" data-ar="إعدادات الحساب">Profile Settings</div></div>
           <div class="card-body" style="display:flex; flex-direction:column; gap:1.25rem; padding:1.5rem">
-            <div class="form-group"><label class="form-label">Username</label><input type="text" id="admin-set-user" class="form-control"></div>
-            <div class="form-group"><label class="form-label">Email Address</label><input type="email" id="admin-set-email" class="form-control"></div>
-            <div class="form-group"><label class="form-label">New Password</label><input type="password" id="admin-set-pass" class="form-control"></div>
-            <button class="btn btn-primary" onclick="Admin.saveSettings()"><i class="fas fa-save"></i> Save Changes</button>
+            <div class="form-group"><label class="form-label tr" data-en="Username" data-ar="المعرف">Username</label><input type="text" id="admin-set-user" class="form-control"></div>
+            <div class="form-group"><label class="form-label tr" data-en="Email" data-ar="البريد">Email Address</label><input type="email" id="admin-set-email" class="form-control"></div>
+            <div class="form-group"><label class="form-label tr" data-en="New Password" data-ar="كلمة المرور">New Password</label><input type="password" id="admin-set-pass" class="form-control"></div>
+            <button class="btn btn-primary" onclick="Admin.saveSettings()"><i class="fas fa-save"></i> <span class="tr" data-en="Save Changes" data-ar="حفظ">Save Changes</span></button>
           </div>
         </div>
       </div>
 
       <div id="panel-records" class="admin-panel">
         <div style="display:flex;gap:0.75rem;margin-bottom:1.25rem; align-items:center; flex-wrap:wrap;">
-          <input type="text" class="form-control" placeholder="Search name..." oninput="Admin.filterRecords()" id="rec-search" style="max-width:200px">
+          <input type="text" class="form-control ph-tr" data-phen="Search name..." data-phar="البحث..." oninput="Admin.filterRecords()" id="rec-search" style="max-width:200px">
           <input type="date" id="rec-date" class="form-control" style="width:150px" onchange="Admin.filterRecords()">
           <div style="flex:1"></div>
           <button class="btn btn-outline btn-sm" onclick="Admin.exportExcel()"><i class="fas fa-file-excel" style="color:var(--success)"></i> Excel</button>
@@ -302,13 +310,13 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
             <thead>
               <tr>
                 <th style="width: 80px;">ID</th>
-                <th>Employee</th>
-                <th style="width: 100px;">Date</th>
-                <th style="width: 100px;">Check In</th>
-                <th style="width: 100px;">Check Out</th>
-                <th style="width: 100px;">Status</th>
-                <th>Notes</th>
-                <th style="width: 100px; text-align:center;">Action</th>
+                <th class="tr" data-en="Employee" data-ar="الموظف">Employee</th>
+                <th style="width: 100px;" class="tr" data-en="Date" data-ar="التاريخ">Date</th>
+                <th style="width: 100px;" class="tr" data-en="Check In" data-ar="الدخول">Check In</th>
+                <th style="width: 100px;" class="tr" data-en="Check Out" data-ar="الخروج">Check Out</th>
+                <th style="width: 100px;" class="tr" data-en="Status" data-ar="الحالة">Status</th>
+                <th class="tr" data-en="Notes" data-ar="الملاحظات">Notes</th>
+                <th style="width: 80px; text-align:center;" class="tr" data-en="Action" data-ar="القرار">Action</th>
               </tr>
             </thead>
             <tbody id="records-table-body"></tbody>
@@ -323,15 +331,18 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
 <div id="page-emp" class="page">
   <div style="height:56px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.5rem;gap:1rem">
     <svg style="width:28px;height:28px;fill:var(--accent)" viewBox="0 0 100 100"><polygon points="10,90 45,10 55,10 90,90 75,90 50,28 25,90"/><rect x="22" y="68" width="56" height="8"/></svg>
-    <div style="font-size:0.9rem;flex:1;font-weight:bold" id="emp-topbar-name">Employee Portal</div>
+    <div style="font-size:0.9rem;font-weight:bold;flex:1" id="emp-topbar-name" class="tr" data-en="Employee Portal" data-ar="بوابة الموظف">Employee Portal</div>
     
     <div style="display:flex; align-items:center; gap:0.25rem;">
+        <button class="btn-ghost btn-sm" onclick="Lang.toggle()" title="Language" style="display:flex; align-items:center; gap:0.4rem;">
+            <i class="fas fa-globe"></i> <span class="lang-text" style="font-weight:600; font-size:0.75rem;">عربي</span>
+        </button>
         <button class="btn-ghost btn-icon" onclick="UI.toggleTheme()" title="Theme">
             <i class="theme-icon fas fa-sun"></i>
         </button>
         <div style="width:1px; height:1.2rem; background:var(--border2); margin:0 0.5rem;"></div>
         <button class="btn btn-sm btn-outline" onclick="Auth.empLogout()">
-            <i class="fas fa-sign-out-alt"></i> Exit
+            <i class="fas fa-sign-out-alt"></i> <span class="tr" data-en="Exit" data-ar="خروج">Exit</span>
         </button>
     </div>
   </div>
@@ -340,17 +351,17 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
       <div style="border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border);height:100%"><div id="emp-map"></div></div>
       <div style="overflow-y:auto">
         <div class="checkin-card">
-          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem"><div class="status-dot unknown pulse" id="emp-status-dot"></div><span id="emp-status-text" style="font-weight:600">Locating...</span></div>
-          <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.5rem;line-height:1.6" id="emp-location-info">Please allow GPS access...</div>
-          <button id="emp-checkin-btn" class="btn btn-success btn-block" style="padding:1rem;font-size:1.1rem" onclick="Emp.checkIn()" disabled><i class="fas fa-map-marker-check"></i> Check In</button>
+          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem"><div class="status-dot unknown pulse" id="emp-status-dot"></div><span id="emp-status-text" style="font-weight:600" class="tr" data-en="Locating..." data-ar="تحديد الموقع...">Locating...</span></div>
+          <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1.5rem;line-height:1.6" id="emp-location-info" class="tr" data-en="Please allow GPS access..." data-ar="يرجى تفعيل الموقع...">Please allow GPS access...</div>
+          <button id="emp-checkin-btn" class="btn btn-success btn-block" style="padding:1rem;font-size:1.1rem" onclick="Emp.checkIn()" disabled><i class="fas fa-map-marker-check"></i> <span class="tr" data-en="Check In" data-ar="تسجيل الدخول">Check In</span></button>
           
           <div id="checkout-container" class="hidden">
-              <button id="emp-checkout-btn" class="btn btn-danger btn-block" style="padding:1rem;font-size:1.1rem;margin-bottom:0.5rem" onclick="Emp.checkOut()"><i class="fas fa-sign-out-alt"></i> Check Out</button>
-              <button id="emp-leave-btn" class="btn btn-warning btn-block" style="padding:1rem;font-size:1.1rem" onclick="UI.openModal('modal-leave')"><i class="fas fa-file-signature"></i> Request Leave</button>
+              <button id="emp-checkout-btn" class="btn btn-danger btn-block" style="padding:1rem;font-size:1.1rem;margin-bottom:0.5rem" onclick="Emp.checkOut()"><i class="fas fa-sign-out-alt"></i> <span class="tr" data-en="Check Out" data-ar="تسجيل الخروج">Check Out</span></button>
+              <button id="emp-leave-btn" class="btn btn-warning btn-block" style="padding:1rem;font-size:1.1rem" onclick="UI.openModal('modal-leave')"><i class="fas fa-file-signature"></i> <span class="tr" data-en="Request Leave" data-ar="طلب استئذان">Request Leave</span></button>
           </div>
         </div>
-        <div class="card"><div class="card-header"><div class="card-title">Today's Record</div></div><div style="padding:1.25rem" id="today-record-body"></div></div>
-        <div class="card"><div class="card-header"><div class="card-title">Recent History</div></div><div style="padding:0.5rem 1.25rem" id="emp-history-list"></div></div>
+        <div class="card"><div class="card-header"><div class="card-title tr" data-en="Today's Record" data-ar="سجل اليوم">Today's Record</div></div><div style="padding:1.25rem" id="today-record-body"></div></div>
+        <div class="card"><div class="card-header"><div class="card-title tr" data-en="Recent History" data-ar="السجل السابق">Recent History</div></div><div style="padding:0.5rem 1.25rem" id="emp-history-list"></div></div>
       </div>
     </div>
   </div>
@@ -359,35 +370,35 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
 <div id="modal-leave" class="modal-overlay">
   <div class="modal">
     <div class="modal-header">
-      <span style="font-weight:700;font-size:1.1rem;text-transform:uppercase">Permission / Leave Request</span>
+      <span style="font-weight:700;font-size:1.1rem;text-transform:uppercase" class="tr" data-en="Leave Request" data-ar="طلب استئذان">Leave Request</span>
       <button class="btn-ghost" onclick="UI.closeModal('modal-leave')"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:1.25rem">
       <div class="form-group">
-        <label class="form-label">Reason</label>
+        <label class="form-label tr" data-en="Reason" data-ar="السبب">Reason</label>
         <select id="leave-reason" class="form-control form-select">
-          <option value="" disabled selected>-- Select Reason --</option>
-          <option value="Health Emergency">Health Emergency</option>
-          <option value="External Work Task">External Work Task</option>
-          <option value="Government Appointment">Government Appointment</option>
-          <option value="Family Issue">Family Issue</option>
-          <option value="Technical Issue">Technical Issue</option>
-          <option value="Pre-approved Leave">Pre-approved Leave</option>
+          <option value="" disabled selected>-- Select / اختر --</option>
+          <option value="Health Emergency / ظرف صحي">Health Emergency / ظرف صحي طارئ</option>
+          <option value="External Work / مهمة خارجية">External Work / مهمة عمل خارجية</option>
+          <option value="Government / جهة حكومية">Government Appointment / مراجعة جهة حكومية</option>
+          <option value="Family / ظرف عائلي">Family Issue / ظرف عائلي</option>
+          <option value="Technical / عطل فني">Technical Issue / توقف العمل أو عطل فني</option>
+          <option value="Pre-approved / إذن مسبق">Pre-approved / إذن مسبق من الإدارة</option>
         </select>
       </div>
       <div class="form-group">
-        <label class="form-label">Attachment (Image/PDF)</label>
+        <label class="form-label tr" data-en="Attachment (Image/PDF)" data-ar="مرفق (صورة / PDF)">Attachment (Image/PDF)</label>
         <input type="file" id="leave-attachment" class="form-control" accept="image/*,.pdf" style="padding: 0.5rem 1rem;">
-        <small style="color:var(--text-muted); font-size:0.7rem; margin-top:0.25rem; display:block;">Max size: 2MB</small>
+        <small style="color:var(--text-muted); font-size:0.7rem; margin-top:0.25rem; display:block;" class="tr" data-en="Max size: 2MB" data-ar="الحد الأقصى: 2 ميجابايت">Max size: 2MB</small>
       </div>
       <div class="form-group">
-        <label class="form-label">Additional Notes</label>
-        <textarea id="leave-notes" class="form-control" rows="3" placeholder="Explain the reason for leaving early..."></textarea>
+        <label class="form-label tr" data-en="Additional Notes" data-ar="ملاحظات">Additional Notes</label>
+        <textarea id="leave-notes" class="form-control" rows="3"></textarea>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline" onclick="UI.closeModal('modal-leave')">Cancel</button>
-      <button class="btn btn-primary" onclick="Emp.submitLeaveRequest()">Submit Request</button>
+      <button class="btn btn-outline tr" onclick="UI.closeModal('modal-leave')" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+      <button class="btn btn-primary tr" onclick="Emp.submitLeaveRequest()" data-en="Submit Request" data-ar="إرسال الطلب">Submit Request</button>
     </div>
   </div>
 </div>
@@ -395,42 +406,42 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
 <div id="modal-employee" class="modal-overlay">
   <div class="modal">
     <div class="modal-header">
-      <span style="font-weight:700;font-size:1.1rem;text-transform:uppercase" id="emp-modal-title">Employee</span>
+      <span style="font-weight:700;font-size:1.1rem;text-transform:uppercase" id="emp-modal-title" class="tr" data-en="Employee" data-ar="موظف">Employee</span>
       <button class="btn-ghost" onclick="UI.closeModal('modal-employee')"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:1rem">
       <input type="hidden" id="emp-modal-id">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
         <div><label class="form-label">ID</label><input type="text" id="emp-modal-eid" class="form-control" placeholder="EMP001"></div>
-        <div><label class="form-label">Name</label><input type="text" id="emp-modal-name" class="form-control"></div>
-        <div><label class="form-label">Username</label><input type="text" id="emp-modal-user" class="form-control"></div>
-        <div><label class="form-label">Password</label><input type="password" id="emp-modal-pass" class="form-control"></div>
+        <div><label class="form-label tr" data-en="Name" data-ar="الاسم">Name</label><input type="text" id="emp-modal-name" class="form-control"></div>
+        <div><label class="form-label tr" data-en="Username" data-ar="المعرف">Username</label><input type="text" id="emp-modal-user" class="form-control"></div>
+        <div><label class="form-label tr" data-en="Password" data-ar="الرقم السري">Password</label><input type="password" id="emp-modal-pass" class="form-control"></div>
         <div><label class="form-label">Email</label><input type="email" id="emp-modal-email" class="form-control"></div>
-        <div><label class="form-label">Phone</label><input type="text" id="emp-modal-phone" class="form-control"></div>
-        <div><label class="form-label">Group</label><select id="emp-modal-group" class="form-control form-select"></select></div>
-        <div><label class="form-label">Status</label><select id="emp-modal-status" class="form-control form-select"><option value="1">Active</option><option value="0">Inactive</option></select></div>
-        <div><label class="form-label">Start Time</label><input type="time" id="emp-modal-start" class="form-control" value="09:00"></div>
-        <div><label class="form-label">End Time</label><input type="time" id="emp-modal-end" class="form-control" value="17:00"></div>
+        <div><label class="form-label tr" data-en="Phone" data-ar="الجوال">Phone</label><input type="text" id="emp-modal-phone" class="form-control"></div>
+        <div><label class="form-label tr" data-en="Group" data-ar="المجموعة">Group</label><select id="emp-modal-group" class="form-control form-select"></select></div>
+        <div><label class="form-label tr" data-en="Status" data-ar="الحالة">Status</label><select id="emp-modal-status" class="form-control form-select"><option value="1">Active</option><option value="0">Inactive</option></select></div>
+        <div><label class="form-label tr" data-en="Start Time" data-ar="بداية الدوام">Start Time</label><input type="time" id="emp-modal-start" class="form-control" value="09:00"></div>
+        <div><label class="form-label tr" data-en="End Time" data-ar="نهاية الدوام">End Time</label><input type="time" id="emp-modal-end" class="form-control" value="17:00"></div>
       </div>
-      <div><label class="form-label">Salary (SAR)</label><input type="number" id="emp-modal-salary" class="form-control" placeholder="0"></div>
+      <div><label class="form-label tr" data-en="Salary (SAR)" data-ar="الراتب">Salary (SAR)</label><input type="number" id="emp-modal-salary" class="form-control" placeholder="0"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline" onclick="UI.closeModal('modal-employee')">Cancel</button>
-      <button class="btn btn-primary" onclick="Admin.saveEmployee()">Save</button>
+      <button class="btn btn-outline tr" onclick="UI.closeModal('modal-employee')" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+      <button class="btn btn-primary tr" onclick="Admin.saveEmployee()" data-en="Save" data-ar="حفظ">Save</button>
     </div>
   </div>
 </div>
 
 <div id="modal-group" class="modal-overlay">
   <div class="modal">
-    <div class="modal-header"><span style="font-weight:700;font-size:1.1rem;text-transform:uppercase" id="grp-modal-title">Group</span><button class="btn-ghost" onclick="UI.closeModal('modal-group')"><i class="fas fa-times"></i></button></div>
+    <div class="modal-header"><span style="font-weight:700;font-size:1.1rem;text-transform:uppercase" id="grp-modal-title" class="tr" data-en="Group" data-ar="المجموعة">Group</span><button class="btn-ghost" onclick="UI.closeModal('modal-group')"><i class="fas fa-times"></i></button></div>
     <div class="modal-body" style="display:flex;flex-direction:column;gap:1rem">
       <input type="hidden" id="grp-modal-id">
-      <div><label class="form-label">Name</label><input type="text" id="grp-modal-name" class="form-control"></div>
-      <div><label class="form-label">Description</label><input type="text" id="grp-modal-desc" class="form-control"></div>
-      <div><label class="form-label">Color Marker</label><input type="color" id="grp-modal-color" class="form-control" value="#C45A28" style="height:45px;padding:0"></div>
+      <div><label class="form-label tr" data-en="Name" data-ar="الاسم">Name</label><input type="text" id="grp-modal-name" class="form-control"></div>
+      <div><label class="form-label tr" data-en="Description" data-ar="الوصف">Description</label><input type="text" id="grp-modal-desc" class="form-control"></div>
+      <div><label class="form-label tr" data-en="Color" data-ar="اللون">Color</label><input type="color" id="grp-modal-color" class="form-control" value="#C45A28" style="height:45px;padding:0"></div>
     </div>
-    <div class="modal-footer"><button class="btn btn-outline" onclick="UI.closeModal('modal-group')">Cancel</button><button class="btn btn-primary" onclick="Admin.saveGroup()">Save</button></div>
+    <div class="modal-footer"><button class="btn btn-outline tr" onclick="UI.closeModal('modal-group')" data-en="Cancel" data-ar="إلغاء">Cancel</button><button class="btn btn-primary tr" onclick="Admin.saveGroup()" data-en="Save" data-ar="حفظ">Save</button></div>
   </div>
 </div>
 
@@ -445,6 +456,32 @@ table{width:100%;border-collapse:collapse} th{background:var(--surface2);padding
 'use strict';
 
 const API_URL = 'https://attendanceapp-50no.onrender.com/api';
+
+const Lang = {
+  current: localStorage.getItem('amd_lang') || 'en',
+  toggle() {
+    this.current = this.current === 'en' ? 'ar' : 'en';
+    localStorage.setItem('amd_lang', this.current);
+    this.apply();
+  },
+  apply() {
+    document.documentElement.dir = this.current === 'ar' ? 'rtl' : 'ltr';
+    document.querySelectorAll('.lang-text').forEach(el => {
+        el.textContent = this.current === 'ar' ? 'EN' : 'عربي';
+    });
+    
+    document.querySelectorAll('.tr').forEach(el => {
+      el.innerHTML = el.getAttribute(`data-${this.current}`);
+    });
+    document.querySelectorAll('.ph-tr').forEach(el => {
+      el.placeholder = el.getAttribute(`data-ph${this.current}`);
+    });
+    
+    if (App.current === 'admin') { Admin.showPanel(Admin.currentPanel); }
+    if (App.current === 'emp') { Emp.updateButtons(!!document.getElementById('emp-status-dot').classList.contains('inside')); }
+  },
+  t(en, ar) { return this.current === 'ar' ? ar : en; }
+};
 
 const UI = {
   loader(show) { const l = document.getElementById('global-loader'); show ? l.classList.add('show') : l.classList.remove('show'); },
@@ -478,8 +515,9 @@ const UI = {
   },
   badge(status){
     const map={present:'success',late:'warning',absent:'danger',early_leave:'warning'};
-    const label={present:'Present',late:'Late',absent:'Absent',early_leave:'Early Leave'};
-    return `<span class="badge badge-${map[status]||'muted'}">${label[status] || status}</span>`;
+    const labelEN={present:'Present',late:'Late',absent:'Absent',early_leave:'Early Leave'};
+    const labelAR={present:'حاضر',late:'متأخر',absent:'غائب',early_leave:'استئذان'};
+    return `<span class="badge badge-${map[status]||'muted'}">${Lang.current==='ar' ? labelAR[status] : labelEN[status] || status}</span>`;
   }
 };
 
@@ -496,7 +534,7 @@ const API = {
       const text = await res.text();
       let data;
       try { data = JSON.parse(text); } 
-      catch (e) { throw new Error('Server Error'); }
+      catch (e) { throw new Error(Lang.t('Server Error', 'خطأ في السيرفر')); }
       if (!res.ok) throw new Error(data.msg || `Error ${res.status}`);
       return data;
     } catch (err) { throw err; }
@@ -515,7 +553,6 @@ const DB = {
   fmtDate(iso){if(!iso)return '—'; return new Date(iso).toLocaleDateString('en-US')}
 };
 
-// Helper function to convert file to Base64 string
 const getBase64 = (file) => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -532,7 +569,7 @@ const Auth = {
     try {
       const u = document.getElementById('admin-username').value.trim();
       const p = document.getElementById('admin-password').value;
-      if(!u || !p) throw new Error("Please enter username and password");
+      if(!u || !p) throw new Error(Lang.t("Please enter username and password", "الرجاء إدخال البيانات"));
 
       const data = await API.request('/auth/admin-login', 'POST', { username: u, password: p });
       localStorage.setItem('amd_token', data.token); localStorage.setItem('amd_user', JSON.stringify(data.user)); localStorage.setItem('amd_role', 'admin');
@@ -549,7 +586,7 @@ const Auth = {
     try {
       const u = document.getElementById('emp-username').value.trim();
       const p = document.getElementById('emp-password').value;
-      if(!u || !p) throw new Error("Please enter username and password");
+      if(!u || !p) throw new Error(Lang.t("Please enter username and password", "الرجاء إدخال البيانات"));
 
       const data = await API.request('/auth/emp-login', 'POST', { username: u, password: p });
       localStorage.setItem('amd_token', data.token); localStorage.setItem('amd_user', JSON.stringify(data.user)); localStorage.setItem('amd_role', 'emp');
@@ -651,7 +688,7 @@ const Maps = {
       L.circle([z.lat,z.lng],{radius:z.radius,color:col,fillColor:col,fillOpacity:0.12,weight:2}).addTo(this.empMap);
       L.circleMarker([z.lat,z.lng],{radius:8,fillColor:col,color:'#fff',weight:2,fillOpacity:1}).bindPopup(z.name).addTo(this.empMap);
     });
-    if(userLat&&userLng){ L.marker([userLat,userLng],{icon: this.pinIcon}).bindPopup('You are here').addTo(this.empMap); }
+    if(userLat&&userLng){ L.marker([userLat,userLng],{icon: this.pinIcon}).bindPopup(Lang.t('You are here','أنت هنا')).addTo(this.empMap); }
   }
 };
 
@@ -677,17 +714,17 @@ const Admin = {
   },
   async saveSettings() {
     const u = document.getElementById('admin-set-user').value.trim(); const e = document.getElementById('admin-set-email').value.trim(); const p = document.getElementById('admin-set-pass').value;
-    if(!u) return UI.toast('Username required', 'error');
+    if(!u) return UI.toast(Lang.t('Username required','اسم المستخدم مطلوب'), 'error');
     UI.loader(true);
     try {
       const data = await API.request('/admin/profile', 'POST', { adminId: Auth.adminSession.id, username: u, email: e, password: p });
       Auth.adminSession = data.user; localStorage.setItem('amd_user', JSON.stringify(data.user));
-      UI.toast('Profile Updated Successfully', 'success');
+      UI.toast(Lang.t('Saved Successfully', 'تم الحفظ'), 'success');
       document.getElementById('admin-set-pass').value = '';
     } catch(err) { UI.toast(err.message, 'error'); }
     UI.loader(false);
   },
-  async refresh(){ UI.loader(true); try{ await DB.sync(); this.showPanel(this.currentPanel); UI.toast('Data Synced', 'success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false); },
+  async refresh(){ UI.loader(true); try{ await DB.sync(); this.showPanel(this.currentPanel); UI.toast(Lang.t('Synced','تمت المزامنة'), 'success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false); },
   renderDashboard(){
     const emps=DB.getEmployees().filter(e=>e.active); document.getElementById('stat-total').textContent=emps.length;
     const recs=DB.getRecords().filter(r=>r.date===DB.today());
@@ -695,7 +732,7 @@ const Admin = {
     document.getElementById('stat-late').textContent=recs.filter(r=>r.status==='late').length;
     document.getElementById('stat-absent').textContent=Math.max(0,emps.length - recs.length);
     const tbody=document.getElementById('dash-attendance-table');
-    if(!recs.length){tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted)">No records today</td></tr>`;return;}
+    if(!recs.length){tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted)">${Lang.t('No records','لا يوجد سجلات')}</td></tr>`;return;}
     tbody.innerHTML=recs.slice(0,10).map(r=>{
       const emp=DB.getEmployees().find(e=>e.id===r.employeeId)||{name:'Unknown'};
       return`<tr><td>${emp.name}</td><td><span dir="ltr">${DB.fmtTime(r.checkIn)}</span></td><td><span dir="ltr">${DB.fmtTime(r.checkOut)}</span></td><td>${UI.badge(r.status)}</td></tr>`;
@@ -705,7 +742,7 @@ const Admin = {
     const ctx = document.getElementById(canvasId); if(!ctx) return;
     if(this.charts[canvasId]) this.charts[canvasId].destroy(); 
     Chart.defaults.color = document.documentElement.getAttribute('data-theme') === 'light' ? '#6B7280' : '#888880';
-    Chart.defaults.font.family = "'Barlow', sans-serif";
+    Chart.defaults.font.family = "'Barlow', 'Cairo', sans-serif";
     this.charts[canvasId] = new Chart(ctx, { type: type, data: data, options: Object.assign({ responsive: true, maintainAspectRatio: false }, options) });
   },
   renderAnalytics() {
@@ -716,7 +753,7 @@ const Admin = {
     const absent = Math.max(0, employees.length - todaysRecs.length);
 
     this.buildChart('chart-today', 'doughnut', {
-        labels: ['Present', 'Late', 'Early Leave', 'Absent'],
+        labels: [Lang.t('Present','حاضر'), Lang.t('Late','متأخر'), Lang.t('Early Leave','استئذان'), Lang.t('Absent','غائب')],
         datasets: [{ data: [present, late, leave, absent], backgroundColor: ['#27AE60', '#F1C40F', '#E67E22', '#E74C3C'], borderWidth: 0, hoverOffset: 4 }]
     }, { cutout: '75%', plugins: { legend: { position: 'bottom' } } });
 
@@ -727,7 +764,7 @@ const Admin = {
         groupData.push( todaysRecs.filter(r => gEmps.includes(r.employeeId)).length );
     });
     this.buildChart('chart-groups', 'bar', {
-        labels: groupLabels, datasets: [{ label: 'Checked-in', data: groupData, backgroundColor: groupColors, borderRadius: 4 }]
+        labels: groupLabels, datasets: [{ label: Lang.t('Checked-in','الحضور'), data: groupData, backgroundColor: groupColors, borderRadius: 4 }]
     }, { plugins: { legend: { display:false } }, scales: { y: { beginAtZero:true } } });
 
     const trendLabels = []; const trendData = [];
@@ -736,7 +773,7 @@ const Admin = {
         trendLabels.push(dateStr.slice(5)); trendData.push( records.filter(r => r.date === dateStr).length );
     }
     this.buildChart('chart-trend', 'line', {
-        labels: trendLabels, datasets: [{ label: 'Attendance', data: trendData, borderColor: '#C45A28', backgroundColor: 'rgba(196,90,40,0.15)', borderWidth: 3, tension: 0.4, fill: true }]
+        labels: trendLabels, datasets: [{ label: Lang.t('Attendance','الحضور'), data: trendData, borderColor: '#C45A28', backgroundColor: 'rgba(196,90,40,0.15)', borderWidth: 3, tension: 0.4, fill: true }]
     }, { plugins: { legend: { display:false } }, scales: { y: { beginAtZero:true } } });
   },
   renderEmployees(filter='',groupFilter=''){
@@ -744,7 +781,7 @@ const Admin = {
     if(filter) emps=emps.filter(e=>e.name.toLowerCase().includes(filter.toLowerCase()));
     if(groupFilter) emps=emps.filter(e=>e.groupId===groupFilter);
     const tbody=document.getElementById('employees-table');
-    if(!emps.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">No employees found</td></tr>`;return;}
+    if(!emps.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted)">${Lang.t('No employees found','لا يوجد موظفين')}</td></tr>`;return;}
     const groups=DB.getGroups();
     tbody.innerHTML=emps.map(e=>{
       const grp=groups.find(g=>g.id===e.groupId);
@@ -754,7 +791,7 @@ const Admin = {
   filterEmployees(){ this.renderEmployees(document.getElementById('emp-search').value, document.getElementById('emp-group-filter').value); },
   openEmployeeModal(id){ 
     this.populateGroupSelect('emp-modal-group'); 
-    document.getElementById('emp-modal-title').textContent = id ? 'Edit Employee' : 'Add Employee';
+    document.getElementById('emp-modal-title').textContent = id ? Lang.t('Edit Employee','تعديل موظف') : Lang.t('Add Employee','إضافة موظف');
     if (id) {
       const e = DB.getEmployees().find(x => x.id === id); if(!e) return;
       document.getElementById('emp-modal-id').value = e.id; document.getElementById('emp-modal-eid').value = e.eid || '';
@@ -772,17 +809,17 @@ const Admin = {
   },
   async saveEmployee(){
     const data={ id:document.getElementById('emp-modal-id').value, eid:document.getElementById('emp-modal-eid').value.trim(), name:document.getElementById('emp-modal-name').value.trim(), username:document.getElementById('emp-modal-user').value.trim(), password:document.getElementById('emp-modal-pass').value, email:document.getElementById('emp-modal-email').value.trim(), phone:document.getElementById('emp-modal-phone').value.trim(), groupId:document.getElementById('emp-modal-group').value, workStart:document.getElementById('emp-modal-start').value, workEnd:document.getElementById('emp-modal-end').value, salary:parseFloat(document.getElementById('emp-modal-salary').value)||0, active: parseInt(document.getElementById('emp-modal-status').value) === 1 };
-    if(!data.name||!data.username) return UI.toast('Required fields missing','error');
-    UI.loader(true); try { await API.request('/admin/employee', 'POST', data); await DB.sync(); UI.closeModal('modal-employee'); this.renderEmployees(); UI.toast('Saved successfully!','success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false);
+    if(!data.name||!data.username) return UI.toast(Lang.t('Required fields missing','أكمل الحقول المطلوبة'),'error');
+    UI.loader(true); try { await API.request('/admin/employee', 'POST', data); await DB.sync(); UI.closeModal('modal-employee'); this.renderEmployees(); UI.toast(Lang.t('Saved!','تم الحفظ'),'success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false);
   },
-  async deleteEmployee(id){ if(confirm('Delete this employee?')){ UI.loader(true); try{ await API.request(`/admin/employee/${id}`, 'DELETE'); await DB.sync(); this.renderEmployees(); UI.toast('Deleted','warning'); } catch(e){UI.toast(e.message, 'error');} UI.loader(false); } },
+  async deleteEmployee(id){ if(confirm(Lang.t('Delete this employee?','حذف الموظف؟'))){ UI.loader(true); try{ await API.request(`/admin/employee/${id}`, 'DELETE'); await DB.sync(); this.renderEmployees(); UI.toast(Lang.t('Deleted','تم الحذف'),'warning'); } catch(e){UI.toast(e.message, 'error');} UI.loader(false); } },
   renderGroups(){
     const groups=DB.getGroups(); const tbody=document.getElementById('groups-table');
-    if(!groups.length){tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:2rem">No groups found</td></tr>`;return;}
+    if(!groups.length){tbody.innerHTML=`<tr><td colspan="4" style="text-align:center;padding:2rem">${Lang.t('No groups yet','لا يوجد مجموعات')}</td></tr>`;return;}
     tbody.innerHTML=groups.map(g=>`<tr><td><span style="display:inline-block;width:15px;height:15px;border-radius:50%;background:${g.color}"></span></td><td><strong>${g.name}</strong></td><td>${g.desc||'—'}</td><td><button class="btn-ghost btn-sm" onclick="Admin.openGroupModal('${g.id}')"><i class="fas fa-edit"></i></button> <button class="btn-ghost btn-sm" style="color:var(--danger)" onclick="Admin.deleteGroup('${g.id}')"><i class="fas fa-trash"></i></button></td></tr>`).join('');
   },
   openGroupModal(id){ 
-    document.getElementById('grp-modal-title').textContent = id ? 'Edit Group' : 'Add Group';
+    document.getElementById('grp-modal-title').textContent = id ? Lang.t('Edit Group','تعديل المجموعة') : Lang.t('Add Group','إضافة مجموعة');
     if(id) {
       const g = DB.getGroups().find(x => x.id === id); document.getElementById('grp-modal-id').value = g.id; document.getElementById('grp-modal-name').value = g.name; document.getElementById('grp-modal-desc').value = g.desc || ''; document.getElementById('grp-modal-color').value = g.color || '#C45A28';
     } else {
@@ -792,78 +829,91 @@ const Admin = {
   },
   async saveGroup(){
     const data={ id:document.getElementById('grp-modal-id').value, name:document.getElementById('grp-modal-name').value.trim(), desc:document.getElementById('grp-modal-desc').value.trim(), color:document.getElementById('grp-modal-color').value };
-    if(!data.name) return UI.toast('Name required','error');
-    UI.loader(true); try { await API.request('/admin/group', 'POST', data); await DB.sync(); UI.closeModal('modal-group'); this.renderGroups(); UI.toast('Saved!','success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false);
+    if(!data.name) return UI.toast(Lang.t('Name required','الاسم مطلوب'),'error');
+    UI.loader(true); try { await API.request('/admin/group', 'POST', data); await DB.sync(); UI.closeModal('modal-group'); this.renderGroups(); UI.toast(Lang.t('Saved!','تم الحفظ'),'success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false);
   },
-  async deleteGroup(id){ if(confirm('Delete this group?')){ UI.loader(true); try{ await API.request(`/admin/group/${id}`, 'DELETE'); await DB.sync(); this.renderGroups(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
+  async deleteGroup(id){ if(confirm(Lang.t('Delete this group?','حذف المجموعة؟'))){ UI.loader(true); try{ await API.request(`/admin/group/${id}`, 'DELETE'); await DB.sync(); this.renderGroups(); UI.toast(Lang.t('Deleted','تم الحذف'),'warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
   populateGroupSelect(selId, addAll) { 
     const sel = document.getElementById(selId); if (!sel) return; 
-    let html = addAll ? `<option value="">All Groups</option>` : `<option value="" disabled selected>-- Select Group --</option>`; 
+    let html = addAll ? `<option value="">${Lang.t('All Groups','الكل')}</option>` : `<option value="" disabled selected>-- ${Lang.t('Select Group','اختر المجموعة')} --</option>`; 
     const groups = DB.getGroups(); 
-    if (groups.length === 0 && !addAll) html += `<option value="" disabled>⚠️ No groups found!</option>`;
+    if (groups.length === 0 && !addAll) html += `<option value="" disabled>⚠️ ${Lang.t('No groups found!','لا يوجد مجموعات')}</option>`;
     else html += groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
     sel.innerHTML = html; 
   },  
   renderZoneList(){
     const zones=DB.getLocations(); const wrap=document.getElementById('zone-list'); if(!wrap) return;
-    if(!zones.length){wrap.innerHTML=`<div style="text-align:center;padding:1rem;color:var(--text-muted)">No zones yet.</div>`;return;}
+    if(!zones.length){wrap.innerHTML=`<div style="text-align:center;padding:1rem;color:var(--text-muted)">${Lang.t('No zones yet.','لا يوجد مواقع')}</div>`;return;}
     wrap.innerHTML=zones.map(z=>`<div style="background:var(--surface2);border:1px solid var(--border);padding:0.75rem;border-radius:4px;display:flex;justify-content:space-between;align-items:center"><div><h5 style="margin-bottom:0.2rem">${z.name}</h5><small style="color:var(--text-muted)">${z.radius}m</small></div><button class="btn-ghost" style="color:var(--danger)" onclick="Admin.deleteZone('${z.id}')"><i class="fas fa-trash"></i></button></div>`).join('');
   },
   updateRadiusDisplay(v){ document.getElementById('zone-radius-val').textContent=v+' m'; if(Maps.tempCircle) Maps.tempCircle.setRadius(parseInt(v)); },
   async saveZone(){
     const name=document.getElementById('zone-name').value.trim();
-    if(!name || !Maps.tempMarker) return UI.toast('Name and map location required','error');
+    if(!name || !Maps.tempMarker) return UI.toast(Lang.t('Name and map location required','الاسم والموقع مطلوبان'),'error');
     const pos = Maps.tempMarker.getLatLng();
     const data={ name, groupId:document.getElementById('zone-group').value, lat: pos.lat, lng: pos.lng, radius: parseInt(document.getElementById('zone-radius').value) || 500 };
-    UI.loader(true); try { await API.request('/admin/location', 'POST', data); await DB.sync(); Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; Maps.renderZones(); UI.toast('Saved','success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false);
+    UI.loader(true); try { await API.request('/admin/location', 'POST', data); await DB.sync(); Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; Maps.renderZones(); UI.toast(Lang.t('Saved','تم الحفظ'),'success'); } catch(e){UI.toast(e.message,'error')} UI.loader(false);
   },
   clearZoneForm(){ if(Maps.tempMarker) Maps.adminMap.removeLayer(Maps.tempMarker); Maps.tempMarker=null; document.getElementById('zone-name').value=''; },
-  async deleteZone(id){ if(confirm('Delete?')){ UI.loader(true); try{ await API.request(`/admin/location/${id}`, 'DELETE'); await DB.sync(); Maps.renderZones(); UI.toast('Deleted','warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
+  async deleteZone(id){ if(confirm(Lang.t('Delete?','حذف؟'))){ UI.loader(true); try{ await API.request(`/admin/location/${id}`, 'DELETE'); await DB.sync(); Maps.renderZones(); UI.toast(Lang.t('Deleted','تم الحذف'),'warning'); }catch(e){UI.toast(e.message,'error')} UI.loader(false); } },
   
   // ==========================================
-  // REPORTS WITH FILE ATTACHMENTS & APPROVALS
+  // REPORTS WITH APPROVAL SYSTEM (AND ABSENTEES)
   // ==========================================
   filterRecords(){
     const search=document.getElementById('rec-search').value.toLowerCase(); 
     const date=document.getElementById('rec-date').value;
-    let recs=DB.getRecords(); const emps=DB.getEmployees();
-    
-    recs.sort((a, b) => new Date(b.date) - new Date(a.date));
-    
-    if(date) recs=recs.filter(r=>r.date===date);
-    if(search) recs=recs.filter(r=>emps.find(e=>e.id===r.employeeId)?.name.toLowerCase().includes(search));
+    const emps=DB.getEmployees().filter(e=>e.active); 
+    let displayList = [];
+
+    if(date) {
+        // If a specific date is selected, show ALL active employees (generate absentees for those missing)
+        emps.forEach(emp => {
+            if(search && !emp.name.toLowerCase().includes(search)) return;
+            const rec = DB.getRecords().find(r => r.employeeId === emp.id && r.date === date);
+            if(rec) displayList.push({ ...rec, isAbsent: false, emp });
+            else displayList.push({ employeeId: emp.id, date: date, checkIn: null, checkOut: null, status: 'absent', notes: '', approvalStatus: 'none', isAbsent: true, emp });
+        });
+    } else {
+        // No date selected -> just show historical records
+        let recs = DB.getRecords();
+        recs.sort((a, b) => new Date(b.date) - new Date(a.date));
+        if(search) recs = recs.filter(r => emps.find(e => e.id === r.employeeId)?.name.toLowerCase().includes(search));
+        displayList = recs.map(r => ({ ...r, isAbsent: false, emp: emps.find(e => e.id === r.employeeId) || {name:'Unknown', eid:'—'} }));
+    }
     
     const tbody=document.getElementById('records-table-body');
-    if(!recs.length){tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted)">No records found</td></tr>`;return;}
+    if(!displayList.length){tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted)">${Lang.t('No records found','لا توجد سجلات')}</td></tr>`;return;}
     
-    tbody.innerHTML=recs.map(r=>{
-      const emp = emps.find(e=>e.id===r.employeeId) || {name:'Unknown', eid:'—'};
+    tbody.innerHTML=displayList.map(item => {
+      const emp = item.emp;
       
       let actionButtons = `—`; 
-      if(r.approvalStatus === 'pending') {
+      if(!item.isAbsent && item.approvalStatus === 'pending') {
           actionButtons = `
-            <button class="btn-ghost btn-sm" onclick="Admin.handleApproval('${r.id}', 'approved')" title="Approve"><i class="fas fa-check-circle" style="color:var(--success); font-size:1.2rem;"></i></button>
-            <button class="btn-ghost btn-sm" onclick="Admin.handleApproval('${r.id}', 'rejected')" title="Reject"><i class="fas fa-times-circle" style="color:var(--danger); font-size:1.2rem;"></i></button>
+            <button class="btn-ghost btn-sm" onclick="Admin.handleApproval('${item.id}', 'approved')" title="${Lang.t('Approve','موافقة')}"><i class="fas fa-check-circle" style="color:var(--success); font-size:1.2rem;"></i></button>
+            <button class="btn-ghost btn-sm" onclick="Admin.handleApproval('${item.id}', 'rejected')" title="${Lang.t('Reject','رفض')}"><i class="fas fa-times-circle" style="color:var(--danger); font-size:1.2rem;"></i></button>
           `;
       }
 
-      let statusBadge = UI.badge(r.status);
-      if(r.approvalStatus === 'pending') statusBadge = `<span class="badge" style="background:var(--warning); color:#000;"><i class="fas fa-hourglass-half"></i> Pending</span>`;
-      else if (r.approvalStatus === 'rejected') statusBadge = `<span class="badge" style="background:var(--danger); color:#fff"><i class="fas fa-ban"></i> Rejected</span>`;
-      else if (r.approvalStatus === 'approved') statusBadge = `<span class="badge" style="background:var(--success); color:#fff"><i class="fas fa-check"></i> Approved</span>`;
+      let statusBadge = UI.badge(item.status);
+      if(!item.isAbsent) {
+          if(item.approvalStatus === 'pending') statusBadge = `<span class="badge" style="background:var(--warning); color:#000;"><i class="fas fa-hourglass-half"></i> ${Lang.t('Pending','معلق')}</span>`;
+          else if (item.approvalStatus === 'rejected') statusBadge = `<span class="badge" style="background:var(--danger); color:#fff"><i class="fas fa-ban"></i> ${Lang.t('Rejected','مرفوض')}</span>`;
+          else if (item.approvalStatus === 'approved') statusBadge = `<span class="badge" style="background:var(--success); color:#fff"><i class="fas fa-check"></i> ${Lang.t('Approved','مقبول')}</span>`;
+      }
 
-      // إضافة رابط مشاهدة المرفق في خانة الملاحظات إن وجد
-      let attachmentLink = r.attachment ? `<div style="margin-top:0.4rem"><a href="${r.attachment}" target="_blank" style="color:var(--info); font-size:0.75rem; font-weight:bold; text-decoration:underline;"><i class="fas fa-paperclip"></i> View Attachment</a></div>` : '';
+      let attachmentLink = item.attachment ? `<div style="margin-top:0.4rem"><a href="${item.attachment}" target="_blank" style="color:var(--info); font-size:0.75rem; font-weight:bold; text-decoration:underline;"><i class="fas fa-paperclip"></i> ${Lang.t('View Attachment','عرض المرفق')}</a></div>` : '';
 
       return`<tr>
         <td><code>${emp.eid || '—'}</code></td>
         <td><strong>${emp.name}</strong></td>
-        <td>${DB.fmtDate(r.date)}</td>
-        <td><span dir="ltr">${DB.fmtTime(r.checkIn)}</span></td>
-        <td><span dir="ltr">${DB.fmtTime(r.checkOut)}</span></td>
+        <td>${DB.fmtDate(item.date)}</td>
+        <td><span dir="ltr">${DB.fmtTime(item.checkIn)}</span></td>
+        <td><span dir="ltr">${DB.fmtTime(item.checkOut)}</span></td>
         <td>${statusBadge}</td>
         <td style="max-width:250px; white-space:normal; overflow:hidden; text-overflow:ellipsis;">
-            ${r.notes||'—'}
+            ${item.notes||'—'}
             ${attachmentLink}
         </td>
         <td style="text-align:center; min-width:80px;">${actionButtons}</td>
@@ -873,40 +923,60 @@ const Admin = {
 
   async handleApproval(recordId, decision) {
       const isApproved = decision === 'approved';
-      if(!confirm(isApproved ? 'Approve this request?' : 'Reject this request?')) return;
+      if(!confirm(isApproved ? Lang.t('Approve this request?','الموافقة على الطلب؟') : Lang.t('Reject this request?','رفض الطلب؟'))) return;
       UI.loader(true);
       try {
           await API.request(`/admin/approve-record/${recordId}`, 'PUT', { status: decision });
           await DB.sync(); this.filterRecords(); 
-          UI.toast(isApproved ? 'Approved' : 'Rejected', isApproved ? 'success' : 'warning');
+          UI.toast(isApproved ? Lang.t('Approved','تم القبول') : Lang.t('Rejected','تم الرفض'), isApproved ? 'success' : 'warning');
       } catch(e) { UI.toast(e.message, 'error'); }
       UI.loader(false);
   },
 
   getExportData() {
-    const search=document.getElementById('rec-search').value.toLowerCase(); const date=document.getElementById('rec-date').value;
-    let recs=DB.getRecords(); const emps=DB.getEmployees();
-    recs.sort((a, b) => new Date(b.date) - new Date(a.date));
-    if(date) recs=recs.filter(r=>r.date===date);
-    if(search) recs=recs.filter(r=>emps.find(e=>e.id===r.employeeId)?.name.toLowerCase().includes(search));
-    
-    return recs.map(r => {
-        const emp = emps.find(e=>e.id===r.employeeId) || {name:'Unknown', eid:'—'};
-        let finalStatus = r.status.toUpperCase();
-        if(r.approvalStatus === 'pending') finalStatus += ' (Pending)';
-        if(r.approvalStatus === 'approved') finalStatus += ' (Approved)';
-        if(r.approvalStatus === 'rejected') finalStatus += ' (Rejected)';
-        
-        let notesText = r.notes || '';
-        if(r.attachment) notesText += ' [Has Attachment]';
+    const search=document.getElementById('rec-search').value.toLowerCase(); 
+    const dateFilter=document.getElementById('rec-date').value;
+    const emps=DB.getEmployees().filter(e=>e.active);
 
-        return { "ID": emp.eid || '—', "Name": emp.name, "Date": r.date, "Check In": r.checkIn ? new Date(r.checkIn).toLocaleString('en-US') : '—', "Check Out": r.checkOut ? new Date(r.checkOut).toLocaleString('en-US') : '—', "Status": finalStatus, "Notes": notesText };
+    let exportList = [];
+
+    if(dateFilter) {
+        emps.forEach(emp => {
+            if(search && !emp.name.toLowerCase().includes(search)) return;
+            const rec = DB.getRecords().find(r => r.employeeId === emp.id && r.date === dateFilter);
+            if(rec) exportList.push({ ...rec, isAbsent: false, emp });
+            else exportList.push({ date: dateFilter, checkIn: null, checkOut: null, status: 'absent', notes: '', approvalStatus: 'none', isAbsent: true, emp });
+        });
+    } else {
+        let recs = DB.getRecords();
+        recs.sort((a, b) => new Date(b.date) - new Date(a.date));
+        if(search) recs = recs.filter(r => emps.find(e => e.id === r.employeeId)?.name.toLowerCase().includes(search));
+        exportList = recs.map(r => ({ ...r, isAbsent: false, emp: emps.find(e => e.id === r.employeeId) || {name:'Unknown', eid:'—'} }));
+    }
+
+    return exportList.map(item => {
+        const emp = item.emp;
+        let finalStatus = Lang.current==='ar' ? (item.status==='present'?'حاضر':item.status==='late'?'متأخر':item.status==='absent'?'غائب':'استئذان') : item.status.toUpperCase();
+        
+        if(!item.isAbsent) {
+            if(item.approvalStatus === 'pending') finalStatus += Lang.t(' (Pending)',' (معلق)');
+            if(item.approvalStatus === 'approved') finalStatus += Lang.t(' (Approved)',' (مقبول)');
+            if(item.approvalStatus === 'rejected') finalStatus += Lang.t(' (Rejected)',' (مرفوض)');
+        }
+        
+        let notesText = item.notes || '';
+        if(item.attachment) notesText += ' [Has Attachment]';
+
+        if (Lang.current === 'ar') {
+           return { "الرقم": emp.eid || '—', "الاسم": emp.name, "التاريخ": item.date, "الدخول": item.checkIn ? new Date(item.checkIn).toLocaleString('en-US') : '—', "الخروج": item.checkOut ? new Date(item.checkOut).toLocaleString('en-US') : '—', "الحالة": finalStatus, "الملاحظات": notesText || '—' };
+        }
+        return { "ID": emp.eid || '—', "Name": emp.name, "Date": item.date, "Check In": item.checkIn ? new Date(item.checkIn).toLocaleString('en-US') : '—', "Check Out": item.checkOut ? new Date(item.checkOut).toLocaleString('en-US') : '—', "Status": finalStatus, "Notes": notesText || '—' };
     });
   },
 
   exportExcel() {
     const data = this.getExportData();
-    if(!data.length) return UI.toast('No data to export', 'warning');
+    if(!data.length) return UI.toast(Lang.t('No data','لا يوجد بيانات'), 'warning');
     const ws = XLSX.utils.json_to_sheet(data); const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Attendance");
     XLSX.writeFile(wb, `AMD_Attendance_${DB.today()}.xlsx`);
@@ -914,21 +984,23 @@ const Admin = {
 
   exportPDF() {
     const data = this.getExportData();
-    if(!data.length) return UI.toast('No data to export', 'warning');
+    if(!data.length) return UI.toast(Lang.t('No data','لا يوجد بيانات'), 'warning');
     const dateFilter = document.getElementById('rec-date').value;
     UI.loader(true); 
 
     const container = document.createElement('div');
     container.style.padding = '20px';
-    container.style.fontFamily = "'Barlow', sans-serif";
-    container.style.direction = 'ltr'; 
+    container.style.fontFamily = "'Cairo', 'Barlow', sans-serif";
+    container.style.direction = Lang.current === 'ar' ? 'rtl' : 'ltr'; 
     container.style.background = '#fff'; container.style.color = '#000';
 
+    const ths = Lang.current === 'ar' ? `<th>الرقم</th><th>الاسم</th><th>التاريخ</th><th>الدخول</th><th>الخروج</th><th>الحالة</th><th>الملاحظات</th>` : `<th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Notes</th>`;
+
     container.innerHTML = `
-      <h2 style="text-align:center; color:#C45A28; margin-bottom:5px; font-family:'Cinzel', serif;">AMD United - Attendance Report</h2>
+      <h2 style="text-align:center; color:#C45A28; margin-bottom:5px; font-family:'Cinzel', serif;">AMD United - ${Lang.t('Attendance Report','تقرير الحضور')}</h2>
       <h4 style="text-align:center; color:#555; margin-bottom:20px; font-weight:normal;">${dateFilter ? dateFilter : DB.today()}</h4>
-      <table style="width:100%; border-collapse:collapse; text-align:left; font-size:12px;">
-        <thead><tr style="background-color:#C45A28; color:#fff;"><th>ID</th><th>Name</th><th>Date</th><th>Check In</th><th>Check Out</th><th>Status</th><th>Notes</th></tr></thead>
+      <table style="width:100%; border-collapse:collapse; text-align:${Lang.current==='ar'?'right':'left'}; font-size:12px;">
+        <thead><tr style="background-color:#C45A28; color:#fff;">${ths}</tr></thead>
         <tbody>
           ${data.map(row => `
             <tr>
@@ -949,7 +1021,7 @@ const Admin = {
 };
 
 /* ══════════════════════════════════════════
-   EMPLOYEE PORTAL LOGIC 
+   EMPLOYEE PORTAL LOGIC
 ══════════════════════════════════════════ */
 const Emp = {
   watchId:null, currentPos:null, assignedZones:[], currentRecord:null, nearestZone:null,
@@ -964,14 +1036,14 @@ const Emp = {
   },
   cleanup(){ if(this.watchId!==null){navigator.geolocation.clearWatch(this.watchId);this.watchId=null;} this.currentPos=null; },
   startTracking(){
-    document.getElementById('emp-status-text').textContent='Locating GPS...';
+    document.getElementById('emp-status-text').textContent=Lang.t('Locating GPS...','جاري تحديد الموقع...');
     if(!navigator.geolocation) { document.getElementById('emp-location-info').textContent='GPS not supported'; return; }
     this.watchId=navigator.geolocation.watchPosition(
       pos=>{
         this.currentPos={lat:pos.coords.latitude,lng:pos.coords.longitude,acc:pos.coords.accuracy}; this.checkZone();
         Maps.initEmp(this.assignedZones[0]?.lat||pos.coords.latitude, this.assignedZones[0]?.lng||pos.coords.longitude, this.assignedZones, pos.coords.latitude, pos.coords.longitude);
       },
-      err=>{ document.getElementById('emp-status-text').textContent='Location unavailable'; document.getElementById('emp-status-dot').className='status-dot outside'; },
+      err=>{ document.getElementById('emp-status-text').textContent=Lang.t('Location unavailable','الموقع غير متاح'); document.getElementById('emp-status-dot').className='status-dot outside'; },
       {enableHighAccuracy:true,timeout:15000,maximumAge:5000}
     );
   },
@@ -983,11 +1055,10 @@ const Emp = {
       const a=Math.sin(dLat/2)**2+Math.cos(this.currentPos.lat*Math.PI/180)*Math.cos(z.lat*Math.PI/180)*Math.sin(dLon/2)**2;
       const d=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a)); if(d<=z.radius) insideZone=z;
     });
-    if(insideZone){ document.getElementById('emp-status-dot').className='status-dot inside pulse'; document.getElementById('emp-status-text').textContent='Within Zone ✓'; document.getElementById('emp-location-info').textContent='You are inside an authorized attendance zone.'; } 
-    else { document.getElementById('emp-status-dot').className='status-dot outside pulse'; document.getElementById('emp-status-text').textContent='Outside Zone'; document.getElementById('emp-location-info').textContent='Please move closer to your designated work zone.'; }
+    if(insideZone){ document.getElementById('emp-status-dot').className='status-dot inside pulse'; document.getElementById('emp-status-text').textContent=Lang.t('Within Zone ✓','داخل الموقع ✓'); document.getElementById('emp-location-info').textContent=Lang.t('You are inside an authorized attendance zone.','أنت داخل النطاق المسموح لتسجيل الحضور.'); } 
+    else { document.getElementById('emp-status-dot').className='status-dot outside pulse'; document.getElementById('emp-status-text').textContent=Lang.t('Outside Zone','خارج الموقع'); document.getElementById('emp-location-info').textContent=Lang.t('Please move closer to your designated work zone.','يرجى الاقتراب من موقع العمل المحدد.'); }
     this.updateButtons(!!insideZone);
   },
-  
   updateButtons(insideZone){
     const rec=this.currentRecord; 
     const checkinBtn=document.getElementById('emp-checkin-btn'); 
@@ -1004,33 +1075,32 @@ const Emp = {
         checkoutContainer.classList.remove('hidden'); 
         checkoutBtn.disabled=!insideZone; 
         
-        // إخفاء زر الاستئذان إذا كان هناك طلب معلق لتجنب التكرار
         if (rec.approvalStatus === 'pending') {
-            checkoutBtn.innerHTML = `<i class="fas fa-hourglass-half"></i> Leave Request Pending`;
+            checkoutBtn.innerHTML = `<i class="fas fa-hourglass-half"></i> ${Lang.t('Pending Approval','قيد المراجعة')}`;
             checkoutBtn.style.background = 'var(--warning)'; checkoutBtn.style.color = '#000';
             leaveBtn.classList.add('hidden');
         } else if (rec.approvalStatus === 'approved') {
-            checkoutBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Clock Out (Approved)`;
+            checkoutBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> ${Lang.t('Clock Out (Approved)','انصراف (تمت الموافقة)')}`;
             checkoutBtn.style.background = 'var(--success)'; checkoutBtn.style.color = '#fff';
             leaveBtn.classList.add('hidden');
         } else if (rec.approvalStatus === 'rejected') {
-            checkoutBtn.innerHTML = `<i class="fas fa-ban"></i> Leave Rejected`;
+            checkoutBtn.innerHTML = `<i class="fas fa-ban"></i> ${Lang.t('Leave Rejected','استئذان مرفوض')}`;
             checkoutBtn.style.background = 'var(--danger)'; checkoutBtn.style.color = '#fff';
-            leaveBtn.classList.remove('hidden'); // يمكنه تقديم طلب آخر بملف جديد
+            leaveBtn.classList.remove('hidden'); 
         } else {
-            checkoutBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Check Out`;
+            checkoutBtn.innerHTML = `<i class="fas fa-sign-out-alt"></i> ${Lang.t('Check Out','تسجيل الخروج')}`;
             checkoutBtn.style.background = 'var(--danger)'; checkoutBtn.style.color = '#fff';
-            leaveBtn.classList.remove('hidden'); // إظهار زر طلب الاستئذان المستقل
+            leaveBtn.classList.remove('hidden'); 
         }
     } else { 
         checkinBtn.classList.add('hidden'); 
         checkoutContainer.classList.add('hidden'); 
-        document.getElementById('emp-location-info').textContent='Attendance complete for today.'; 
+        document.getElementById('emp-location-info').textContent=Lang.t('Attendance complete for today.','اكتمل الحضور لهذا اليوم.'); 
     }
   },
   
   async checkIn(){
-    if(!this.currentPos){UI.toast('Location unavailable','error');return;}
+    if(!this.currentPos){UI.toast(Lang.t('Location unavailable','الموقع غير متاح'),'error');return;}
     UI.loader(true);
 
     let finalStatus = 'present';
@@ -1059,9 +1129,9 @@ const Emp = {
         this.renderTodayRecord(); this.updateButtons(true); this.renderHistory(); 
         
         if (finalStatus === 'late') {
-            UI.toast('Checked in (Late)!','warning');
+            UI.toast(Lang.t('Checked in (Late)!','تم تسجيل الدخول (متأخر)!'),'warning');
         } else {
-            UI.toast('Checked in successfully!','success');
+            UI.toast(Lang.t('Checked in!','تم الدخول بنجاح!'),'success');
         }
     } catch(e) { UI.toast(e.message,'error'); }
     UI.loader(false);
@@ -1071,7 +1141,7 @@ const Emp = {
     const emp = Auth.empSession; const rec = this.currentRecord;
     
     if (!emp || !emp.workEnd) { 
-        if(confirm('Do you want to officially clock out now?')) this.confirmStandardCheckOut();
+        if(confirm(Lang.t('Officially clock out now?','تسجيل الانصراف الرسمي الآن؟'))) this.confirmStandardCheckOut();
         return; 
     }
 
@@ -1087,20 +1157,16 @@ const Emp = {
 
     if (currTotalMinutes < endTotalMinutes) {
         if (rec && rec.approvalStatus === 'pending') { 
-            UI.toast('Request is pending admin approval.', 'warning'); 
+            UI.toast(Lang.t('Request is pending admin approval.','طلبك قيد المراجعة من الإدارة.'), 'warning'); 
             return; 
         }
         if (rec && rec.approvalStatus === 'approved') {
-            if(confirm('Approved! Clock out now?')) this.confirmStandardCheckOut();
+            this.confirmStandardCheckOut(); 
             return;
         }
-        // Block early exit completely if not approved
-        let dispH = endH > 12 ? endH - 12 : (endH === 0 ? 12 : endH);
-        let ampm = endH >= 12 ? 'PM' : 'AM';
-        let dispM = endM < 10 ? '0'+endM : endM;
-        UI.toast(`You cannot clock out before your shift ends at ${dispH}:${dispM} ${ampm}. Please submit a Leave Request instead.`, 'error');
+        UI.openModal('modal-leave');
     } else {
-        if(confirm('Officially clock out now?')) this.confirmStandardCheckOut();
+        this.confirmStandardCheckOut();
     }
   },
 
@@ -1111,35 +1177,32 @@ const Emp = {
     try {
         await API.request('/employee/record', 'POST', rec); await DB.sync();
         this.currentRecord = DB.getRecords().find(r => r.employeeId === Auth.empSession.id && r.date === DB.today());
-        this.renderTodayRecord(); this.updateButtons(false); UI.toast('Checked out successfully', 'success');
+        this.renderTodayRecord(); this.updateButtons(false); UI.toast(Lang.t('Checked out successfully','تم تسجيل الخروج بنجاح'), 'success');
     } catch(e) { UI.toast(e.message, 'error'); }
     UI.loader(false);
   },
 
-  // دالة إرسال طلب الاستئذان الجديد مع معالجة الملفات
   async submitLeaveRequest() {
     const reason = document.getElementById('leave-reason').value; 
     const notes = document.getElementById('leave-notes').value.trim();
     const fileInput = document.getElementById('leave-attachment');
 
-    if(!reason) return UI.toast('Please select a reason', 'error');
+    if(!reason) return UI.toast(Lang.t('Please select a reason','الرجاء اختيار السبب'), 'error');
 
     UI.loader(true);
     let attachmentData = null;
 
-    // قراءة الملف وتحويله إلى Base64
     if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
-        // الحد الأقصى 2 ميجابايت لحماية قاعدة البيانات
         if (file.size > 2 * 1024 * 1024) { 
             UI.loader(false);
-            return UI.toast('File too large. Max size is 2MB.', 'error');
+            return UI.toast(Lang.t('File too large. Max size is 2MB.','حجم الملف كبير جداً. الحد الأقصى 2MB'), 'error');
         }
         try {
             attachmentData = await getBase64(file);
         } catch (error) {
             UI.loader(false);
-            return UI.toast('Error reading file.', 'error');
+            return UI.toast(Lang.t('Error reading file.','خطأ في قراءة الملف'), 'error');
         }
     }
 
@@ -1148,7 +1211,7 @@ const Emp = {
         date: DB.today(), 
         status: 'early_leave', 
         approvalStatus: 'pending', 
-        notes: `[Leave: ${reason}] ${notes}`,
+        notes: `[${reason}] ${notes}`,
         attachment: attachmentData 
     };
 
@@ -1159,9 +1222,8 @@ const Emp = {
         this.currentRecord = DB.getRecords().find(r => r.employeeId === Auth.empSession.id && r.date === DB.today());
         this.renderTodayRecord(); 
         this.updateButtons(true); 
-        UI.toast('Request sent to admin', 'success');
+        UI.toast(Lang.t('Request sent to admin','تم إرسال الطلب للإدارة'), 'success');
         
-        // تنظيف الحقول
         document.getElementById('leave-reason').value = '';
         document.getElementById('leave-notes').value = '';
         document.getElementById('leave-attachment').value = '';
@@ -1171,19 +1233,19 @@ const Emp = {
 
   renderTodayRecord(){
     const rec=this.currentRecord; const body=document.getElementById('today-record-body');
-    if(!rec){body.innerHTML=`<div style="text-align:center;color:var(--text-muted)">No record yet</div>`;return;}
-    body.innerHTML=`<div style="display:flex;justify-content:space-between;padding:1rem;background:var(--surface2);border-radius:4px"><div><small style="color:var(--text-muted);display:block">Check In</small><strong><span dir="ltr">${DB.fmtTime(rec.checkIn)}</span></strong></div><div><small style="color:var(--text-muted);display:block">Check Out</small><strong><span dir="ltr">${DB.fmtTime(rec.checkOut)}</span></strong></div></div>`;
+    if(!rec){body.innerHTML=`<div style="text-align:center;color:var(--text-muted)">${Lang.t('No record yet','لا يوجد سجل بعد')}</div>`;return;}
+    body.innerHTML=`<div style="display:flex;justify-content:space-between;padding:1rem;background:var(--surface2);border-radius:4px"><div><small style="color:var(--text-muted);display:block">${Lang.t('Check In','الدخول')}</small><strong><span dir="ltr">${DB.fmtTime(rec.checkIn)}</span></strong></div><div><small style="color:var(--text-muted);display:block">${Lang.t('Check Out','الخروج')}</small><strong><span dir="ltr">${DB.fmtTime(rec.checkOut)}</span></strong></div></div>`;
   },
   
   renderHistory(){
     const wrap=document.getElementById('emp-history-list'); const recs=DB.getRecords().filter(r=>r.employeeId===Auth.empSession.id);
-    if(!recs.length){wrap.innerHTML=`<div style="text-align:center;padding:1rem;color:var(--text-muted)">No history</div>`;return;}
+    if(!recs.length){wrap.innerHTML=`<div style="text-align:center;padding:1rem;color:var(--text-muted)">${Lang.t('No history','لا يوجد سجل سابق')}</div>`;return;}
     recs.sort((a, b) => new Date(b.date) - new Date(a.date));
     wrap.innerHTML=recs.map(r=>{
         let badge = UI.badge(r.status);
-        if(r.approvalStatus === 'pending') badge = `<span class="badge" style="background:var(--warning); color:#000;">Pending</span>`;
-        if(r.approvalStatus === 'rejected') badge = `<span class="badge" style="background:var(--danger); color:#fff;">Rejected</span>`;
-        if(r.approvalStatus === 'approved') badge = `<span class="badge" style="background:var(--success); color:#fff;">Approved</span>`;
+        if(r.approvalStatus === 'pending') badge = `<span class="badge" style="background:var(--warning); color:#000;">${Lang.t('Pending','معلق')}</span>`;
+        if(r.approvalStatus === 'rejected') badge = `<span class="badge" style="background:var(--danger); color:#fff;">${Lang.t('Rejected','مرفوض')}</span>`;
+        if(r.approvalStatus === 'approved') badge = `<span class="badge" style="background:var(--success); color:#fff;">${Lang.t('Approved','مقبول')}</span>`;
         return `<div style="padding:0.75rem 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;"><div><strong style="display:block;font-size:0.9rem">${DB.fmtDate(r.date)}</strong><small style="color:var(--text-muted)"><span dir="ltr">In: ${DB.fmtTime(r.checkIn)} | Out: ${DB.fmtTime(r.checkOut)}</span></small></div>${badge}</div>`;
     }).join('');
   }
@@ -1198,7 +1260,7 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('DOMContentLoaded',()=>{ 
   const d=document.getElementById('rec-date'); if(d) d.value=DB.today(); 
-  UI.applyTheme();
+  Lang.apply(); UI.applyTheme();
   Auth.restoreSession(); 
 });
 </script>
