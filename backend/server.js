@@ -44,6 +44,14 @@ app.use('/api/employee', require('./routes/employee'));
 // مسار فحص حالة السيرفر
 app.get('/', (req, res) => res.send('AMD Backend API is running perfectly!'));
 
+// 🛡️ كود منع السيرفر من النوم (Anti-Sleep)
+// هذا الكود سيقوم بزيارة رابط السيرفر كل 14 دقيقة لكي لا يغلق أبداً
+const https = require('https');
+setInterval(() => {
+    https.get('https://attendanceapp-50no.onrender.com/');
+    console.log('⏰ Ping sent to keep server awake!');
+}, 14 * 60 * 1000); 
+
 // التشغيل (مع إضافة '0.0.0.0' لتجنب مشكلة Timed Out في منصة Render)
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
